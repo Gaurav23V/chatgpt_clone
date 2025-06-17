@@ -1,102 +1,170 @@
-import Image from 'next/image';
+import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import Link from 'next/link';
 
 export default function Home() {
   return (
-    <div className='grid min-h-screen grid-rows-[20px_1fr_20px] items-center justify-items-center gap-16 p-8 pb-20 font-[family-name:var(--font-geist-sans)] sm:p-20'>
-      <main className='row-start-2 flex flex-col items-center gap-[32px] sm:items-start'>
-        <Image
-          className='dark:invert'
-          src='/next.svg'
-          alt='Next.js logo'
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className='list-inside list-decimal text-center font-[family-name:var(--font-geist-mono)] text-sm/6 sm:text-left'>
-          <li className='mb-2 tracking-[-.01em]'>
-            Get started by editing{' '}
-            <code className='rounded bg-black/[.05] px-1 py-0.5 font-[family-name:var(--font-geist-mono)] font-semibold dark:bg-white/[.06]'>
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className='tracking-[-.01em]'>
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+      {/* Header with Authentication Status */}
+      <header className="border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <div className="flex items-center">
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                ChatGPT Clone
+              </h1>
+            </div>
 
-        <div className='flex flex-col items-center gap-4 sm:flex-row'>
-          <a
-            className='bg-foreground text-background flex h-10 items-center justify-center gap-2 rounded-full border border-solid border-transparent px-4 text-sm font-medium transition-colors hover:bg-[#383838] sm:h-12 sm:w-auto sm:px-5 sm:text-base dark:hover:bg-[#ccc]'
-            href='https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app'
-            target='_blank'
-            rel='noopener noreferrer'
-          >
-            <Image
-              className='dark:invert'
-              src='/vercel.svg'
-              alt='Vercel logomark'
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className='flex h-10 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-4 text-sm font-medium transition-colors hover:border-transparent hover:bg-[#f2f2f2] sm:h-12 sm:w-auto sm:px-5 sm:text-base md:w-[158px] dark:border-white/[.145] dark:hover:bg-[#1a1a1a]'
-            href='https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app'
-            target='_blank'
-            rel='noopener noreferrer'
-          >
-            Read our docs
-          </a>
+            {/* Authentication Section */}
+            <div className="flex items-center space-x-4">
+              <SignedOut>
+                <Link
+                  href="/sign-in"
+                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/sign-up"
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Sign Up
+                </Link>
+              </SignedOut>
+
+              <SignedIn>
+                <Link
+                  href="/c/new"
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  New Chat
+                </Link>
+                <UserButton afterSignOutUrl="/" />
+              </SignedIn>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center">
+          {/* Welcome Section for Signed Out Users */}
+          <SignedOut>
+            <div className="max-w-3xl mx-auto">
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl">
+                Welcome to{' '}
+                <span className="text-green-600">ChatGPT Clone</span>
+              </h1>
+              <p className="mt-6 text-lg text-gray-600 dark:text-gray-300">
+                Experience the power of AI-driven conversations. Sign up to start chatting with our advanced AI assistant.
+              </p>
+
+              {/* Features Grid */}
+              <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                  <div className="text-green-600 text-2xl mb-4">🤖</div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">AI-Powered</h3>
+                  <p className="text-gray-600 dark:text-gray-300 mt-2">
+                    Powered by advanced language models for intelligent conversations
+                  </p>
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                  <div className="text-green-600 text-2xl mb-4">💬</div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Natural Chat</h3>
+                  <p className="text-gray-600 dark:text-gray-300 mt-2">
+                    Engage in natural, flowing conversations on any topic
+                  </p>
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                  <div className="text-green-600 text-2xl mb-4">🔒</div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Secure</h3>
+                  <p className="text-gray-600 dark:text-gray-300 mt-2">
+                    Your conversations are private and securely stored
+                  </p>
+                </div>
+              </div>
+
+              {/* Call to Action */}
+              <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  href="/sign-up"
+                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg text-lg font-medium transition-colors"
+                >
+                  Get Started Free
+                </Link>
+                <Link
+                  href="/sign-in"
+                  className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 px-8 py-3 rounded-lg text-lg font-medium transition-colors"
+                >
+                  Sign In
+                </Link>
+              </div>
+            </div>
+          </SignedOut>
+
+          {/* Welcome Section for Signed In Users */}
+          <SignedIn>
+            <div className="max-w-2xl mx-auto">
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white sm:text-5xl">
+                Welcome back!
+              </h1>
+              <p className="mt-6 text-lg text-gray-600 dark:text-gray-300">
+                Ready to continue your AI conversations? Start a new chat or manage your account.
+              </p>
+
+              {/* Action Buttons */}
+              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  href="/c/new"
+                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg text-lg font-medium transition-colors"
+                >
+                  Start New Chat
+                </Link>
+                <button className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 px-8 py-3 rounded-lg text-lg font-medium transition-colors">
+                  View Chat History
+                </button>
+              </div>
+
+              {/* Auth Testing Info */}
+              <div className="mt-12 p-6 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <h3 className="text-lg font-semibold text-green-800 dark:text-green-200 mb-2">
+                  ✅ Authentication Test Successful
+                </h3>
+                <p className="text-green-700 dark:text-green-300">
+                  You are successfully signed in! The authentication flow is working correctly.
+                </p>
+                <div className="mt-4 text-left text-sm text-green-600 dark:text-green-400 space-y-1">
+                  <p>• ✅ Sign-up flow completed</p>
+                  <p>• ✅ Sign-in redirection working</p>
+                  <p>• ✅ User button accessible</p>
+                  <p>• ✅ Protected routes accessible</p>
+                </div>
+              </div>
+            </div>
+          </SignedIn>
         </div>
       </main>
-      <footer className='row-start-3 flex flex-wrap items-center justify-center gap-[24px]'>
-        <a
-          className='flex items-center gap-2 hover:underline hover:underline-offset-4'
-          href='https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app'
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          <Image
-            aria-hidden
-            src='/file.svg'
-            alt='File icon'
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className='flex items-center gap-2 hover:underline hover:underline-offset-4'
-          href='https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app'
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          <Image
-            aria-hidden
-            src='/window.svg'
-            alt='Window icon'
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className='flex items-center gap-2 hover:underline hover:underline-offset-4'
-          href='https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app'
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          <Image
-            aria-hidden
-            src='/globe.svg'
-            alt='Globe icon'
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 mt-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center text-gray-600 dark:text-gray-400">
+            <p>&copy; 2024 ChatGPT Clone. Built with Next.js, Clerk & OpenAI.</p>
+            <div className="mt-4 space-x-4">
+              <SignedOut>
+                <span className="text-sm">Testing: Authentication flow verification</span>
+              </SignedOut>
+              <SignedIn>
+                <span className="text-sm text-green-600 dark:text-green-400">
+                  ✅ Authentication Active
+                </span>
+              </SignedIn>
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
   );

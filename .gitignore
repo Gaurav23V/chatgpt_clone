@@ -338,3 +338,6 @@ tramp
 
 # Windows shortcuts
 *.lnk
+
+# clerk configuration (can include secrets)
+/.clerk/
