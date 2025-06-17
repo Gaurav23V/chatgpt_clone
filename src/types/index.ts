@@ -14,6 +14,24 @@
 export * from './database';
 export * from './file-upload';
 
+// Export user context types (settings and extended state)
+export type {
+  UserSettings,
+  ExtendedUserState,
+} from '../contexts/user-context';
+
+// Export enhanced user preferences from storage module
+export type {
+  UserPreferences,
+} from '../lib/storage/user-preferences';
+
+// Export auth state change types
+export type {
+  AuthStateChangeEvent,
+  AuthTransitionState,
+  CleanupConfig,
+} from '../hooks/useAuthStateChange';
+
 // TODO: Export additional types when they are created
 // export * from './api';
 // export * from './chat';
@@ -81,7 +99,8 @@ export interface ChatConversation {
 }
 
 /**
- * User-related types (to be expanded)
+ * Updated User-related types (aligned with user context)
+ * Note: This interface is for database storage and extends the context types
  */
 export interface UserProfile {
   id: ID;
@@ -93,8 +112,17 @@ export interface UserProfile {
   role: 'free' | 'pro' | 'enterprise';
   preferences: {
     theme: 'light' | 'dark' | 'system';
+    model: 'gpt-3.5-turbo' | 'gpt-4o-mini' | 'gpt-4o' | 'gpt-4' | 'gpt-4-turbo';
     language: string;
-    defaultModel: string;
+    fontSize: 'small' | 'medium' | 'large';
+    sendOnEnter: boolean;
+    showCodeLineNumbers: boolean;
+  };
+  settings: {
+    historyLimit: number;
+    defaultSystemPrompt: string;
+    autoSave: boolean;
+    soundEffects: boolean;
   };
   subscription?: {
     plan: 'free' | 'pro' | 'enterprise';
@@ -103,6 +131,24 @@ export interface UserProfile {
   };
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+/**
+ * User subscription types
+ */
+export type UserRole = 'free' | 'pro' | 'enterprise';
+export type SubscriptionStatus = 'active' | 'cancelled' | 'expired';
+
+export interface UserSubscription {
+  plan: UserRole;
+  status: SubscriptionStatus;
+  expiresAt?: Timestamp;
+  features: string[];
+  limits: {
+    maxChatsPerDay: number;
+    maxTokensPerChat: number;
+    models: string[];
+  };
 }
 
 /**

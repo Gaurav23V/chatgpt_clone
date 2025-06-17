@@ -10,9 +10,30 @@
  * - Utility hooks
  */
 
-// TODO: Export custom hooks when they are created
+// Export user-related hooks from user context
+export {
+  useUserContext,
+  useUserPreferences,
+  useUserSettings,
+  useCurrentConversation,
+  useAuthState,
+  useAuthTransition,
+} from '../contexts/user-context';
+
+// Export auth state change hook
+export { useAuthStateChange } from './useAuthStateChange';
+export type { AuthStateChangeEvent, AuthTransitionState, CleanupConfig } from './useAuthStateChange';
+
+// Export persisted preferences hooks
+export {
+  usePersistedPreferences,
+  useThemePreference,
+  useModelPreference,
+  useInterfacePreferences,
+} from './usePersistedPreferences';
+
+// TODO: Export additional custom hooks when they are created
 // export { useChat } from './useChat';
-// export { useAuth } from './useAuth';
 // export { useLocalStorage } from './useLocalStorage';
 // export { useDebounce } from './useDebounce';
 // export { useApi } from './useApi';
@@ -27,55 +48,72 @@ export const CustomHooks = {
 };
 
 /**
- * Planned Custom Hooks:
+ * Available Custom Hooks:
+ *
+ * User Management Hooks:
+ * - useUserContext() - Access full user context state
+ * - useUserPreferences() - Manage user preferences (theme, model, language, fontSize)
+ * - useUserSettings() - Manage chat settings (history limit, system prompt, etc.)
+ * - useCurrentConversation() - Manage active conversation state
+ * - useAuthState() - Check authentication status and user data (now includes transition state)
+ * - useAuthTransition() - Access auth transition state and cleanup functions
+ *
+ * Auth State Change Management:
+ * - useAuthStateChange() - Handle auth state transitions with cleanup and loading states
+ * - AuthStateChangeEvent - Type for auth state change events
+ * - AuthTransitionState - Interface for transition state
+ * - CleanupConfig - Configuration for cleanup behavior
+ *
+ * Persisted Preferences Hooks:
+ * - usePersistedPreferences() - Full-featured preference management with auto-save
+ * - useThemePreference() - Manage theme preference specifically
+ * - useModelPreference() - Manage AI model preference specifically
+ * - useInterfacePreferences() - Manage UI preferences (fontSize, language, etc.)
+ *
+ * Planned Additional Hooks:
  *
  * 1. useChat - Main chat functionality hook
  *    - Send messages, manage conversation state
  *    - Handle streaming responses
  *    - Manage chat history
  *
- * 2. useAuth - Authentication state management
- *    - Current user info
- *    - Login/logout handlers
- *    - Permission checking
- *
- * 3. useApi - API request management
+ * 2. useApi - API request management
  *    - Generic API calling with loading states
  *    - Error handling and retry logic
  *    - Request caching
  *
- * 4. useLocalStorage - Local storage state management
+ * 3. useLocalStorage - Local storage state management
  *    - Persist state to localStorage
  *    - Sync across tabs
  *    - Type-safe storage
  *
- * 5. useDebounce - Debounce values and functions
+ * 4. useDebounce - Debounce values and functions
  *    - Debounce input values
  *    - Debounce API calls
  *    - Configurable delay
  *
- * 6. useWebSocket - WebSocket connection management
+ * 5. useWebSocket - WebSocket connection management
  *    - Real-time chat updates
  *    - Connection status
  *    - Auto-reconnection
  *
- * 7. useTheme - Theme management
+ * 6. useTheme - Theme management
  *    - Light/dark mode toggle
  *    - System preference detection
  *    - Theme persistence
  *
- * 8. useCopyToClipboard - Copy text to clipboard
+ * 7. useCopyToClipboard - Copy text to clipboard
  *    - Copy functionality with feedback
  *    - Success/error states
  *    - Browser compatibility
  *
- * 9. useKeyboardShortcuts - Keyboard shortcut handling
+ * 8. useKeyboardShortcuts - Keyboard shortcut handling
  *    - Global shortcuts (Cmd+K, etc.)
  *    - Context-specific shortcuts
  *    - Shortcut registration
  *
- * 10. useInfiniteScroll - Infinite scrolling
- *     - Chat history pagination
- *     - Automatic loading
- *     - Scroll position management
+ * 9. useInfiniteScroll - Infinite scrolling
+ *    - Chat history pagination
+ *    - Automatic loading
+ *    - Scroll position management
  */

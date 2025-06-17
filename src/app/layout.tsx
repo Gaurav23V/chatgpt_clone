@@ -4,6 +4,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { Inter } from 'next/font/google';
 import { Suspense } from 'react';
 
+import { UserProvider } from '@/contexts/user-context';
 import './globals.css';
 
 /**
@@ -13,6 +14,10 @@ import './globals.css';
  * `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` exposed to the browser—no need to pass
  * it manually. Placing the provider here keeps session management & JWT
  * refreshes consistent across the entire app.
+ *
+ * The UserProvider is nested inside ClerkProvider to extend Clerk's basic
+ * authentication with app-specific user state management including preferences,
+ * settings, and active conversation tracking.
  */
 
 const geistSans = Geist({
@@ -47,9 +52,11 @@ export default function RootLayout({
         <body
           className={`${inter.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          <Suspense fallback={<div className='py-6 text-center'>Loading...</div>}>
-            {children}
-          </Suspense>
+          <UserProvider>
+            <Suspense fallback={<div className='py-6 text-center'>Loading...</div>}>
+              {children}
+            </Suspense>
+          </UserProvider>
         </body>
       </html>
     </ClerkProvider>

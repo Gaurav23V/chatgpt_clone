@@ -1,24 +1,29 @@
 /**
  * Common Components Export Barrel
  *
- * This file exports all shared/common components for easy importing.
- * Components in this directory are reusable across the application:
- * - Loading states and spinners
- * - Error boundaries and messages
- * - Modal and dialog components
- * - Form elements and inputs
- * - Utility components
+ * This file exports all common/shared components used throughout the application.
+ * Includes:
+ * - Layout components
+ * - Form components
+ * - UI utilities
+ * - Demo components
  */
 
-// TODO: Export common components when they are created
+// Export demo components
+export { UserPreferencesDemo } from './user-preferences-demo';
+export { EnhancedPreferencesDemo } from './enhanced-preferences-demo';
+export { AuthStateDemo } from './auth-state-demo';
+
+// TODO: Export additional common components when they are created
+// export { Header } from './Header';
+// export { Footer } from './Footer';
+// export { Sidebar } from './Sidebar';
+// export { Navigation } from './Navigation';
 // export { LoadingSpinner } from './LoadingSpinner';
 // export { ErrorBoundary } from './ErrorBoundary';
 // export { Modal } from './Modal';
-// export { ConfirmDialog } from './ConfirmDialog';
 // export { Toast } from './Toast';
-// export { Avatar } from './Avatar';
-// export { Badge } from './Badge';
-// export { Tooltip } from './Tooltip';
+// export { ConfirmDialog } from './ConfirmDialog';
 
 // Placeholder exports to prevent import errors
 export const CommonComponents = {
@@ -27,18 +32,35 @@ export const CommonComponents = {
 };
 
 /**
- * Planned Common Components:
+ * Available Common Components:
  *
- * 1. LoadingSpinner - Various loading states and animations
- * 2. ErrorBoundary - Catch and display JavaScript errors
- * 3. Modal - Reusable modal dialog component
- * 4. ConfirmDialog - Confirmation dialog for destructive actions
- * 5. Toast - Toast notifications for user feedback
- * 6. Avatar - User avatar with fallback initials
- * 7. Badge - Status badges and labels
- * 8. Tooltip - Hover tooltips for additional information
- * 9. EmptyState - Empty state illustrations and messages
- * 10. Skeleton - Loading skeleton placeholders
- * 11. CopyButton - Copy text to clipboard functionality
- * 12. DropdownMenu - Reusable dropdown menu component
+ * Demo Components:
+ * - UserPreferencesDemo - Interactive demo of user context functionality
+ * - EnhancedPreferencesDemo - Advanced demo of the persistence system with all features
+ * - AuthStateDemo - Demo of authentication state change management and cleanup
+ *
+ * Planned Components:
+ *
+ * 1. Layout Components:
+ *    - Header - Application header with navigation
+ *    - Footer - Application footer
+ *    - Sidebar - Collapsible sidebar navigation
+ *    - Navigation - Main navigation component
+ *
+ * 2. UI Components:
+ *    - LoadingSpinner - Loading indicator
+ *    - ErrorBoundary - Error handling wrapper
+ *    - Modal - Modal dialog component
+ *    - Toast - Notification toast
+ *    - ConfirmDialog - Confirmation dialog
+ *
+ * 3. Form Components:
+ *    - FormField - Reusable form field wrapper
+ *    - FormButton - Styled form button
+ *    - FormValidation - Form validation utilities
+ *
+ * 4. Utility Components:
+ *    - ConditionalWrapper - Conditionally wrap children
+ *    - ProtectedRoute - Route protection wrapper
+ *    - ThemeProvider - Theme management
  */

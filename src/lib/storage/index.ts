@@ -16,6 +16,17 @@
  * import { cloudinaryConfig, uploadcareConfig } from '@/lib/storage';
  */
 
+/**
+ * Storage Services Export Barrel
+ *
+ * This file exports all storage-related services and utilities.
+ * Handles:
+ * - File upload and management
+ * - User preference persistence
+ * - Data caching and storage
+ * - Database connections
+ */
+
 // Export all storage configurations
 export { default as cloudinaryConfig, cloudinary } from './cloudinary-config';
 export { default as uploadcareConfig } from './uploadcare-config';
@@ -344,3 +355,50 @@ export default {
   checkStorageHealth,
   errorCodes: FILE_UPLOAD_ERROR_CODES,
 };
+
+// Export user preferences persistence
+export * from './user-preferences';
+
+// Placeholder exports to prevent import errors
+export const StorageServices = {
+  // This object will be replaced with actual service exports
+  placeholder: true,
+};
+
+/**
+ * Available Storage Services:
+ *
+ * File Upload Services:
+ * - Cloudinary configuration and utilities
+ * - Uploadcare configuration and utilities
+ *
+ * User Preferences:
+ * - savePreferences() - Save user preferences to localStorage
+ * - loadPreferences() - Load user preferences from localStorage
+ * - resetPreferences() - Reset preferences to defaults
+ * - migrateAllPreferences() - Migrate all stored preferences
+ * - DEFAULT_PREFERENCES - Default preference values
+ * - UserPreferences interface - TypeScript interface for preferences
+ *
+ * Planned Storage Services:
+ *
+ * 1. CacheManager - Client-side data caching
+ *    - API response caching
+ *    - Automatic cache invalidation
+ *    - Memory and localStorage strategies
+ *
+ * 2. DatabaseSync - Sync local data with database
+ *    - Bidirectional synchronization
+ *    - Conflict resolution
+ *    - Offline support
+ *
+ * 3. FileManager - Advanced file management
+ *    - Multi-provider support
+ *    - File optimization and compression
+ *    - Batch upload capabilities
+ *
+ * 4. DataBackup - User data backup and restore
+ *    - Export user data
+ *    - Import user data
+ *    - Data migration between accounts
+ */
