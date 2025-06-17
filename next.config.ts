@@ -105,6 +105,18 @@ const nextConfig: NextConfig = {
         hostname: '*.vercel.app',
         pathname: '/**',
       },
+      // Clerk user profile images
+      {
+        protocol: 'https',
+        hostname: 'img.clerk.com',
+        pathname: '/**',
+      },
+      // Clerk social provider images (Google, GitHub, etc.)
+      {
+        protocol: 'https',
+        hostname: 'images.clerk.dev',
+        pathname: '/**',
+      },
     ],
 
     // Disable static image imports optimization to reduce build size
@@ -131,15 +143,15 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://clerk.com https://*.clerk.accounts.dev",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https://res.cloudinary.com https://ucarecdn.com https://*.vercel.app",
-              "connect-src 'self' https://api.openai.com https://vercel.live wss://ws.pusher.com",
-              "frame-src 'none'",
+              "img-src 'self' data: blob: https://res.cloudinary.com https://ucarecdn.com https://*.vercel.app https://img.clerk.com https://images.clerk.dev",
+              "connect-src 'self' https://api.openai.com https://vercel.live wss://ws.pusher.com https://clerk.com https://*.clerk.accounts.dev https://api.clerk.com",
+              "frame-src 'self' https://clerk.com https://*.clerk.accounts.dev",
               "object-src 'none'",
               "base-uri 'self'",
-              "form-action 'self'",
+              "form-action 'self' https://clerk.com https://*.clerk.accounts.dev",
               "frame-ancestors 'none'",
               'upgrade-insecure-requests',
             ].join('; '),

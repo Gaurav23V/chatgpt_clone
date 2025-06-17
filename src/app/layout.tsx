@@ -3,6 +3,26 @@ import { Geist, Geist_Mono } from 'next/font/google';
 
 import './globals.css';
 
+/**
+ * TODO: Add Clerk Provider when ready to enable authentication
+ *
+ * Import and wrap the app with ClerkProvider:
+ *
+ * import { ClerkProvider } from '@clerk/nextjs'
+ *
+ * Then wrap {children} with:
+ * <ClerkProvider>
+ *   {children}
+ * </ClerkProvider>
+ *
+ * This will provide authentication context to the entire application.
+ * Make sure to set up environment variables first:
+ * - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ * - CLERK_SECRET_KEY
+ *
+ * See src/lib/auth/clerk-config.ts for detailed configuration.
+ */
+
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],

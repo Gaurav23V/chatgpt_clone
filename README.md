@@ -76,10 +76,15 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 These variables are only accessible on the server side:
 
 ```env
-# API Keys
+# AI Configuration
 OPENAI_API_KEY=sk-your-openai-api-key
+
+# Authentication (Clerk)
+CLERK_SECRET_KEY=sk_test_your-clerk-secret-key
+CLERK_WEBHOOK_SECRET=whsec_your-webhook-secret
+
+# Database
 DATABASE_URL=postgresql://username:password@localhost:5432/chatgpt_clone
-NEXTAUTH_SECRET=your-super-secret-nextauth-secret-here
 
 # CDN Configuration
 CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
@@ -98,6 +103,13 @@ These variables are exposed to the browser (prefixed with `NEXT_PUBLIC_`):
 # Application Configuration
 NEXT_PUBLIC_APP_NAME=ChatGPT Clone
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Authentication (Clerk)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your-clerk-publishable-key
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/chat
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/onboarding
 
 # Feature Flags
 NEXT_PUBLIC_ENABLE_ANALYTICS=true
@@ -149,11 +161,45 @@ The `next.config.ts` file includes comprehensive production-ready settings:
 
 ## 🔒 Security
 
+### Authentication (Clerk)
+
+The application uses Clerk for secure user authentication:
+
+- **Social Sign-In**: Google, GitHub, Discord, and more
+- **Email/Password**: Traditional authentication method
+- **Multi-Factor Authentication**: Enhanced security options
+- **Session Management**: Automatic session handling
+- **User Management**: Built-in user dashboard
+
+#### Setting up Clerk
+
+1. Create a Clerk account at [clerk.com](https://clerk.com)
+2. Create a new application in the Clerk dashboard
+3. Copy your publishable and secret keys to `.env.local`
+4. Configure sign-in/sign-up URLs in the dashboard
+5. Enable desired social providers
+
+#### Protected Routes
+
+The following routes require authentication:
+- `/chat` - Main chat interface
+- `/history` - Chat history
+- `/settings` - User settings
+- `/profile` - User profile
+- `/api/chat` - Chat API endpoints
+
+#### User Data Sync
+
+User data is synchronized with MongoDB using:
+- Clerk user ID as primary key
+- Webhook integration for user lifecycle events
+- Automatic profile updates
+
 ### Security Headers
 
 The application implements comprehensive security headers:
 
-- **Content Security Policy**: Prevents XSS and injection attacks
+- **Content Security Policy**: Prevents XSS and injection attacks (updated for Clerk domains)
 - **Strict Transport Security**: Forces HTTPS connections
 - **X-Frame-Options**: Prevents clickjacking attacks
 - **X-Content-Type-Options**: Prevents MIME sniffing
@@ -162,9 +208,10 @@ The application implements comprehensive security headers:
 ### Best Practices
 
 - Environment variables properly secured
-- API routes protected with CORS
+- API routes protected with Clerk middleware
 - Input validation and sanitization
 - Secure cookie configuration
+- User authentication on all protected routes
 
 ## ⚡ Performance
 
