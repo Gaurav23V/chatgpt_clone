@@ -83,16 +83,27 @@ OPENAI_API_KEY=sk-your-openai-api-key
 CLERK_SECRET_KEY=sk_test_your-clerk-secret-key
 CLERK_WEBHOOK_SECRET=whsec_your-webhook-secret
 
-# Database
-DATABASE_URL=postgresql://username:password@localhost:5432/chatgpt_clone
+# Database (MongoDB)
+MONGODB_URI=mongodb://username:password@localhost:27017/chatgpt_clone
+# Or for MongoDB Atlas:
+# MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/chatgpt_clone
 
-# CDN Configuration
+# File Storage Configuration
+
+# Cloudinary (Image/Video Management)
 CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
 CLOUDINARY_API_KEY=your-cloudinary-api-key
 CLOUDINARY_API_SECRET=your-cloudinary-api-secret
+CLOUDINARY_UPLOAD_PRESET=your-upload-preset
+CLOUDINARY_FOLDER=chatgpt-clone
 
+# Uploadcare (File Upload Service)
 UPLOADCARE_PUBLIC_KEY=your-uploadcare-public-key
 UPLOADCARE_SECRET_KEY=your-uploadcare-secret-key
+UPLOADCARE_WEBHOOK_URL=https://yourdomain.com/api/webhooks/uploadcare
+
+# Storage Provider Selection
+DEFAULT_STORAGE_PROVIDER=cloudinary
 ```
 
 ### Client-Side Variables (Public)
@@ -111,9 +122,14 @@ NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/chat
 NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/onboarding
 
+# File Storage (Public Keys)
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
+NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY=your-uploadcare-public-key
+
 # Feature Flags
 NEXT_PUBLIC_ENABLE_ANALYTICS=true
 NEXT_PUBLIC_ENABLE_CHAT_HISTORY=true
+NEXT_PUBLIC_ENABLE_FILE_UPLOADS=true
 ```
 
 ## ⚙️ Configuration
