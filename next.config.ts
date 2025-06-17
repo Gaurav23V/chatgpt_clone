@@ -370,9 +370,10 @@ const nextConfig: NextConfig = {
    * Provides faster builds and better performance
    */
   turbopack: {
-    rules: {
-      '*.svg': ['@svgr/webpack'],
-    },
+    // Temporarily disabled SVG rule until @svgr/webpack is properly configured
+    // rules: {
+    //   '*.svg': ['@svgr/webpack'],
+    // },
   },
 
   // =============================================================================
