@@ -260,6 +260,57 @@ npm run build:standalone
 - **ESLint**: Code linting and quality
 - **Tailwind CSS**: Utility-first CSS framework
 
+## 🔒 Branch Protection Rules
+
+When setting up this repository on GitHub, consider implementing the following branch protection rules for the `main` branch:
+
+### Recommended Settings:
+- **Require pull request reviews before merging**: ✅ Enabled
+  - Required number of reviewers: 1
+  - Dismiss stale reviews when new commits are pushed: ✅ Enabled
+  - Require review from code owners: ✅ Enabled (if CODEOWNERS file exists)
+
+- **Require status checks to pass before merging**: ✅ Enabled
+  - Require branches to be up to date before merging: ✅ Enabled
+  - Required status checks:
+    - `build` (Next.js build process)
+    - `lint` (ESLint checks)
+    - `type-check` (TypeScript compilation)
+    - `format:check` (Prettier formatting)
+
+- **Require conversation resolution before merging**: ✅ Enabled
+
+- **Require signed commits**: ✅ Enabled (recommended for security)
+
+- **Require linear history**: ✅ Enabled (keeps git history clean)
+
+- **Include administrators**: ✅ Enabled (apply rules to admins too)
+
+- **Allow force pushes**: ❌ Disabled
+
+- **Allow deletions**: ❌ Disabled
+
+### GitHub Actions Workflow
+Consider adding a `.github/workflows/ci.yml` file with the following checks:
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run type-check
+      - run: npm run format:check
+      - run: npm run build
+```
+
 ## 🤝 Contributing
 
 1. Fork the repository
