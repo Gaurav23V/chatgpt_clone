@@ -1,0 +1,61 @@
+# Build outputs
+.next/
+out/
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Package files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment variables
+.env*
+
+# Cache directories
+.cache/
+.turbo/
+.vercel/
+
+# Coverage reports
+coverage/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Generated files
+*.min.js
+*.min.css
+
+# Public assets that shouldn't be formatted
+public/
+assets/
+
+# Config files that have specific formatting requirements
+*.tsbuildinfo
+*.d.ts
+
+# License files
+LICENSE
+CHANGELOG.md
+
+# Generated or downloaded files
+vendor/ 
