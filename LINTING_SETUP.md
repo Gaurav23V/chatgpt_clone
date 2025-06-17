@@ -1,10 +1,12 @@
 # ESLint and Prettier Configuration
 
-This project uses a comprehensive ESLint and Prettier setup following modern Next.js best practices and professional standards inspired by the Dub repository.
+This project uses a comprehensive ESLint and Prettier setup following modern Next.js best practices
+and professional standards inspired by the Dub repository.
 
 ## 🔧 Configuration Files
 
 ### ESLint Configuration (`eslint.config.mjs`)
+
 - Uses the new **flat config format** (ESLint 9+)
 - Includes Next.js core web vitals and TypeScript rules
 - Custom import sorting with `simple-import-sort`
@@ -12,6 +14,7 @@ This project uses a comprehensive ESLint and Prettier setup following modern Nex
 - Prettier integration to prevent conflicts
 
 ### Prettier Configuration (`.prettierrc`)
+
 - Single quotes for JavaScript/TypeScript
 - Semi-colons enabled
 - 2-space indentation
@@ -19,6 +22,7 @@ This project uses a comprehensive ESLint and Prettier setup following modern Nex
 - Specific overrides for different file types
 
 ### VS Code Settings (`.vscode/settings.json`)
+
 - Auto-format on save
 - ESLint auto-fix on save
 - Proper TypeScript integration
@@ -27,6 +31,7 @@ This project uses a comprehensive ESLint and Prettier setup following modern Nex
 ## 📦 Installed Dependencies
 
 ### ESLint Related
+
 - `@typescript-eslint/eslint-plugin` - TypeScript ESLint rules
 - `@typescript-eslint/parser` - TypeScript parser for ESLint
 - `eslint-plugin-import` - Import/export syntax rules
@@ -36,6 +41,7 @@ This project uses a comprehensive ESLint and Prettier setup following modern Nex
 - `eslint-import-resolver-typescript` - TypeScript import resolution
 
 ### Prettier Related
+
 - `prettier` - Code formatter
 - `prettier-plugin-tailwindcss` - Tailwind CSS class sorting
 
@@ -57,7 +63,9 @@ npm run type-check    # Run TypeScript type checking
 ## 📋 Rules and Standards
 
 ### Import Organization
+
 Imports are automatically sorted in this order:
+
 1. React imports
 2. Next.js imports
 3. External packages
@@ -66,12 +74,14 @@ Imports are automatically sorted in this order:
 6. Style imports
 
 ### TypeScript Rules
+
 - Unused variables must start with `_` to be ignored
 - Explicit `any` types trigger warnings
 - Consistent type imports are enforced
 - No unused variables (handled by TypeScript)
 
 ### Code Quality Rules
+
 - Prefer `const` over `let` when possible
 - No `var` declarations
 - Template literals over string concatenation
@@ -79,6 +89,7 @@ Imports are automatically sorted in this order:
 - Proper error handling
 
 ### React/Next.js Rules
+
 - No need to import React in scope (Next.js 13+)
 - Proper hooks dependency arrays
 - Component display names are optional
@@ -86,18 +97,21 @@ Imports are automatically sorted in this order:
 ## 🎯 Best Practices
 
 ### Development Workflow
+
 1. Write code
 2. Save file (auto-format and lint fix)
 3. Use `npm run type-check` before commits
 4. Use `npm run lint` in CI/CD
 
 ### IDE Integration
+
 - Install ESLint and Prettier extensions in VS Code
 - Configuration automatically applies on save
 - Real-time error highlighting
 - Import organization on save
 
 ### Accessibility
+
 - Rules encourage semantic HTML
 - ARIA attributes are validated
 - Focus management is enforced
@@ -121,14 +135,17 @@ npm run build
 ### Common Issues
 
 1. **ESLint config not found**
+
    - Make sure `eslint.config.mjs` is in the root directory
    - Restart your IDE
 
 2. **Import sorting not working**
+
    - Check that `simple-import-sort` is installed
    - Verify the import groups configuration
 
 3. **Prettier conflicts with ESLint**
+
    - Configuration includes `eslint-config-prettier` to prevent conflicts
    - Run `npm run format` if issues persist
 
@@ -139,6 +156,7 @@ npm run build
 ### VS Code Extensions
 
 Recommended extensions:
+
 - ESLint (Microsoft)
 - Prettier - Code formatter (Prettier)
 - TypeScript and JavaScript Language Features (built-in)
@@ -153,4 +171,5 @@ Recommended extensions:
 
 ---
 
-This setup ensures consistent code quality, automatic formatting, and follows industry best practices for React/Next.js development.
+This setup ensures consistent code quality, automatic formatting, and follows industry best
+practices for React/Next.js development.

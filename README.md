@@ -262,15 +262,19 @@ npm run build:standalone
 
 ## 🔒 Branch Protection Rules
 
-When setting up this repository on GitHub, consider implementing the following branch protection rules for the `main` branch:
+When setting up this repository on GitHub, consider implementing the following branch protection
+rules for the `main` branch:
 
 ### Recommended Settings:
+
 - **Require pull request reviews before merging**: ✅ Enabled
+
   - Required number of reviewers: 1
   - Dismiss stale reviews when new commits are pushed: ✅ Enabled
   - Require review from code owners: ✅ Enabled (if CODEOWNERS file exists)
 
 - **Require status checks to pass before merging**: ✅ Enabled
+
   - Require branches to be up to date before merging: ✅ Enabled
   - Required status checks:
     - `build` (Next.js build process)
@@ -291,7 +295,9 @@ When setting up this repository on GitHub, consider implementing the following b
 - **Allow deletions**: ❌ Disabled
 
 ### GitHub Actions Workflow
+
 Consider adding a `.github/workflows/ci.yml` file with the following checks:
+
 ```yaml
 name: CI
 on: [push, pull_request]
