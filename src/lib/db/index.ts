@@ -54,8 +54,11 @@ export type {
   UserRole,
 } from '@/types/database';
 
-// Models will be exported here once created
-// export { User, Conversation, Message, Attachment } from './models';
+// Model exports
+export { User } from './models';
+
+// Service exports
+export * from './services/user.service';
 
 /**
  * Database initialization function
