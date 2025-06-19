@@ -15,9 +15,9 @@
  */
 
 import { startSession, ClientSession } from 'mongoose';
-import { User } from '@/lib/db/models';
+import { User, Conversation } from '@/lib/db/models';
 import { connectToDatabase } from '@/lib/db/connection';
-import type { IUser } from '@/types/database';
+import type { IUser, IConversation } from '@/types/database';
 
 // ========================================
 // TYPE DEFINITIONS
@@ -659,6 +659,188 @@ export async function handleUserDeleted(
     }
     return result;
   });
+}
+
+// ========================================
+// CONVERSATION-RELATED USER OPERATIONS
+// ========================================
+
+/**
+ * Get user with their conversations populated
+ * Useful for dashboard and profile views
+ */
+export async function getUserWithConversations(
+  clerkId: string,
+  limit: number = 20
+): Promise<ServiceResult<IUser & { conversationList: IConversation[] }>> {
+  try {
+    await connectToDatabase();
+
+    if (!isValidClerkId(clerkId)) {
+      return createErrorResult('INVALID_CLERK_ID', 'Invalid Clerk user ID format');
+    }
+
+    // Get user
+    const userResult = await getUserByClerkId(clerkId);
+    if (!userResult.success) {
+      return { success: false, error: userResult.error };
+    }
+
+    const user = userResult.data!;
+
+    // Get user's conversations
+    const conversations = await Conversation.getUserConversations(clerkId, limit);
+
+    return createSuccessResult({
+      ...user,
+      conversationList: conversations
+    });
+
+  } catch (error: any) {
+    logError('getUserWithConversations', error, { clerkId });
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to fetch user with conversations',
+      error.message
+    );
+  }
+}
+
+/**
+ * Delete all conversations for a user
+ * Called when user account is deleted
+ */
+export async function deleteUserConversations(
+  clerkId: string,
+  session?: ClientSession
+): Promise<ServiceResult<{ deletedCount: number }>> {
+  try {
+    await connectToDatabase();
+
+    if (!isValidClerkId(clerkId)) {
+      return createErrorResult('INVALID_CLERK_ID', 'Invalid Clerk user ID format');
+    }
+
+    // Delete all user conversations
+    const result = await Conversation.deleteUserConversations(clerkId);
+
+    console.log(`[UserService.deleteUserConversations] Deleted ${result.deletedCount} conversations for user: ${clerkId}`);
+    
+    return createSuccessResult({ deletedCount: result.deletedCount });
+
+  } catch (error: any) {
+    logError('deleteUserConversations', error, { clerkId });
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to delete user conversations',
+      error.message
+    );
+  }
+}
+
+/**
+ * Get user conversation statistics
+ * Returns conversation counts and activity metrics
+ */
+export async function getUserConversationStats(
+  clerkId: string
+): Promise<ServiceResult<{
+  totalConversations: number;
+  activeConversations: number;
+  archivedConversations: number;
+  recentConversations: number;
+  totalMessages: number;
+}>> {
+  try {
+    await connectToDatabase();
+
+    if (!isValidClerkId(clerkId)) {
+      return createErrorResult('INVALID_CLERK_ID', 'Invalid Clerk user ID format');
+    }
+
+    // Get various conversation counts
+    const [
+      totalConversations,
+      activeConversations,
+      archivedConversations,
+      recentConversations
+    ] = await Promise.all([
+      Conversation.countUserConversations(clerkId),
+      Conversation.getActiveConversations(clerkId).then(convs => convs.length),
+      Conversation.getArchivedConversations(clerkId).then(convs => convs.length),
+      Conversation.getRecentConversations(clerkId, 7).then(convs => convs.length)
+    ]);
+
+    // Calculate total messages across all conversations
+    const conversations = await Conversation.find({ clerkId, status: { $ne: 'deleted' } });
+    const totalMessages = conversations.reduce((sum, conv) => sum + conv.messageCount, 0);
+
+    return createSuccessResult({
+      totalConversations,
+      activeConversations,
+      archivedConversations,
+      recentConversations,
+      totalMessages
+    });
+
+  } catch (error: any) {
+    logError('getUserConversationStats', error, { clerkId });
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to fetch user conversation statistics',
+      error.message
+    );
+  }
+}
+
+/**
+ * Archive all inactive conversations for a user
+ * Useful for cleanup operations
+ */
+export async function archiveInactiveConversations(
+  clerkId: string,
+  inactiveDays: number = 30
+): Promise<ServiceResult<{ archivedCount: number }>> {
+  try {
+    await connectToDatabase();
+
+    if (!isValidClerkId(clerkId)) {
+      return createErrorResult('INVALID_CLERK_ID', 'Invalid Clerk user ID format');
+    }
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - inactiveDays);
+
+    // Find and archive inactive conversations
+    const result = await Conversation.updateMany(
+      {
+        clerkId,
+        status: 'active',
+        $or: [
+          { lastMessageAt: { $lt: cutoffDate } },
+          { updatedAt: { $lt: cutoffDate } }
+        ]
+      },
+      {
+        $set: {
+          status: 'archived',
+          archivedAt: new Date()
+        }
+      }
+    );
+
+    console.log(`[UserService.archiveInactiveConversations] Archived ${result.modifiedCount} conversations for user: ${clerkId}`);
+    
+    return createSuccessResult({ archivedCount: result.modifiedCount });
+
+  } catch (error: any) {
+    logError('archiveInactiveConversations', error, { clerkId, inactiveDays });
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to archive inactive conversations',
+      error.message
+    );
+  }
 }
 
 // All types are already exported with their interface declarations above 

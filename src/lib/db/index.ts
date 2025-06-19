@@ -55,10 +55,11 @@ export type {
 } from '@/types/database';
 
 // Model exports
-export { User } from './models';
+export { User, Conversation } from './models';
 
 // Service exports
 export * from './services/user.service';
+export * from './services/conversation.service';
 
 /**
  * Database initialization function

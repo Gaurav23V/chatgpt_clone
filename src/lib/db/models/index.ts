@@ -19,7 +19,7 @@
 
 // Model exports
 export { default as User } from './user.model';
-// export { default as Conversation } from './conversation';
+export { default as Conversation } from './conversation.model';
 // export { default as Message } from './message';
 // export { default as Attachment } from './attachment';
 

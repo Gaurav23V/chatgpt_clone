@@ -36,6 +36,19 @@ export {
   useThemePreference,
 } from './usePersistedPreferences';
 
+// Export database-backed user preferences hook
+export {
+  useUserPreferences as useUserPreferencesDB,
+  usePreference,
+  useThemePreference as useThemePreferenceDB,
+  useModelPreference as useModelPreferenceDB,
+} from './useUserPreferences';
+export type {
+  UserPreferences,
+  PreferenceUpdate,
+  UseUserPreferencesReturn,
+} from './useUserPreferences';
+
 // Export auth error handling hooks
 export {
   useAuthError,
