@@ -17,8 +17,8 @@
  * const conversation = await Conversation.create({ userId: user._id, title: 'New Chat' });
  */
 
-// Placeholder exports - will be uncommented once models are created
-// export { default as User } from './user';
+// Model exports
+export { default as User } from './user.model';
 // export { default as Conversation } from './conversation';
 // export { default as Message } from './message';
 // export { default as Attachment } from './attachment';
