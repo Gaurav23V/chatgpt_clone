@@ -196,6 +196,77 @@ export function sanitizeUserInput(
   return sanitized;
 }
 
+/**
+ * Validate and sanitize user preferences
+ */
+export function validateAndSanitizePreferences(
+  preferences: Partial<IUser['preferences']>
+): Partial<IUser['preferences']> {
+  const sanitized: Partial<IUser['preferences']> = {};
+
+  // Validate theme
+  if (preferences.theme !== undefined) {
+    const validThemes = ['light', 'dark', 'system'] as const;
+    if (validThemes.includes(preferences.theme as any)) {
+      sanitized.theme = preferences.theme;
+    } else {
+      throw new Error(`Invalid theme: ${preferences.theme}. Must be one of: ${validThemes.join(', ')}`);
+    }
+  }
+
+  // Validate aiModel
+  if (preferences.aiModel !== undefined) {
+    const validModels = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-4o-mini', 'gpt-4o'] as const;
+    if (validModels.includes(preferences.aiModel as any)) {
+      sanitized.aiModel = preferences.aiModel;
+    } else {
+      throw new Error(`Invalid AI model: ${preferences.aiModel}. Must be one of: ${validModels.join(', ')}`);
+    }
+  }
+
+  // Validate language (ISO 639-1 format)
+  if (preferences.language !== undefined) {
+    const languageRegex = /^[a-z]{2}(-[A-Z]{2})?$/;
+    if (typeof preferences.language === 'string' && 
+        preferences.language.length >= 2 && 
+        preferences.language.length <= 5 &&
+        languageRegex.test(preferences.language)) {
+      sanitized.language = preferences.language.toLowerCase();
+    } else {
+      throw new Error(`Invalid language code: ${preferences.language}. Must be ISO 639-1 format (e.g., 'en', 'es', 'fr')`);
+    }
+  }
+
+  // Validate fontSize
+  if (preferences.fontSize !== undefined) {
+    const validSizes = ['small', 'medium', 'large'] as const;
+    if (validSizes.includes(preferences.fontSize as any)) {
+      sanitized.fontSize = preferences.fontSize;
+    } else {
+      throw new Error(`Invalid font size: ${preferences.fontSize}. Must be one of: ${validSizes.join(', ')}`);
+    }
+  }
+
+  // Validate boolean preferences
+  if (preferences.soundEnabled !== undefined) {
+    if (typeof preferences.soundEnabled === 'boolean') {
+      sanitized.soundEnabled = preferences.soundEnabled;
+    } else {
+      throw new Error('soundEnabled must be a boolean value');
+    }
+  }
+
+  if (preferences.emailNotifications !== undefined) {
+    if (typeof preferences.emailNotifications === 'boolean') {
+      sanitized.emailNotifications = preferences.emailNotifications;
+    } else {
+      throw new Error('emailNotifications must be a boolean value');
+    }
+  }
+
+  return sanitized;
+}
+
 // ========================================
 // VALIDATION UTILITIES
 // ========================================
@@ -611,6 +682,112 @@ export async function getUserByClerkId(
 }
 
 /**
+ * Update only user preferences
+ * Optimized function for preference updates with enhanced validation
+ */
+export async function updateUserPreferences(
+  clerkId: string,
+  preferences: Partial<IUser['preferences']>,
+  session?: ClientSession
+): Promise<ServiceResult<IUser>> {
+  try {
+    // Ensure database connection
+    await connectToDatabase();
+
+    // Validate Clerk ID
+    if (!isValidClerkId(clerkId)) {
+      return createErrorResult(
+        'INVALID_CLERK_ID',
+        'Invalid Clerk user ID format'
+      );
+    }
+
+    // Validate and sanitize preferences
+    const sanitizedPreferences = validateAndSanitizePreferences(preferences);
+
+    // Check if user exists
+    const existingUser = await User.findOne({
+      clerkId,
+      isActive: true,
+    })
+      .select('_id clerkId preferences')
+      .lean()
+      .session(session || null);
+
+    if (!existingUser) {
+      return createErrorResult(
+        'USER_NOT_FOUND',
+        'User not found or inactive',
+        { clerkId }
+      );
+    }
+
+    // Update user preferences using dot notation for better performance
+    const updateFields: Record<string, any> = {};
+    Object.entries(sanitizedPreferences).forEach(([key, value]) => {
+      updateFields[`preferences.${key}`] = value;
+    });
+
+    // Update user preferences
+    const updatedUser = await User.findOneAndUpdate(
+      { clerkId, isActive: true },
+      {
+        $set: {
+          ...updateFields,
+          lastLoginAt: new Date(),
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+        session: session || null,
+        lean: true,
+      }
+    );
+
+    if (!updatedUser) {
+      return createErrorResult(
+        'USER_NOT_FOUND',
+        'User not found during update',
+        { clerkId }
+      );
+    }
+
+    console.log(
+      `[UserService.updateUserPreferences] Updated preferences for user: ${clerkId}`,
+      { preferences: sanitizedPreferences }
+    );
+
+    return createSuccessResult(updatedUser);
+  } catch (error: any) {
+    logError('updateUserPreferences', error, { clerkId, preferences });
+
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      return createErrorResult(
+        'VALIDATION_ERROR',
+        'Preference validation failed',
+        error.errors
+      );
+    }
+
+    // Handle custom validation errors from our sanitization
+    if (error.message.includes('Invalid')) {
+      return createErrorResult(
+        'VALIDATION_ERROR',
+        error.message
+      );
+    }
+
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to update user preferences',
+      error.message
+    );
+  }
+}
+
+/**
  * Execute operations within a transaction
  */
 export async function withTransaction<T>(
@@ -892,5 +1069,192 @@ export async function archiveInactiveConversations(
     );
   }
 }
+
+// ========================================
+// PERFORMANCE OPTIMIZATION UTILITIES
+// ========================================
+
+/**
+ * Get user with minimal fields for performance
+ * Useful for authentication checks and basic operations
+ */
+export async function getUserBasicInfo(
+  clerkId: string
+): Promise<ServiceResult<Pick<IUser, 'clerkId' | 'email' | 'firstName' | 'lastName' | 'isActive'>>> {
+  try {
+    await connectToDatabase();
+
+    if (!isValidClerkId(clerkId)) {
+      return createErrorResult(
+        'INVALID_CLERK_ID',
+        'Invalid Clerk user ID format'
+      );
+    }
+
+    const user = await User.findOne(
+      { clerkId, isActive: true },
+      'clerkId email firstName lastName isActive'
+    ).lean();
+
+    if (!user) {
+      return createErrorResult('USER_NOT_FOUND', 'User not found', { clerkId });
+    }
+
+    return createSuccessResult(user);
+  } catch (error: any) {
+    logError('getUserBasicInfo', error, { clerkId });
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to fetch user basic info',
+      error.message
+    );
+  }
+}
+
+/**
+ * Check if user exists without fetching full document
+ * Optimized for existence checks
+ */
+export async function userExists(clerkId: string): Promise<ServiceResult<boolean>> {
+  try {
+    await connectToDatabase();
+
+    if (!isValidClerkId(clerkId)) {
+      return createErrorResult(
+        'INVALID_CLERK_ID',
+        'Invalid Clerk user ID format'
+      );
+    }
+
+    const exists = await User.exists({ clerkId, isActive: true });
+    return createSuccessResult(!!exists);
+  } catch (error: any) {
+    logError('userExists', error, { clerkId });
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to check user existence',
+      error.message
+    );
+  }
+}
+
+/**
+ * Batch update user preferences for multiple users
+ * Useful for bulk operations or migrations
+ */
+export async function batchUpdateUserPreferences(
+  updates: Array<{
+    clerkId: string;
+    preferences: Partial<IUser['preferences']>;
+  }>,
+  session?: ClientSession
+): Promise<ServiceResult<{ modifiedCount: number; errors: Array<{ clerkId: string; error: string }> }>> {
+  try {
+    await connectToDatabase();
+
+    const results = {
+      modifiedCount: 0,
+      errors: [] as Array<{ clerkId: string; error: string }>,
+    };
+
+    for (const update of updates) {
+      try {
+        const result = await updateUserPreferences(
+          update.clerkId,
+          update.preferences,
+          session
+        );
+
+        if (result.success) {
+          results.modifiedCount++;
+        } else {
+          results.errors.push({
+            clerkId: update.clerkId,
+            error: result.error?.message || 'Unknown error',
+          });
+        }
+      } catch (error: any) {
+        results.errors.push({
+          clerkId: update.clerkId,
+          error: error.message || 'Unknown error',
+        });
+      }
+    }
+
+    console.log(
+      `[UserService.batchUpdateUserPreferences] Updated ${results.modifiedCount} users, ${results.errors.length} errors`
+    );
+
+    return createSuccessResult(results);
+  } catch (error: any) {
+    logError('batchUpdateUserPreferences', error, { updateCount: updates.length });
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to batch update user preferences',
+      error.message
+    );
+  }
+}
+
+/**
+ * Get user preferences only
+ * Optimized for preference-only operations
+ */
+export async function getUserPreferences(
+  clerkId: string
+): Promise<ServiceResult<IUser['preferences']>> {
+  try {
+    await connectToDatabase();
+
+    if (!isValidClerkId(clerkId)) {
+      return createErrorResult(
+        'INVALID_CLERK_ID',
+        'Invalid Clerk user ID format'
+      );
+    }
+
+    const user = await User.findOne(
+      { clerkId, isActive: true },
+      'preferences'
+    ).lean();
+
+    if (!user) {
+      return createErrorResult('USER_NOT_FOUND', 'User not found', { clerkId });
+    }
+
+    return createSuccessResult(user.preferences);
+  } catch (error: any) {
+    logError('getUserPreferences', error, { clerkId });
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to fetch user preferences',
+      error.message
+    );
+  }
+}
+
+// ========================================
+// CACHE PREPARATION UTILITIES
+// ========================================
+
+/**
+ * Cache keys for Redis implementation (if needed in the future)
+ */
+export const CacheKeys = {
+  user: (clerkId: string) => `user:${clerkId}`,
+  userBasic: (clerkId: string) => `user:basic:${clerkId}`,
+  userPreferences: (clerkId: string) => `user:preferences:${clerkId}`,
+  userExists: (clerkId: string) => `user:exists:${clerkId}`,
+} as const;
+
+/**
+ * Cache TTL values (in seconds)
+ */
+export const CacheTTL = {
+  user: 300, // 5 minutes
+  userBasic: 600, // 10 minutes
+  userPreferences: 180, // 3 minutes
+  userExists: 600, // 10 minutes
+} as const;
 
 // All types are already exported with their interface declarations above
