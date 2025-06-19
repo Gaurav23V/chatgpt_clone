@@ -1,6 +1,7 @@
 # Authentication Error Handling System
 
-This document provides a comprehensive guide to the authentication error handling system implemented for the ChatGPT clone application.
+This document provides a comprehensive guide to the authentication error handling system implemented
+for the ChatGPT clone application.
 
 ## Overview
 
@@ -79,6 +80,7 @@ function App() {
 ```
 
 **Props:**
+
 - `enableLogging`: Enable/disable error logging (default: true)
 - `autoRetry`: Enable automatic retry for retryable errors (default: false)
 - `maxRetries`: Maximum number of retry attempts (default: 3)
@@ -113,6 +115,7 @@ function LoginForm() {
 ```
 
 **Props:**
+
 - `error`: The auth error to display
 - `context`: Optional error context
 - `onRetry`: Retry handler function
@@ -133,7 +136,7 @@ function ErrorPage() {
       error={error}
       context={context}
       onRetry={() => window.location.reload()}
-      onGoHome={() => window.location.href = '/'}
+      onGoHome={() => (window.location.href = '/')}
       showContactSupport={true}
     />
   );
@@ -141,6 +144,7 @@ function ErrorPage() {
 ```
 
 **Props:**
+
 - `error`: The auth error to display
 - `context`: Optional error context
 - `onRetry`: Retry handler function
@@ -161,8 +165,8 @@ function RetrySection() {
       loading={isLoading}
       retryCount={currentRetryCount}
       maxRetries={3}
-      variant="primary"
-      size="md"
+      variant='primary'
+      size='md'
     >
       Try Again
     </AuthRetryButton>
@@ -171,6 +175,7 @@ function RetrySection() {
 ```
 
 **Props:**
+
 - `onRetry`: Async retry function
 - `loading`: Loading state
 - `disabled`: Disabled state
@@ -212,6 +217,7 @@ function Component() {
 ```
 
 **Returns:**
+
 - `error`: Current auth error
 - `context`: Error context information
 - `retry`: Function to retry the failed operation
@@ -249,6 +255,7 @@ function Component() {
 ```
 
 **Returns:**
+
 - `executeRecovery`: Function to execute a recovery strategy
 - `getAvailableStrategies`: Function to get available strategies for an error
 - `isExecuting`: Boolean indicating recovery in progress
@@ -282,6 +289,7 @@ function ApiComponent() {
 ```
 
 **Returns:**
+
 - `handleNetworkError`: Function to handle network errors
 - `wrapAsyncCall`: Wrapper function that catches and handles async errors
 
@@ -293,16 +301,14 @@ Hook for automatic error recovery with exponential backoff:
 import { useAutoRecovery } from '@/hooks';
 
 function Component() {
-  const { autoRetryCount, isAutoRetrying, maxAttempts } = useAutoRecovery(
-    error,
-    3,
-    true
-  );
+  const { autoRetryCount, isAutoRetrying, maxAttempts } = useAutoRecovery(error, 3, true);
 
   return (
     <div>
       {isAutoRetrying && (
-        <div>Auto-retry in progress ({autoRetryCount}/{maxAttempts})</div>
+        <div>
+          Auto-retry in progress ({autoRetryCount}/{maxAttempts})
+        </div>
       )}
     </div>
   );
@@ -310,11 +316,13 @@ function Component() {
 ```
 
 **Parameters:**
+
 - `error`: The error to auto-recover from
 - `maxAttempts`: Maximum auto-retry attempts
 - `enableAutoRetry`: Enable/disable auto-retry
 
 **Returns:**
+
 - `autoRetryCount`: Current auto-retry count
 - `isAutoRetrying`: Boolean indicating auto-retry in progress
 - `maxAttempts`: Maximum retry attempts
@@ -375,8 +383,8 @@ const DEFAULT_RETRY_CONFIG = {
     'NETWORK_ERROR',
     'CLERK_SERVICE_ERROR',
     'TOKEN_REFRESH_FAILED',
-    'UNKNOWN_AUTH_ERROR'
-  ]
+    'UNKNOWN_AUTH_ERROR',
+  ],
 };
 ```
 
@@ -388,7 +396,7 @@ const ERROR_MESSAGES = {
     title: 'Connection Problem',
     message: 'Unable to connect to our servers.',
     userMessage: 'Please check your internet connection and try again.',
-    actionText: 'Retry'
+    actionText: 'Retry',
   },
   // ... other error messages
 };
@@ -419,7 +427,7 @@ import { AuthErrorAlert, useAuthError } from '@/components/auth';
 
 function SignInForm() {
   const { error, reportError, clearError } = useAuthError();
-  
+
   const handleSubmit = async (data) => {
     try {
       await signIn(data);
@@ -431,12 +439,7 @@ function SignInForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      {error && (
-        <AuthErrorAlert
-          error={error}
-          onDismiss={clearError}
-        />
-      )}
+      {error && <AuthErrorAlert error={error} onDismiss={clearError} />}
       {/* Form fields */}
     </form>
   );
@@ -492,7 +495,7 @@ trackingService.track('auth_error', {
   error_type: error.type,
   error_code: error.code,
   user_id: context.userId,
-  severity: error.severity
+  severity: error.severity,
 });
 ```
 
@@ -532,4 +535,4 @@ function TestPage() {
 2. **User Feedback**: Collect user feedback on error experiences
 3. **A/B Testing**: Test different error message strategies
 4. **Performance**: Monitor error handling performance
-5. **Accessibility**: Enhance accessibility for error components 
+5. **Accessibility**: Enhance accessibility for error components

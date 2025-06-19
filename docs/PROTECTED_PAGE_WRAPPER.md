@@ -1,10 +1,12 @@
 # Protected Page Wrapper
 
-A comprehensive authentication wrapper for pages requiring user authentication, providing consistent loading states, error handling, and development tools.
+A comprehensive authentication wrapper for pages requiring user authentication, providing consistent
+loading states, error handling, and development tools.
 
 ## Overview
 
-The `ProtectedPageWrapper` component combines route protection with proper loading and error states, creating a seamless experience for protected pages in your application.
+The `ProtectedPageWrapper` component combines route protection with proper loading and error states,
+creating a seamless experience for protected pages in your application.
 
 ## Features
 
@@ -37,10 +39,10 @@ export default function MyProtectedPage() {
 ```tsx
 <ProtectedPageWrapper
   requirements={{
-    level: 'chat',                    // 'basic' | 'chat' | 'premium' | 'admin'
-    requireVerified: true,            // Require email verification
-    requireComplete: true,            // Require complete profile
-    requireRole: ['user', 'premium']  // Required user roles
+    level: 'chat', // 'basic' | 'chat' | 'premium' | 'admin'
+    requireVerified: true, // Require email verification
+    requireComplete: true, // Require complete profile
+    requireRole: ['user', 'premium'], // Required user roles
   }}
 >
   {/* Your content */}
@@ -51,7 +53,7 @@ export default function MyProtectedPage() {
 
 ```tsx
 <ProtectedPageWrapper
-  loadingVariant="chat"  // 'skeleton' | 'spinner' | 'chat' | 'minimal'
+  loadingVariant='chat' // 'skeleton' | 'spinner' | 'chat' | 'minimal'
 >
   {/* Your content */}
 </ProtectedPageWrapper>
@@ -60,9 +62,7 @@ export default function MyProtectedPage() {
 ### Custom Loading Component
 
 ```tsx
-<ProtectedPageWrapper
-  loadingComponent={<MyCustomLoader />}
->
+<ProtectedPageWrapper loadingComponent={<MyCustomLoader />}>
   {/* Your content */}
 </ProtectedPageWrapper>
 ```
@@ -70,32 +70,40 @@ export default function MyProtectedPage() {
 ## Protection Levels
 
 ### Basic Protection
+
 ```tsx
 requirements={{ level: 'basic' }}
 ```
+
 - Requires authentication
 - No additional requirements
 
 ### Chat Protection
+
 ```tsx
 requirements={{ level: 'chat' }}
 ```
+
 - Requires authentication
 - Optimized for chat interfaces
 - Includes chat-specific loading states
 
 ### Premium Protection
+
 ```tsx
 requirements={{ level: 'premium' }}
 ```
+
 - Requires authentication
 - Checks for premium role/subscription
 - Enhanced features access
 
 ### Admin Protection
+
 ```tsx
 requirements={{ level: 'admin' }}
 ```
+
 - Requires authentication
 - Admin role verification
 - Highest security level
@@ -103,33 +111,41 @@ requirements={{ level: 'admin' }}
 ## Loading Variants
 
 ### Skeleton Loading
+
 ```tsx
-loadingVariant="skeleton"
+loadingVariant = 'skeleton';
 ```
+
 - General-purpose skeleton screens
 - Maintains layout structure
 - Animated placeholders
 
 ### Chat Loading
+
 ```tsx
-loadingVariant="chat"
+loadingVariant = 'chat';
 ```
+
 - Chat-specific skeleton
 - Includes sidebar, messages, and input areas
 - Perfect for chat pages
 
 ### Spinner Loading
+
 ```tsx
-loadingVariant="spinner"
+loadingVariant = 'spinner';
 ```
+
 - Standard loading spinner
 - Minimal UI disruption
 - Good for quick transitions
 
 ### Minimal Loading
+
 ```tsx
-loadingVariant="minimal"
+loadingVariant = 'minimal';
 ```
+
 - Bare minimum loading indicator
 - Fastest to render
 - Best performance
@@ -137,38 +153,37 @@ loadingVariant="minimal"
 ## Error Handling
 
 ### Error Boundary Integration
+
 ```tsx
-<ProtectedPageWrapper
-  enableErrorBoundary={true}
-  errorFallback={<MyErrorComponent />}
->
+<ProtectedPageWrapper enableErrorBoundary={true} errorFallback={<MyErrorComponent />}>
   {/* Your content */}
 </ProtectedPageWrapper>
 ```
 
 ### Custom Error Fallback
+
 ```tsx
 const errorFallback = (error: AuthError, context: AuthErrorContext) => (
   <div>Custom error handling for {error.type}</div>
 );
 
-<ProtectedPageWrapper errorFallback={errorFallback}>
-  {/* Your content */}
-</ProtectedPageWrapper>
+<ProtectedPageWrapper errorFallback={errorFallback}>{/* Your content */}</ProtectedPageWrapper>;
 ```
 
 ## Development Features
 
 ### Development Tools
+
 ```tsx
 <ProtectedPageWrapper
-  enableDevTools={true}  // Shows debug panel in development
+  enableDevTools={true} // Shows debug panel in development
 >
   {/* Your content */}
 </ProtectedPageWrapper>
 ```
 
 The dev tools display:
+
 - Authentication status
 - Protection level
 - User information
@@ -176,11 +191,9 @@ The dev tools display:
 - Error states
 
 ### Performance Timing
+
 ```tsx
-<ProtectedPageWrapper
-  enableDevTools={true}
-  showLoadingProgress={true}
->
+<ProtectedPageWrapper enableDevTools={true} showLoadingProgress={true}>
   {/* Your content */}
 </ProtectedPageWrapper>
 ```
@@ -188,6 +201,7 @@ The dev tools display:
 ## Advanced Configuration
 
 ### Complete Example
+
 ```tsx
 export default function AdvancedProtectedPage() {
   return (
@@ -196,14 +210,14 @@ export default function AdvancedProtectedPage() {
         level: 'premium',
         requireVerified: true,
         requireComplete: true,
-        requireRole: ['premium', 'vip']
+        requireRole: ['premium', 'vip'],
       }}
-      loadingVariant="chat"
+      loadingVariant='chat'
       enableErrorBoundary={true}
       enableDevTools={process.env.NODE_ENV === 'development'}
-      pageTitle="Premium Chat"
-      pageDescription="Premium chat features"
-      className="min-h-screen"
+      pageTitle='Premium Chat'
+      pageDescription='Premium chat features'
+      className='min-h-screen'
       showLoadingProgress={true}
       transitionDuration={300}
     >
@@ -214,6 +228,7 @@ export default function AdvancedProtectedPage() {
 ```
 
 ### HOC Pattern
+
 ```tsx
 import { withProtectedPage } from '@/components/auth';
 
@@ -221,26 +236,28 @@ const MyPage = () => <div>Protected content</div>;
 
 export default withProtectedPage(MyPage, {
   requirements: { level: 'chat' },
-  loadingVariant: 'skeleton'
+  loadingVariant: 'skeleton',
 });
 ```
 
 ## SEO Considerations
 
 ### Metadata Handling
+
 ```tsx
 // In your page component
 export const metadata = {
   title: 'Protected Page | Your App',
   description: 'Protected content description',
   robots: {
-    index: false,  // Don't index protected content
+    index: false, // Don't index protected content
     follow: false,
   },
 };
 ```
 
 ### Dynamic Metadata
+
 ```tsx
 export async function generateMetadata({ params }) {
   return {
@@ -254,6 +271,7 @@ export async function generateMetadata({ params }) {
 ## Integration Examples
 
 ### Chat Page Integration
+
 ```tsx
 // src/app/(chat)/c/[id]/page.tsx
 import { ProtectedPageWrapper } from '@/components/auth';
@@ -264,9 +282,9 @@ export default async function ChatPage({ params }) {
   return (
     <ProtectedPageWrapper
       requirements={{ level: 'chat' }}
-      loadingVariant="chat"
+      loadingVariant='chat'
       pageTitle={`Chat ${id}`}
-      className="h-full"
+      className='h-full'
     >
       <ChatInterface chatId={id} />
     </ProtectedPageWrapper>
@@ -275,6 +293,7 @@ export default async function ChatPage({ params }) {
 ```
 
 ### Admin Dashboard
+
 ```tsx
 // src/app/admin/page.tsx
 import { ProtectedPageWrapper } from '@/components/auth';
@@ -285,9 +304,9 @@ export default function AdminDashboard() {
       requirements={{
         level: 'admin',
         requireVerified: true,
-        requireRole: ['admin', 'moderator']
+        requireRole: ['admin', 'moderator'],
       }}
-      loadingVariant="skeleton"
+      loadingVariant='skeleton'
       enableErrorBoundary={true}
     >
       <AdminDashboardContent />
@@ -297,6 +316,7 @@ export default function AdminDashboard() {
 ```
 
 ### Premium Features
+
 ```tsx
 // src/app/premium/page.tsx
 import { ProtectedPageWrapper } from '@/components/auth';
@@ -306,9 +326,9 @@ export default function PremiumPage() {
     <ProtectedPageWrapper
       requirements={{
         level: 'premium',
-        requireRole: ['premium', 'pro']
+        requireRole: ['premium', 'pro'],
       }}
-      loadingVariant="skeleton"
+      loadingVariant='skeleton'
       errorFallback={<UpgradePrompt />}
     >
       <PremiumFeatures />
@@ -320,12 +340,14 @@ export default function PremiumPage() {
 ## Error Scenarios
 
 ### Authentication Failures
+
 - **Not Authenticated**: Redirects to sign-in page
 - **Insufficient Permissions**: Shows access denied message
 - **Unverified Email**: Shows verification prompt
 - **Incomplete Profile**: Shows profile completion form
 
 ### Network Errors
+
 - **Connection Issues**: Shows retry options
 - **API Failures**: Shows error boundary with recovery
 - **Timeout**: Automatic retry with exponential backoff
@@ -333,16 +355,19 @@ export default function PremiumPage() {
 ## Performance Considerations
 
 ### Loading Optimization
+
 - Skeleton screens maintain layout stability
 - Progressive loading reduces perceived wait time
 - Transition animations provide smooth experience
 
 ### Bundle Size
+
 - Tree-shakeable exports
 - Lazy loading for heavy components
 - Minimal runtime overhead
 
 ### Caching
+
 - Authentication state caching
 - Component-level memoization
 - Efficient re-renders
@@ -350,6 +375,7 @@ export default function PremiumPage() {
 ## Best Practices
 
 ### 1. Choose Appropriate Loading Variants
+
 ```tsx
 // For chat pages
 <ProtectedPageWrapper loadingVariant="chat" />
@@ -362,6 +388,7 @@ export default function PremiumPage() {
 ```
 
 ### 2. Set Proper Protection Levels
+
 ```tsx
 // Match protection to content sensitivity
 <ProtectedPageWrapper requirements={{ level: 'admin' }} />  // Admin only
@@ -369,15 +396,14 @@ export default function PremiumPage() {
 ```
 
 ### 3. Handle Error States
+
 ```tsx
 // Provide meaningful error fallbacks
-<ProtectedPageWrapper
-  errorFallback={<UserFriendlyError />}
-  enableErrorBoundary={true}
-/>
+<ProtectedPageWrapper errorFallback={<UserFriendlyError />} enableErrorBoundary={true} />
 ```
 
 ### 4. Optimize for Development
+
 ```tsx
 // Enable dev tools during development
 <ProtectedPageWrapper
@@ -387,10 +413,11 @@ export default function PremiumPage() {
 ```
 
 ### 5. SEO-Friendly Configuration
+
 ```tsx
 // Always set robots meta for protected content
 export const metadata = {
-  robots: { index: false, follow: false }
+  robots: { index: false, follow: false },
 };
 ```
 
@@ -404,12 +431,15 @@ export const metadata = {
 4. **Error Boundary Not Catching**: Check error boundary configuration
 
 ### Debug Mode
+
 Enable debug mode in development:
+
 ```tsx
 <ProtectedPageWrapper enableDevTools={true} />
 ```
 
 This shows:
+
 - Authentication status
 - Loading timing
 - Error states
@@ -418,6 +448,7 @@ This shows:
 ## Migration Guide
 
 ### From Manual Auth Checks
+
 ```tsx
 // Before
 const { isLoaded, isSignedIn } = useAuth();
@@ -425,12 +456,11 @@ if (!isLoaded) return <Spinner />;
 if (!isSignedIn) redirect('/sign-in');
 
 // After
-<ProtectedPageWrapper loadingVariant="spinner">
-  {/* Your content */}
-</ProtectedPageWrapper>
+<ProtectedPageWrapper loadingVariant='spinner'>{/* Your content */}</ProtectedPageWrapper>;
 ```
 
 ### From Basic Auth Guards
+
 ```tsx
 // Before
 <AuthGuard>
@@ -446,16 +476,18 @@ if (!isSignedIn) redirect('/sign-in');
 ## TypeScript Support
 
 ### Full Type Definitions
+
 ```tsx
 import type {
   ProtectedPageWrapperProps,
   AuthRequirements,
   ProtectionLevel,
-  LoadingVariant
+  LoadingVariant,
 } from '@/components/auth';
 ```
 
 ### Custom Requirements
+
 ```tsx
 interface CustomAuthRequirements extends AuthRequirements {
   customCheck?: boolean;
@@ -465,6 +497,7 @@ interface CustomAuthRequirements extends AuthRequirements {
 ## Contributing
 
 When adding new features:
+
 1. Update the component props interface
 2. Add corresponding loading states
 3. Update documentation
@@ -475,4 +508,4 @@ When adding new features:
 
 - [`AuthErrorBoundary`](./AUTH_ERROR_HANDLING.md) - Error boundary integration
 - [`ChatPageSkeleton`](./LOADING_STATES.md) - Loading state components
-- [`AuthGuard`](./AUTH_GUARDS_USAGE.md) - Basic authentication guards 
+- [`AuthGuard`](./AUTH_GUARDS_USAGE.md) - Basic authentication guards

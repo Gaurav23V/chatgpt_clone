@@ -17,8 +17,8 @@ import type { IConnectionStatus } from '@/types/database';
 import {
   closeConnection as _closeConnection,
   connectDB as _connectDB,
-  connectToDatabase as _connectToDatabase,
   CONNECTION_STATES as _CONNECTION_STATES,
+  connectToDatabase as _connectToDatabase,
   disconnectDB as _disconnectDB,
   getConnectionStatus as _getConnectionStatus,
   isConnected as _isConnected,
@@ -28,8 +28,8 @@ import {
 export {
   closeConnection,
   connectDB,
-  connectToDatabase,
   CONNECTION_STATES,
+  connectToDatabase,
   disconnectDB,
   getConnectionStatus,
   isConnected,
@@ -61,11 +61,11 @@ export type {
 } from '@/types/database';
 
 // Model exports
-export { User, Conversation } from './models';
+export { Conversation, User } from './models';
 
 // Service exports
-export * from './services/user.service';
 export * from './services/conversation.service';
+export * from './services/user.service';
 
 // Utility exports
 export * from './utils';

@@ -11,15 +11,23 @@
  * - Development tools
  */
 
-import type { Connection, Model, Document, FilterQuery, SortOrder, QueryOptions } from 'mongoose';
+import type {
+  Connection,
+  Document,
+  FilterQuery,
+  Model,
+  QueryOptions,
+  SortOrder,
+} from 'mongoose';
 import mongoose from 'mongoose';
 
-import type { 
-  IConnectionStatus, 
-  IPaginationOptions, 
+import type {
+  IConnectionStatus,
   IPaginatedResponse,
-  ISearchOptions
+  IPaginationOptions,
+  ISearchOptions,
 } from '@/types/database';
+
 import { connectToDatabase, getConnectionStatus } from './connection';
 
 // =============================================================================
@@ -48,7 +56,7 @@ export async function performHealthCheck(): Promise<IDatabaseHealthCheck> {
   try {
     // Check connection status
     const connection = getConnectionStatus();
-    
+
     if (!connection.isConnected) {
       errors.push('Database not connected');
       return {
@@ -65,20 +73,22 @@ export async function performHealthCheck(): Promise<IDatabaseHealthCheck> {
     if (db) {
       // Ping the database
       await db.admin().ping();
-      
+
       // Get database version
       const buildInfo = await db.admin().buildInfo();
       version = buildInfo.version;
-      
+
       // Test a simple operation
       await db.collection('healthcheck').findOne({});
-      
+
       isHealthy = true;
     } else {
       errors.push('Database connection not available');
     }
   } catch (error) {
-    errors.push(`Health check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    errors.push(
+      `Health check failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 
   return {
@@ -107,13 +117,16 @@ export interface IConnectionMonitor {
 
 export function monitorConnection(): IConnectionMonitor {
   const connection = mongoose.connection;
-  
+
   return {
     status: getConnectionStatus(),
     metrics: {
       activeConnections: connection.readyState === 1 ? 1 : 0,
       totalConnections: 1, // Single connection in our singleton pattern
-      uptime: connection.readyState === 1 ? Date.now() - (connection as any)._startTime || 0 : 0,
+      uptime:
+        connection.readyState === 1
+          ? Date.now() - (connection as any)._startTime || 0
+          : 0,
       lastActivity: new Date(),
     },
   };
@@ -167,7 +180,10 @@ export async function withPerformanceMonitoring<T>(
     queryPerformanceLog.push(performance);
 
     // Keep only last 100 entries in development
-    if (process.env.NODE_ENV === 'development' && queryPerformanceLog.length > 100) {
+    if (
+      process.env.NODE_ENV === 'development' &&
+      queryPerformanceLog.length > 100
+    ) {
       queryPerformanceLog.shift();
     }
 
@@ -189,13 +205,19 @@ export function getQueryPerformanceStats(): {
   slowQueries: IQueryPerformance[];
   recentQueries: IQueryPerformance[];
 } {
-  const slowQueries = queryPerformanceLog.filter(q => q.duration > 1000);
+  const slowQueries = queryPerformanceLog.filter((q) => q.duration > 1000);
   const recentQueries = queryPerformanceLog.slice(-10);
-  const totalDuration = queryPerformanceLog.reduce((sum, q) => sum + q.duration, 0);
+  const totalDuration = queryPerformanceLog.reduce(
+    (sum, q) => sum + q.duration,
+    0
+  );
 
   return {
     totalQueries: queryPerformanceLog.length,
-    averageDuration: queryPerformanceLog.length > 0 ? totalDuration / queryPerformanceLog.length : 0,
+    averageDuration:
+      queryPerformanceLog.length > 0
+        ? totalDuration / queryPerformanceLog.length
+        : 0,
     slowQueries,
     recentQueries,
   };
@@ -237,7 +259,8 @@ export function parseMongoError(error: Error): IMongoError {
   // Handle mongoose validation errors
   if (error.name === 'ValidationError') {
     type = MongoErrorType.VALIDATION_ERROR;
-    userMessage = 'The provided data is invalid. Please check your input and try again.';
+    userMessage =
+      'The provided data is invalid. Please check your input and try again.';
     retryable = false;
   }
   // Handle duplicate key errors
@@ -253,13 +276,19 @@ export function parseMongoError(error: Error): IMongoError {
     retryable = false;
   }
   // Handle connection errors
-  else if (error.message.includes('connection') || error.message.includes('ECONNREFUSED')) {
+  else if (
+    error.message.includes('connection') ||
+    error.message.includes('ECONNREFUSED')
+  ) {
     type = MongoErrorType.CONNECTION_ERROR;
     userMessage = 'Database connection issue. Please try again in a moment.';
     retryable = true;
   }
   // Handle timeout errors
-  else if (error.message.includes('timeout') || error.message.includes('ETIMEDOUT')) {
+  else if (
+    error.message.includes('timeout') ||
+    error.message.includes('ETIMEDOUT')
+  ) {
     type = MongoErrorType.TIMEOUT_ERROR;
     userMessage = 'The operation took too long to complete. Please try again.';
     retryable = true;
@@ -308,13 +337,13 @@ export async function withRetry<T>(
 
       // Calculate delay with optional backoff
       const currentDelay = backoff ? delay * Math.pow(2, attempt - 1) : delay;
-      
+
       console.warn(
         `🔄 Database operation failed (attempt ${attempt}/${maxRetries}). Retrying in ${currentDelay}ms...`,
         mongoError.message
       );
 
-      await new Promise(resolve => setTimeout(resolve, currentDelay));
+      await new Promise((resolve) => setTimeout(resolve, currentDelay));
     }
   }
 
@@ -357,7 +386,7 @@ export function sanitizeQuery<T = any>(query: FilterQuery<T>): FilterQuery<T> {
  */
 export function projectFields(fields: string[]): Record<string, 1 | 0> {
   const projection: Record<string, 1 | 0> = {};
-  
+
   for (const field of fields) {
     // Only allow alphanumeric characters, dots, and underscores
     if (/^[a-zA-Z0-9._]+$/.test(field)) {
@@ -371,7 +400,10 @@ export function projectFields(fields: string[]): Record<string, 1 | 0> {
 /**
  * Safe sort builder
  */
-export function sortBuilder(sortBy?: string, sortOrder: 'asc' | 'desc' = 'desc'): Record<string, SortOrder> {
+export function sortBuilder(
+  sortBy?: string,
+  sortOrder: 'asc' | 'desc' = 'desc'
+): Record<string, SortOrder> {
   if (!sortBy || !/^[a-zA-Z0-9._]+$/.test(sortBy)) {
     return { createdAt: -1 }; // Default sort
   }
@@ -391,12 +423,17 @@ export function paginate(options: IPaginationOptions): {
   limit: number;
   sort: Record<string, SortOrder>;
 } {
-  const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = options;
-  
+  const {
+    page = 1,
+    limit = 10,
+    sortBy = 'createdAt',
+    sortOrder = 'desc',
+  } = options;
+
   // Ensure reasonable limits
   const safeLimit = Math.min(Math.max(limit, 1), 100);
   const safePage = Math.max(page, 1);
-  
+
   return {
     skip: (safePage - 1) * safeLimit,
     limit: safeLimit,
@@ -414,7 +451,7 @@ export async function executePaginatedQuery<T extends Document>(
   projection?: Record<string, 1 | 0>
 ): Promise<IPaginatedResponse<T>> {
   const { skip, limit, sort } = paginate(options);
-  
+
   const [data, total] = await Promise.all([
     model
       .find(sanitizeQuery(filter), projection)
@@ -452,19 +489,23 @@ export async function executePaginatedQuery<T extends Document>(
 export async function safeDbOperation<T>(
   operation: () => Promise<T>,
   context: string
-): Promise<{ success: true; data: T } | { success: false; error: IMongoError }> {
+): Promise<
+  { success: true; data: T } | { success: false; error: IMongoError }
+> {
   try {
     // Ensure database connection
     await connectToDatabase();
-    
+
     const data = await withRetry(operation, { maxRetries: 2 });
-    
+
     return { success: true, data };
   } catch (error) {
-    const mongoError = parseMongoError(error instanceof Error ? error : new Error('Unknown error'));
-    
+    const mongoError = parseMongoError(
+      error instanceof Error ? error : new Error('Unknown error')
+    );
+
     console.error(`❌ Database operation failed in ${context}:`, mongoError);
-    
+
     return { success: false, error: mongoError };
   }
 }
@@ -477,14 +518,14 @@ export async function executeBatch<T>(
   batchSize: number = 10
 ): Promise<(T | Error)[]> {
   const results: (T | Error)[] = [];
-  
+
   for (let i = 0; i < operations.length; i += batchSize) {
     const batch = operations.slice(i, i + batchSize);
-    
+
     const batchResults = await Promise.allSettled(
-      batch.map(operation => operation())
+      batch.map((operation) => operation())
     );
-    
+
     for (const result of batchResults) {
       if (result.status === 'fulfilled') {
         results.push(result.value);
@@ -493,7 +534,7 @@ export async function executeBatch<T>(
       }
     }
   }
-  
+
   return results;
 }
 
@@ -510,14 +551,16 @@ export function debugConnection(): void {
   }
 
   const connection = mongoose.connection;
-  
+
   console.log('🔍 Database Connection Debug Info:');
   console.log('════════════════════════════════════');
   console.log(`Ready State: ${connection.readyState} (1 = connected)`);
   console.log(`Host: ${connection.host}`);
   console.log(`Port: ${connection.port}`);
   console.log(`Database: ${connection.name}`);
-  console.log(`Collections: ${Object.keys(connection.collections).join(', ') || 'None'}`);
+  console.log(
+    `Collections: ${Object.keys(connection.collections).join(', ') || 'None'}`
+  );
   console.log('════════════════════════════════════');
 }
 
@@ -529,12 +572,15 @@ export function enableQueryLogging(): void {
     return;
   }
 
-  mongoose.set('debug', (collectionName: string, method: string, query: any) => {
-    console.log(
-      `🔍 MongoDB Query: ${collectionName}.${method}`,
-      JSON.stringify(query, null, 2)
-    );
-  });
+  mongoose.set(
+    'debug',
+    (collectionName: string, method: string, query: any) => {
+      console.log(
+        `🔍 MongoDB Query: ${collectionName}.${method}`,
+        JSON.stringify(query, null, 2)
+      );
+    }
+  );
 }
 
 /**
@@ -572,4 +618,4 @@ export function initDevTools(): void {
     enableQueryLogging();
     setupPerformanceMonitoring();
   }
-} 
+}

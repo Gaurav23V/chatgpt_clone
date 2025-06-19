@@ -309,7 +309,7 @@ export const CONNECTION_STATES = {
 /**
  * Initialize MongoDB connection
  * Alias for connectToDatabase() to match your requirements
- * 
+ *
  * @returns Promise<Connection> - MongoDB connection instance
  */
 export const connectDB = connectToDatabase;
@@ -322,7 +322,7 @@ export const disconnectDB = closeConnection;
 
 /**
  * Check if MongoDB is connected
- * 
+ *
  * @returns boolean - True if connected, false otherwise
  */
 export const isConnected = (): boolean => {

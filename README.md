@@ -198,6 +198,7 @@ The application uses Clerk for secure user authentication:
 #### Protected Routes
 
 The following routes require authentication:
+
 - `/chat` - Main chat interface
 - `/history` - Chat history
 - `/settings` - User settings
@@ -207,6 +208,7 @@ The following routes require authentication:
 #### User Data Sync
 
 User data is synchronized with MongoDB using:
+
 - Clerk user ID as primary key
 - Webhook integration for user lifecycle events
 - Automatic profile updates

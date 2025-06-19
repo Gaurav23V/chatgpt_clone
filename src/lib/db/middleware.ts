@@ -8,11 +8,16 @@
  * - Provide Next.js middleware helpers
  */
 
-import type { NextRequest, NextResponse } from 'next/server';
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { type NextRequest, NextResponse } from 'next/server';
 
 import { connectToDatabase, getConnectionStatus } from './connection';
-import { parseMongoError, withRetry, performHealthCheck, type IMongoError } from './utils';
+import {
+  type IMongoError,
+  parseMongoError,
+  performHealthCheck,
+  withRetry,
+} from './utils';
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -42,7 +47,7 @@ export interface IDbMiddlewareOptions {
 /**
  * Middleware response type
  */
-export type MiddlewareResult = 
+export type MiddlewareResult =
   | { success: true; timing?: any }
   | { success: false; error: IMongoError; status: number };
 
@@ -70,7 +75,7 @@ export async function ensureDbConnection(
   try {
     // Check if connection is already established
     const status = getConnectionStatus();
-    
+
     if (status.isConnected && !status.error) {
       if (enableTiming) {
         timing = {
@@ -130,16 +135,17 @@ export async function dbHealthCheckMiddleware(): Promise<MiddlewareResult> {
     const healthCheck = await performHealthCheck();
 
     if (healthCheck.isHealthy) {
-      return { 
-        success: true, 
-        timing: { healthCheckDuration: healthCheck.latency } 
+      return {
+        success: true,
+        timing: { healthCheckDuration: healthCheck.latency },
       };
     } else {
       const error: IMongoError = {
         type: 'CONNECTION_ERROR' as any,
         message: `Health check failed: ${healthCheck.errors.join(', ')}`,
         originalError: new Error('Health check failed'),
-        userMessage: 'Database is currently unavailable. Please try again later.',
+        userMessage:
+          'Database is currently unavailable. Please try again later.',
         retryable: true,
       };
 
@@ -170,7 +176,10 @@ export async function dbHealthCheckMiddleware(): Promise<MiddlewareResult> {
  * Higher-order function to wrap API routes with database middleware
  */
 export function withDatabase<T = any>(
-  handler: (req: IApiRequestWithTiming, res: NextApiResponse<T>) => Promise<void> | void,
+  handler: (
+    req: IApiRequestWithTiming,
+    res: NextApiResponse<T>
+  ) => Promise<void> | void,
   options: IDbMiddlewareOptions = {}
 ) {
   return async (req: IApiRequestWithTiming, res: NextApiResponse<T>) => {
@@ -182,7 +191,7 @@ export function withDatabase<T = any>(
 
       if (!result.success) {
         console.error('❌ Database middleware failed:', result.error);
-        
+
         return res.status(result.status).json({
           error: result.error.userMessage,
           code: result.error.type,
@@ -197,10 +206,11 @@ export function withDatabase<T = any>(
 
       // Add response headers for debugging
       if (process.env.NODE_ENV === 'development') {
-        res.setHeader('X-DB-Connection-Duration', 
-          result.timing?.dbConnectionDuration || 0);
-        res.setHeader('X-DB-Connection-Cached', 
-          result.timing?.cached || false);
+        res.setHeader(
+          'X-DB-Connection-Duration',
+          result.timing?.dbConnectionDuration || 0
+        );
+        res.setHeader('X-DB-Connection-Cached', result.timing?.cached || false);
       }
 
       // Execute the actual handler
@@ -215,7 +225,7 @@ export function withDatabase<T = any>(
       }
     } catch (error) {
       console.error('❌ API handler error:', error);
-      
+
       const mongoError = parseMongoError(
         error instanceof Error ? error : new Error('Unknown error')
       );
@@ -235,7 +245,10 @@ export function withDatabase<T = any>(
  * Database health check endpoint middleware
  */
 export function withHealthCheck<T = any>(
-  handler: (req: IApiRequestWithTiming, res: NextApiResponse<T>) => Promise<void> | void
+  handler: (
+    req: IApiRequestWithTiming,
+    res: NextApiResponse<T>
+  ) => Promise<void> | void
 ) {
   return async (req: IApiRequestWithTiming, res: NextApiResponse<T>) => {
     try {
@@ -256,7 +269,7 @@ export function withHealthCheck<T = any>(
       await handler(req, res);
     } catch (error) {
       console.error('❌ Health check handler error:', error);
-      
+
       res.status(503).json({
         healthy: false,
         error: 'Health check failed',
@@ -289,8 +302,11 @@ export async function databaseMiddleware(
       const result = await ensureDbConnection(options);
 
       if (!result.success) {
-        console.error('❌ Database middleware failed for API route:', result.error);
-        
+        console.error(
+          '❌ Database middleware failed for API route:',
+          result.error
+        );
+
         return new NextResponse(
           JSON.stringify({
             error: result.error.userMessage,
@@ -309,10 +325,14 @@ export async function databaseMiddleware(
       // Add timing headers for development
       if (process.env.NODE_ENV === 'development' && result.timing) {
         const response = NextResponse.next();
-        response.headers.set('X-DB-Connection-Duration', 
-          String(result.timing.dbConnectionDuration));
-        response.headers.set('X-DB-Connection-Cached', 
-          String(result.timing.cached));
+        response.headers.set(
+          'X-DB-Connection-Duration',
+          String(result.timing.dbConnectionDuration)
+        );
+        response.headers.set(
+          'X-DB-Connection-Cached',
+          String(result.timing.cached)
+        );
         return response;
       }
     }
@@ -320,7 +340,7 @@ export async function databaseMiddleware(
     return null; // Continue to next middleware
   } catch (error) {
     console.error('❌ Database middleware error:', error);
-    
+
     const mongoError = parseMongoError(
       error instanceof Error ? error : new Error('Middleware error')
     );
@@ -354,7 +374,7 @@ function shouldSkipMiddleware(pathname: string): boolean {
     '/static',
   ];
 
-  return skipPaths.some(path => pathname.startsWith(path));
+  return skipPaths.some((path) => pathname.startsWith(path));
 }
 
 // =============================================================================
@@ -370,23 +390,26 @@ export function withTiming<T>(
 ): Promise<{ result: T; duration: number }> {
   return new Promise(async (resolve, reject) => {
     const startTime = Date.now();
-    
+
     try {
       const result = await operation();
       const duration = Date.now() - startTime;
-      
+
       if (process.env.NODE_ENV === 'development') {
         console.log(`⏱️  ${operationName} completed in ${duration}ms`);
       }
-      
+
       resolve({ result, duration });
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       if (process.env.NODE_ENV === 'development') {
-        console.error(`⏱️  ${operationName} failed after ${duration}ms:`, error);
+        console.error(
+          `⏱️  ${operationName} failed after ${duration}ms:`,
+          error
+        );
       }
-      
+
       reject(error);
     }
   });
@@ -434,7 +457,7 @@ export function combineMiddleware(
 /**
  * Default database middleware configuration
  */
-export const defaultDbMiddleware = (req: NextRequest) => 
+export const defaultDbMiddleware = (req: NextRequest) =>
   databaseMiddleware(req, {
     requireConnection: true,
     enableTiming: process.env.NODE_ENV === 'development',
@@ -459,27 +482,27 @@ export const healthCheckMiddleware = (req: NextRequest) =>
 
 /**
  * Example API route usage:
- * 
+ *
  * ```typescript
  * // pages/api/users.ts
  * import { withDatabase } from '@/lib/db/middleware';
- * 
+ *
  * async function handler(req: IApiRequestWithTiming, res: NextApiResponse) {
  *   // Database is guaranteed to be connected here
  *   // Access timing info via req.timing
  * }
- * 
+ *
  * export default withDatabase(handler, { enableTiming: true });
  * ```
- * 
+ *
  * Example App Router middleware:
- * 
+ *
  * ```typescript
  * // middleware.ts
  * import { defaultDbMiddleware } from '@/lib/db/middleware';
- * 
+ *
  * export async function middleware(request: NextRequest) {
  *   return await defaultDbMiddleware(request);
  * }
  * ```
- */ 
+ */

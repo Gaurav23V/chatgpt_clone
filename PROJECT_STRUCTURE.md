@@ -1,10 +1,12 @@
 # ChatGPT Clone - Project Structure
 
-This document outlines the project structure and organization of the ChatGPT Clone application, following Dub repository patterns and Next.js 14+ App Router conventions.
+This document outlines the project structure and organization of the ChatGPT Clone application,
+following Dub repository patterns and Next.js 14+ App Router conventions.
 
 ## Overview
 
-The project is structured as a modern Next.js application with TypeScript, featuring a clean separation of concerns and scalable architecture patterns inspired by the Dub repository.
+The project is structured as a modern Next.js application with TypeScript, featuring a clean
+separation of concerns and scalable architecture patterns inspired by the Dub repository.
 
 ## Root Directory Structure
 
@@ -53,6 +55,7 @@ src/app/
 ```
 
 **Route Groups Explained:**
+
 - `(auth)` - Groups authentication-related pages with shared layout
 - `(chat)` - Groups chat interface pages with sidebar layout
 - Route groups don't affect URL structure but allow layout organization
@@ -75,6 +78,7 @@ src/components/
 ```
 
 **Component Organization:**
+
 - `ui/` - Base UI components from ShadCN
 - `chat/` - Chat functionality components
 - `layout/` - Navigation, sidebar, header components
@@ -138,17 +142,20 @@ src/constants/
 ## Naming Conventions
 
 ### File Naming
+
 - **Components**: PascalCase (`ChatInput.tsx`, `UserProfile.tsx`)
 - **Pages**: lowercase (`page.tsx`, `layout.tsx`)
 - **Utilities**: camelCase (`utils.ts`, `api-client.ts`)
 - **Types**: camelCase with descriptive names (`user-types.ts`, `api-types.ts`)
 
 ### Directory Naming
+
 - **Route Groups**: lowercase with parentheses `(auth)`, `(chat)`
 - **Dynamic Routes**: square brackets `[id]`, `[...slug]`
 - **Feature Directories**: lowercase (`chat`, `auth`, `storage`)
 
 ### Component Naming
+
 - **React Components**: PascalCase exports
 - **Hooks**: camelCase starting with "use" (`useChat`, `useAuth`)
 - **Utilities**: camelCase (`formatDate`, `validateEmail`)
@@ -156,15 +163,22 @@ src/constants/
 ## Architecture Patterns
 
 ### 1. Feature-Based Organization
-Components and logic are organized by feature (chat, auth, etc.) rather than by type, making the codebase more maintainable as it scales.
+
+Components and logic are organized by feature (chat, auth, etc.) rather than by type, making the
+codebase more maintainable as it scales.
 
 ### 2. Barrel Exports
-Each major directory includes an `index.ts` file that exports all relevant items, making imports cleaner and more maintainable.
+
+Each major directory includes an `index.ts` file that exports all relevant items, making imports
+cleaner and more maintainable.
 
 ### 3. Route Groups
-Next.js route groups `(auth)` and `(chat)` allow for organized layouts without affecting URL structure.
+
+Next.js route groups `(auth)` and `(chat)` allow for organized layouts without affecting URL
+structure.
 
 ### 4. Separation of Concerns
+
 - **Components**: UI and presentation logic
 - **Hooks**: Reusable stateful logic
 - **Lib**: Business logic and external integrations
@@ -172,6 +186,7 @@ Next.js route groups `(auth)` and `(chat)` allow for organized layouts without a
 - **Constants**: Configuration and static values
 
 ### 5. Configuration Co-location
+
 Related configuration files are kept together (e.g., all auth config in `lib/auth/`).
 
 ## Alignment with Dub Repository Patterns
@@ -188,6 +203,7 @@ This structure follows several patterns from the Dub repository:
 ## Development Workflow
 
 ### Adding New Features
+
 1. Create feature directory in appropriate section (`components/`, `lib/`, etc.)
 2. Add types in `src/types/`
 3. Create components with proper exports
@@ -196,6 +212,7 @@ This structure follows several patterns from the Dub repository:
 6. Add constants and configuration as needed
 
 ### File Creation Guidelines
+
 - Always include descriptive comments at the top of files
 - Use TODO comments for planned implementations
 - Follow TypeScript strict mode conventions
@@ -204,6 +221,7 @@ This structure follows several patterns from the Dub repository:
 ## Future Expansions
 
 The structure is designed to accommodate:
+
 - Additional AI providers and models
 - Real-time features (WebSocket integration)
 - Advanced chat features (voice, images, etc.)
@@ -211,4 +229,5 @@ The structure is designed to accommodate:
 - Analytics and monitoring
 - Internationalization (i18n)
 
-This structure provides a solid foundation for scaling the ChatGPT Clone while maintaining code organization and developer experience.
+This structure provides a solid foundation for scaling the ChatGPT Clone while maintaining code
+organization and developer experience.

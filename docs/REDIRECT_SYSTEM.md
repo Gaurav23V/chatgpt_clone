@@ -1,10 +1,12 @@
 # Sophisticated Redirect System
 
-This document explains the sophisticated redirect system that remembers where users were trying to go before authentication and returns them there afterward.
+This document explains the sophisticated redirect system that remembers where users were trying to
+go before authentication and returns them there afterward.
 
 ## Overview
 
 The redirect system provides seamless authentication flows by:
+
 - **Storing intended destinations** before redirecting to auth pages
 - **Validating URLs** to prevent open redirect vulnerabilities
 - **Handling edge cases** like special routes and invalid URLs
@@ -40,6 +42,7 @@ storeCurrentLocationAndRedirect(authPage: string): void
 ### 2. Security Features
 
 #### URL Validation
+
 ```typescript
 // Validates URLs are internal and safe
 isValidRedirectUrl(url: string): boolean
@@ -49,6 +52,7 @@ sanitizeRedirectUrl(url: string): string
 ```
 
 #### Allowed Origins
+
 ```typescript
 const ALLOWED_ORIGINS = [
   'localhost:3000',
@@ -58,13 +62,9 @@ const ALLOWED_ORIGINS = [
 ```
 
 #### Blocked Paths
+
 ```typescript
-const blockedPaths = [
-  '/api/webhooks',
-  '/api/auth',
-  '/_next',
-  '/admin/system',
-];
+const blockedPaths = ['/api/webhooks', '/api/auth', '/_next', '/admin/system'];
 ```
 
 ### 3. Middleware Integration
@@ -76,11 +76,7 @@ The middleware automatically includes return URLs in auth redirects:
 import { serverRedirectUtils } from '@/lib/auth/redirect-utils';
 
 // Builds secure redirect URLs
-const redirectUrl = serverRedirectUtils.buildAuthRedirect(
-  'sign-in', 
-  currentPath, 
-  origin
-);
+const redirectUrl = serverRedirectUtils.buildAuthRedirect('sign-in', currentPath, origin);
 ```
 
 ### 4. Auth Page Integration
@@ -106,11 +102,11 @@ import { useAuthRedirect } from '@/lib/auth/redirect-utils';
 
 function ProtectedComponent() {
   const { redirectToAuth } = useAuthRedirect();
-  
+
   const handleSignInRequired = () => {
     redirectToAuth('sign-in'); // Stores current location and redirects
   };
-  
+
   return (
     <button onClick={handleSignInRequired}>
       Sign In Required
@@ -122,11 +118,7 @@ function ProtectedComponent() {
 ### 2. Manual Redirect Handling
 
 ```typescript
-import { 
-  storeRedirectUrl, 
-  buildAuthUrl,
-  handlePostAuthRedirect 
-} from '@/lib/auth/redirect-utils';
+import { storeRedirectUrl, buildAuthUrl, handlePostAuthRedirect } from '@/lib/auth/redirect-utils';
 
 // Store specific URL for after auth
 storeRedirectUrl('/chat/important-conversation');
@@ -194,10 +186,10 @@ Some routes are mapped to better defaults after authentication:
 
 ```typescript
 const SPECIAL_ROUTE_MAPPINGS = {
-  '/c/new': '/chat',     // New chat → chat home
-  '/': '/chat',          // Home → chat home  
-  '/sign-in': '/chat',   // Sign-in → chat home
-  '/sign-up': '/chat',   // Sign-up → chat home
+  '/c/new': '/chat', // New chat → chat home
+  '/': '/chat', // Home → chat home
+  '/sign-in': '/chat', // Sign-in → chat home
+  '/sign-up': '/chat', // Sign-up → chat home
 };
 ```
 
@@ -221,25 +213,14 @@ if (!ALLOWED_ORIGINS.includes(hostWithPort)) {
 
 ```typescript
 // Dangerous paths are blocked
-const blockedPaths = [
-  '/api/webhooks',
-  '/api/auth', 
-  '/_next',
-  '/admin/system',
-];
+const blockedPaths = ['/api/webhooks', '/api/auth', '/_next', '/admin/system'];
 ```
 
 ### 3. Parameter Sanitization
 
 ```typescript
 // Dangerous parameters are removed
-const dangerousParams = [
-  'javascript:', 
-  'data:', 
-  'vbscript:', 
-  'file:', 
-  'ftp:'
-];
+const dangerousParams = ['javascript:', 'data:', 'vbscript:', 'file:', 'ftp:'];
 ```
 
 ## Error Handling
@@ -268,4 +249,5 @@ return DEFAULT_POST_AUTH_URL; // '/chat'
 6. **Consider mobile users** who might have different navigation patterns
 7. **Log redirect attempts** for security monitoring
 
-The sophisticated redirect system ensures users never lose their intended destination while maintaining security against redirect-based attacks. 
+The sophisticated redirect system ensures users never lose their intended destination while
+maintaining security against redirect-based attacks.

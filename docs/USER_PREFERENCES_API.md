@@ -1,10 +1,13 @@
- # User Preferences Storage System
+# User Preferences Storage System
 
-This document outlines the user preferences storage system implemented in the ChatGPT Clone application. The system provides persistent storage of user preferences in MongoDB with real-time synchronization.
+This document outlines the user preferences storage system implemented in the ChatGPT Clone
+application. The system provides persistent storage of user preferences in MongoDB with real-time
+synchronization.
 
 ## Overview
 
 The user preferences system consists of:
+
 - **API Endpoints** for CRUD operations on user preferences
 - **Client-side Hook** for managing preferences with caching and optimistic updates
 - **Database Integration** with the User model and service layer
@@ -19,6 +22,7 @@ Fetch current user preferences.
 **Authentication**: Required (Clerk JWT)
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -37,6 +41,7 @@ Fetch current user preferences.
 ```
 
 **Error Response**:
+
 ```json
 {
   "success": false,
@@ -54,6 +59,7 @@ Update user preferences (partial or full updates supported).
 **Authentication**: Required (Clerk JWT)
 
 **Request Body**:
+
 ```json
 {
   "theme": "dark",
@@ -62,6 +68,7 @@ Update user preferences (partial or full updates supported).
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -114,8 +121,8 @@ function SettingsPage() {
   return (
     <div>
       <h1>Settings</h1>
-      <select 
-        value={preferences?.theme} 
+      <select
+        value={preferences?.theme}
         onChange={(e) => handleThemeChange(e.target.value)}
       >
         <option value="light">Light</option>
@@ -134,17 +141,17 @@ interface UseUserPreferencesReturn {
   // Data
   preferences: UserPreferences | null;
   lastUpdated: Date | null;
-  
+
   // States
   isLoading: boolean;
   isUpdating: boolean;
   error: string | null;
-  
+
   // Actions
   updatePreferences: (updates: PreferenceUpdate) => Promise<boolean>;
   refreshPreferences: () => Promise<void>;
   resetError: () => void;
-  
+
   // Convenience methods
   updateTheme: (theme: 'light' | 'dark' | 'system') => Promise<boolean>;
   updateModel: (model: string) => Promise<boolean>;
@@ -195,14 +202,14 @@ interface UserPreferences {
 
 ### Validation Rules
 
-| Field | Type | Valid Values | Default |
-|-------|------|--------------|---------|
-| `theme` | string | `'light'`, `'dark'`, `'system'` | `'system'` |
-| `aiModel` | string | `'gpt-3.5-turbo'`, `'gpt-4'`, `'gpt-4-turbo'` | `'gpt-3.5-turbo'` |
-| `language` | string | ISO language codes (2-5 chars) | `'en'` |
-| `fontSize` | string | `'small'`, `'medium'`, `'large'` | `'medium'` |
-| `soundEnabled` | boolean | `true`, `false` | `true` |
-| `emailNotifications` | boolean | `true`, `false` | `true` |
+| Field                | Type    | Valid Values                                  | Default           |
+| -------------------- | ------- | --------------------------------------------- | ----------------- |
+| `theme`              | string  | `'light'`, `'dark'`, `'system'`               | `'system'`        |
+| `aiModel`            | string  | `'gpt-3.5-turbo'`, `'gpt-4'`, `'gpt-4-turbo'` | `'gpt-3.5-turbo'` |
+| `language`           | string  | ISO language codes (2-5 chars)                | `'en'`            |
+| `fontSize`           | string  | `'small'`, `'medium'`, `'large'`              | `'medium'`        |
+| `soundEnabled`       | boolean | `true`, `false`                               | `true`            |
+| `emailNotifications` | boolean | `true`, `false`                               | `true`            |
 
 ## Database Integration
 
@@ -267,7 +274,7 @@ The API uses the user service layer for database operations:
 ```typescript
 function App() {
   const { preferences, updateTheme } = useUserPreferences();
-  
+
   return (
     <ThemeProvider theme={preferences?.theme || 'system'}>
       <button onClick={() => updateTheme('dark')}>
@@ -282,13 +289,13 @@ function App() {
 
 ```typescript
 function PreferencesForm() {
-  const { 
-    preferences, 
-    isUpdating, 
-    updatePreferences, 
-    error 
+  const {
+    preferences,
+    isUpdating,
+    updatePreferences,
+    error
   } = useUserPreferences();
-  
+
   const handleSubmit = async (formData: PreferenceUpdate) => {
     const success = await updatePreferences(formData);
     if (success) {
@@ -313,7 +320,7 @@ function PreferencesForm() {
 ```typescript
 function UserProvider({ children }) {
   const preferences = useUserPreferences();
-  
+
   return (
     <UserContext.Provider value={{ preferences }}>
       {children}
@@ -340,13 +347,13 @@ function UserProvider({ children }) {
 
 ## Error Codes
 
-| Code | Description | Solution |
-|------|-------------|----------|
-| `UNAUTHENTICATED` | User not signed in | Redirect to sign-in |
-| `USER_NOT_FOUND` | User profile missing | Create user profile |
-| `VALIDATION_ERROR` | Invalid input data | Fix validation errors |
-| `DATABASE_ERROR` | Database operation failed | Retry operation |
-| `INTERNAL_ERROR` | Unexpected server error | Contact support |
+| Code               | Description               | Solution              |
+| ------------------ | ------------------------- | --------------------- |
+| `UNAUTHENTICATED`  | User not signed in        | Redirect to sign-in   |
+| `USER_NOT_FOUND`   | User profile missing      | Create user profile   |
+| `VALIDATION_ERROR` | Invalid input data        | Fix validation errors |
+| `DATABASE_ERROR`   | Database operation failed | Retry operation       |
+| `INTERNAL_ERROR`   | Unexpected server error   | Contact support       |
 
 ## Future Enhancements
 

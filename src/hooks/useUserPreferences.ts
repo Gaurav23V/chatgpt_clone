@@ -15,7 +15,8 @@
  * - Loading and error states
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+
 import { useUser } from '@clerk/nextjs';
 
 // ========================================
@@ -68,19 +69,19 @@ export interface UseUserPreferencesReturn {
   // Preference data
   preferences: UserPreferences | null;
   lastUpdated: Date | null;
-  
+
   // Loading states
   isLoading: boolean;
   isUpdating: boolean;
-  
+
   // Error state
   error: string | null;
-  
+
   // Actions
   updatePreferences: (updates: PreferenceUpdate) => Promise<boolean>;
   refreshPreferences: () => Promise<void>;
   resetError: () => void;
-  
+
   // Convenience methods
   updateTheme: (theme: UserPreferences['theme']) => Promise<boolean>;
   updateModel: (model: string) => Promise<boolean>;
@@ -123,11 +124,14 @@ async function fetchPreferences(): Promise<PreferencesData> {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+    throw new Error(
+      errorData.error?.message ||
+        `HTTP ${response.status}: ${response.statusText}`
+    );
   }
 
   const result: ApiResponse<PreferencesData> = await response.json();
-  
+
   if (!result.success || !result.data) {
     throw new Error(result.error?.message || 'Failed to fetch preferences');
   }
@@ -138,7 +142,9 @@ async function fetchPreferences(): Promise<PreferencesData> {
 /**
  * Update user preferences via API
  */
-async function updatePreferencesApi(updates: PreferenceUpdate): Promise<PreferencesData> {
+async function updatePreferencesApi(
+  updates: PreferenceUpdate
+): Promise<PreferencesData> {
   const response = await fetch('/api/user/preferences', {
     method: 'PUT',
     headers: {
@@ -149,11 +155,14 @@ async function updatePreferencesApi(updates: PreferenceUpdate): Promise<Preferen
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+    throw new Error(
+      errorData.error?.message ||
+        `HTTP ${response.status}: ${response.statusText}`
+    );
   }
 
   const result: ApiResponse<PreferencesData> = await response.json();
-  
+
   if (!result.success || !result.data) {
     throw new Error(result.error?.message || 'Failed to update preferences');
   }
@@ -212,10 +221,11 @@ export function useUserPreferences(): UseUserPreferencesReturn {
       setPreferences(data.preferences);
       setLastUpdated(new Date(data.lastUpdated));
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load preferences';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load preferences';
       setError(errorMessage);
       console.error('[useUserPreferences] Fetch error:', err);
-      
+
       // Fallback to default preferences
       setPreferences(DEFAULT_PREFERENCES);
       setLastUpdated(new Date());
@@ -227,40 +237,44 @@ export function useUserPreferences(): UseUserPreferencesReturn {
   /**
    * Update preferences with optimistic updates
    */
-  const updatePreferences = useCallback(async (updates: PreferenceUpdate): Promise<boolean> => {
-    if (!isSignedIn || !preferences) {
-      setError('User must be signed in to update preferences');
-      return false;
-    }
+  const updatePreferences = useCallback(
+    async (updates: PreferenceUpdate): Promise<boolean> => {
+      if (!isSignedIn || !preferences) {
+        setError('User must be signed in to update preferences');
+        return false;
+      }
 
-    // Optimistic update
-    const previousPreferences = { ...preferences };
-    const optimisticPreferences = { ...preferences, ...updates };
-    setPreferences(optimisticPreferences);
-    setIsUpdating(true);
-    setError(null);
+      // Optimistic update
+      const previousPreferences = { ...preferences };
+      const optimisticPreferences = { ...preferences, ...updates };
+      setPreferences(optimisticPreferences);
+      setIsUpdating(true);
+      setError(null);
 
-    try {
-      const data = await updatePreferencesApi(updates);
-      
-      // Update with server response
-      setPreferences(data.preferences);
-      setLastUpdated(new Date(data.lastUpdated));
-      
-      return true;
-    } catch (err) {
-      // Rollback optimistic update
-      setPreferences(previousPreferences);
-      
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update preferences';
-      setError(errorMessage);
-      console.error('[useUserPreferences] Update error:', err);
-      
-      return false;
-    } finally {
-      setIsUpdating(false);
-    }
-  }, [isSignedIn, preferences]);
+      try {
+        const data = await updatePreferencesApi(updates);
+
+        // Update with server response
+        setPreferences(data.preferences);
+        setLastUpdated(new Date(data.lastUpdated));
+
+        return true;
+      } catch (err) {
+        // Rollback optimistic update
+        setPreferences(previousPreferences);
+
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to update preferences';
+        setError(errorMessage);
+        console.error('[useUserPreferences] Update error:', err);
+
+        return false;
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [isSignedIn, preferences]
+  );
 
   // ========================================
   // CONVENIENCE METHODS
@@ -269,30 +283,42 @@ export function useUserPreferences(): UseUserPreferencesReturn {
   /**
    * Update theme preference
    */
-  const updateTheme = useCallback(async (theme: UserPreferences['theme']): Promise<boolean> => {
-    return updatePreferences({ theme });
-  }, [updatePreferences]);
+  const updateTheme = useCallback(
+    async (theme: UserPreferences['theme']): Promise<boolean> => {
+      return updatePreferences({ theme });
+    },
+    [updatePreferences]
+  );
 
   /**
    * Update AI model preference
    */
-  const updateModel = useCallback(async (aiModel: string): Promise<boolean> => {
-    return updatePreferences({ aiModel });
-  }, [updatePreferences]);
+  const updateModel = useCallback(
+    async (aiModel: string): Promise<boolean> => {
+      return updatePreferences({ aiModel });
+    },
+    [updatePreferences]
+  );
 
   /**
    * Update language preference
    */
-  const updateLanguage = useCallback(async (language: string): Promise<boolean> => {
-    return updatePreferences({ language });
-  }, [updatePreferences]);
+  const updateLanguage = useCallback(
+    async (language: string): Promise<boolean> => {
+      return updatePreferences({ language });
+    },
+    [updatePreferences]
+  );
 
   /**
    * Update font size preference
    */
-  const updateFontSize = useCallback(async (fontSize: UserPreferences['fontSize']): Promise<boolean> => {
-    return updatePreferences({ fontSize });
-  }, [updatePreferences]);
+  const updateFontSize = useCallback(
+    async (fontSize: UserPreferences['fontSize']): Promise<boolean> => {
+      return updatePreferences({ fontSize });
+    },
+    [updatePreferences]
+  );
 
   /**
    * Toggle sound enabled preference
@@ -307,7 +333,9 @@ export function useUserPreferences(): UseUserPreferencesReturn {
    */
   const toggleEmailNotifications = useCallback(async (): Promise<boolean> => {
     if (!preferences) return false;
-    return updatePreferences({ emailNotifications: !preferences.emailNotifications });
+    return updatePreferences({
+      emailNotifications: !preferences.emailNotifications,
+    });
   }, [preferences, updatePreferences]);
 
   // ========================================
@@ -331,19 +359,19 @@ export function useUserPreferences(): UseUserPreferencesReturn {
     // Preference data
     preferences,
     lastUpdated,
-    
+
     // Loading states
     isLoading,
     isUpdating,
-    
+
     // Error state
     error,
-    
+
     // Actions
     updatePreferences,
     refreshPreferences,
     resetError,
-    
+
     // Convenience methods
     updateTheme,
     updateModel,
@@ -363,15 +391,19 @@ export function useUserPreferences(): UseUserPreferencesReturn {
  */
 export function usePreference<K extends keyof UserPreferences>(
   key: K
-): [UserPreferences[K] | null, (value: UserPreferences[K]) => Promise<boolean>] {
+): [
+  UserPreferences[K] | null,
+  (value: UserPreferences[K]) => Promise<boolean>,
+] {
   const { preferences, updatePreferences } = useUserPreferences();
-  
+
   const value = preferences?.[key] ?? null;
   const updateValue = useCallback(
-    (newValue: UserPreferences[K]) => updatePreferences({ [key]: newValue } as PreferenceUpdate),
+    (newValue: UserPreferences[K]) =>
+      updatePreferences({ [key]: newValue } as PreferenceUpdate),
     [key, updatePreferences]
   );
-  
+
   return [value, updateValue];
 }
 
@@ -380,7 +412,7 @@ export function usePreference<K extends keyof UserPreferences>(
  */
 export function useThemePreference() {
   const { preferences, updateTheme, isLoading } = useUserPreferences();
-  
+
   return {
     theme: preferences?.theme ?? 'system',
     updateTheme,
@@ -393,7 +425,7 @@ export function useThemePreference() {
  */
 export function useModelPreference() {
   const { preferences, updateModel, isLoading } = useUserPreferences();
-  
+
   return {
     model: preferences?.aiModel ?? 'gpt-3.5-turbo',
     updateModel,
@@ -402,4 +434,4 @@ export function useModelPreference() {
 }
 
 // Export default
-export default useUserPreferences; 
+export default useUserPreferences;

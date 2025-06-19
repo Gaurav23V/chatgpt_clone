@@ -1,6 +1,7 @@
 # Database Utilities Documentation
 
-This document explains how to use the comprehensive database utilities and middleware for the ChatGPT clone project.
+This document explains how to use the comprehensive database utilities and middleware for the
+ChatGPT clone project.
 
 ## Table of Contents
 
@@ -33,25 +34,25 @@ import {
   // Health and monitoring
   performHealthCheck,
   monitorConnection,
-  
+
   // Error handling
   parseMongoError,
   withRetry,
   safeDbOperation,
-  
+
   // Performance
   withPerformanceMonitoring,
   getQueryPerformanceStats,
-  
+
   // Security
   sanitizeQuery,
   projectFields,
   sortBuilder,
-  
+
   // Pagination
   paginate,
   executePaginatedQuery,
-  
+
   // Development
   debugConnection,
   enableQueryLogging,
@@ -92,7 +93,7 @@ try {
   await User.create(userData);
 } catch (error) {
   const mongoError = parseMongoError(error);
-  
+
   console.log('Error type:', mongoError.type);
   console.log('User message:', mongoError.userMessage);
   console.log('Retryable:', mongoError.retryable);
@@ -102,12 +103,9 @@ try {
 #### Safe Database Operations
 
 ```typescript
-const result = await safeDbOperation(
-  async () => {
-    return await User.findById(userId);
-  },
-  'Find user by ID'
-);
+const result = await safeDbOperation(async () => {
+  return await User.findById(userId);
+}, 'Find user by ID');
 
 if (result.success) {
   const user = result.data;
@@ -193,10 +191,7 @@ const invalidSort = sortBuilder('$where', 'desc');
 const options = { page: 1, limit: 20, sortBy: 'createdAt', sortOrder: 'desc' };
 const { skip, limit, sort } = paginate(options);
 
-const users = await User.find({})
-  .sort(sort)
-  .skip(skip)
-  .limit(limit);
+const users = await User.find({}).sort(sort).skip(skip).limit(limit);
 ```
 
 #### Paginated Query with Response
@@ -240,7 +235,7 @@ import type { IApiRequestWithTiming } from '@/lib/db/middleware';
 async function handler(req: IApiRequestWithTiming, res: NextApiResponse) {
   // Database is guaranteed to be connected
   // Access timing info via req.timing
-  
+
   const users = await User.find({});
   res.json(users);
 }
@@ -321,53 +316,47 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search');
-    
+
     // Build safe filter
     let filter: any = {};
     if (search) {
       filter = sanitizeQuery({
-        title: { $regex: search, $options: 'i' }
+        title: { $regex: search, $options: 'i' },
       });
     }
-    
+
     // Execute paginated query with timing
-    const result = await safeDbOperation(
-      async () => {
-        return await withTiming(
-          () => executePaginatedQuery(
+    const result = await safeDbOperation(async () => {
+      return await withTiming(
+        () =>
+          executePaginatedQuery(
             Conversation,
             filter,
             { page, limit, sortBy: 'updatedAt', sortOrder: 'desc' },
             projectFields(['title', 'messageCount', 'updatedAt'])
           ),
-          'Get conversations'
-        );
-      },
-      'Fetch conversations with pagination'
-    );
-    
+        'Get conversations'
+      );
+    }, 'Fetch conversations with pagination');
+
     if (!result.success) {
       return NextResponse.json(
         { error: result.error.userMessage },
         { status: result.error.type === MongoErrorType.CONNECTION_ERROR ? 503 : 500 }
       );
     }
-    
+
     const { result: queryResult, duration } = result.data;
-    
+
     return NextResponse.json(queryResult, {
       headers: {
         'X-Query-Duration': String(duration),
         'X-Total-Count': String(queryResult.pagination.total),
       },
     });
-    
   } catch (error) {
     const mongoError = parseMongoError(error instanceof Error ? error : new Error('Unknown error'));
-    return NextResponse.json(
-      { error: mongoError.userMessage },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: mongoError.userMessage }, { status: 500 });
   }
 }
 ```
@@ -378,8 +367,8 @@ export async function GET(request: NextRequest) {
 import { executeBatch } from '@/lib/db/utils';
 
 // Process multiple operations in batches
-const operations = users.map(user => 
-  () => User.findByIdAndUpdate(user.id, { lastLogin: new Date() })
+const operations = users.map(
+  (user) => () => User.findByIdAndUpdate(user.id, { lastLogin: new Date() })
 );
 
 const results = await executeBatch(operations, 5); // Process 5 at a time
@@ -430,7 +419,7 @@ console.log('Performance Report:', {
   totalQueries: stats.totalQueries,
   averageDuration: `${stats.averageDuration.toFixed(2)}ms`,
   slowQueries: stats.slowQueries.length,
-  recentQueries: stats.recentQueries.map(q => ({
+  recentQueries: stats.recentQueries.map((q) => ({
     query: q.query,
     duration: q.duration,
     success: q.success,
@@ -444,12 +433,12 @@ console.log('Performance Report:', {
 
 ```typescript
 enum MongoErrorType {
-  CONNECTION_ERROR = 'CONNECTION_ERROR',      // Network/connection issues
-  VALIDATION_ERROR = 'VALIDATION_ERROR',      // Data validation failed
+  CONNECTION_ERROR = 'CONNECTION_ERROR', // Network/connection issues
+  VALIDATION_ERROR = 'VALIDATION_ERROR', // Data validation failed
   DUPLICATE_KEY_ERROR = 'DUPLICATE_KEY_ERROR', // Unique constraint violation
-  CAST_ERROR = 'CAST_ERROR',                  // Type casting failed
-  TIMEOUT_ERROR = 'TIMEOUT_ERROR',            // Operation timeout
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR',            // Other errors
+  CAST_ERROR = 'CAST_ERROR', // Type casting failed
+  TIMEOUT_ERROR = 'TIMEOUT_ERROR', // Operation timeout
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR', // Other errors
 }
 ```
 
@@ -460,11 +449,11 @@ All database errors return a consistent format:
 ```typescript
 interface IMongoError {
   type: MongoErrorType;
-  message: string;           // Technical error message
-  userMessage: string;       // User-friendly message
-  originalError: Error;      // Original error object
-  code?: number;            // MongoDB error code
-  retryable: boolean;       // Whether operation can be retried
+  message: string; // Technical error message
+  userMessage: string; // User-friendly message
+  originalError: Error; // Original error object
+  code?: number; // MongoDB error code
+  retryable: boolean; // Whether operation can be retried
 }
 ```
 
@@ -489,4 +478,4 @@ Your application now includes a comprehensive health check endpoint at `/api/hea
 - Query performance statistics
 - Connection monitoring metrics
 
-Use this endpoint for monitoring and load balancer health checks. 
+Use this endpoint for monitoring and load balancer health checks.

@@ -1,11 +1,14 @@
 # User Context System
 
-This directory contains the user context and related functionality that extends Clerk's basic authentication with app-specific user state management.
+This directory contains the user context and related functionality that extends Clerk's basic
+authentication with app-specific user state management.
 
 ## Overview
 
 The user context system provides:
-- **Extended User State**: Combines Clerk's authentication data with app-specific preferences and settings
+
+- **Extended User State**: Combines Clerk's authentication data with app-specific preferences and
+  settings
 - **Persistent Storage**: Automatically saves user preferences to localStorage
 - **Type Safety**: Full TypeScript support with proper type definitions
 - **Custom Hooks**: Convenient hooks for accessing specific parts of user state
@@ -39,9 +42,7 @@ import { UserProvider } from '@/contexts/user-context';
 export default function RootLayout({ children }) {
   return (
     <ClerkProvider>
-      <UserProvider>
-        {children}
-      </UserProvider>
+      <UserProvider>{children}</UserProvider>
     </ClerkProvider>
   );
 }
@@ -50,6 +51,7 @@ export default function RootLayout({ children }) {
 ### 2. Using Custom Hooks
 
 #### useAuthState Hook
+
 Access authentication status and user data:
 
 ```tsx
@@ -66,6 +68,7 @@ function MyComponent() {
 ```
 
 #### useUserPreferences Hook
+
 Manage user preferences (theme, model, language, font size):
 
 ```tsx
@@ -80,14 +83,11 @@ function PreferencesPanel() {
 
   return (
     <div>
-      <h3>Preferences {isSaving && "(Saving...)"}</h3>
-      <select
-        value={preferences.theme}
-        onChange={(e) => handleThemeChange(e.target.value as any)}
-      >
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
-        <option value="system">System</option>
+      <h3>Preferences {isSaving && '(Saving...)'}</h3>
+      <select value={preferences.theme} onChange={(e) => handleThemeChange(e.target.value as any)}>
+        <option value='light'>Light</option>
+        <option value='dark'>Dark</option>
+        <option value='system'>System</option>
       </select>
     </div>
   );
@@ -95,6 +95,7 @@ function PreferencesPanel() {
 ```
 
 #### useUserSettings Hook
+
 Manage chat-specific settings:
 
 ```tsx
@@ -109,9 +110,9 @@ function SettingsPanel() {
       <label>
         History Limit: {settings.historyLimit}
         <input
-          type="range"
-          min="10"
-          max="100"
+          type='range'
+          min='10'
+          max='100'
           value={settings.historyLimit}
           onChange={(e) => updateSettings({ historyLimit: parseInt(e.target.value) })}
         />
@@ -119,7 +120,7 @@ function SettingsPanel() {
 
       <label>
         <input
-          type="checkbox"
+          type='checkbox'
           checked={settings.autoSave}
           onChange={(e) => updateSettings({ autoSave: e.target.checked })}
         />
@@ -131,6 +132,7 @@ function SettingsPanel() {
 ```
 
 #### useCurrentConversation Hook
+
 Manage active conversation state:
 
 ```tsx
@@ -155,6 +157,7 @@ function ChatInterface() {
 ```
 
 #### useUserContext Hook (Full Access)
+
 Access the complete user context:
 
 ```tsx
@@ -174,7 +177,7 @@ function AdvancedUserComponent() {
     resetToDefaults,
     isLoadingPreferences,
     isLoadingSettings,
-    isSaving
+    isSaving,
   } = useUserContext();
 
   // Full access to all user state and functions
@@ -184,6 +187,7 @@ function AdvancedUserComponent() {
 ## Type Definitions
 
 ### UserPreferences Interface
+
 ```typescript
 interface UserPreferences {
   theme: 'light' | 'dark' | 'system';
@@ -194,6 +198,7 @@ interface UserPreferences {
 ```
 
 ### UserSettings Interface
+
 ```typescript
 interface UserSettings {
   historyLimit: number;
@@ -204,6 +209,7 @@ interface UserSettings {
 ```
 
 ### ExtendedUserState Interface
+
 ```typescript
 interface ExtendedUserState {
   // Clerk user data
@@ -236,11 +242,13 @@ interface ExtendedUserState {
 The user context automatically persists data to localStorage with the following strategy:
 
 ### Storage Keys
+
 - `chatgpt-clone-preferences-${userId}` - User preferences
 - `chatgpt-clone-settings-${userId}` - User settings
 - `chatgpt-clone-current-conversation-${userId}` - Active conversation ID
 
 ### Behavior
+
 - **Automatic Save**: Changes are immediately saved to localStorage
 - **User-Specific**: Each user's data is stored separately using their Clerk user ID
 - **Error Handling**: Failed saves are logged and state is reverted
@@ -249,6 +257,7 @@ The user context automatically persists data to localStorage with the following 
 ## Error Handling
 
 The context includes comprehensive error handling:
+
 - Failed localStorage operations are logged and gracefully handled
 - State reverts to previous values on save errors
 - Default values are used when stored data is corrupted
@@ -270,7 +279,8 @@ This component provides an interactive interface to test all user context featur
 
 ## Integration with Database
 
-While the current implementation uses localStorage for persistence, the system is designed to easily integrate with a database:
+While the current implementation uses localStorage for persistence, the system is designed to easily
+integrate with a database:
 
 1. Replace localStorage operations in the context with API calls
 2. Add server-side endpoints for user preferences and settings
@@ -279,7 +289,8 @@ While the current implementation uses localStorage for persistence, the system i
 
 ## Best Practices
 
-1. **Use Specific Hooks**: Prefer `useUserPreferences()` over `useUserContext()` when you only need preferences
+1. **Use Specific Hooks**: Prefer `useUserPreferences()` over `useUserContext()` when you only need
+   preferences
 2. **Check Loading States**: Always check `isLoaded` before accessing user data
 3. **Handle Errors**: Implement error boundaries around components using user context
 4. **Optimize Updates**: Batch multiple preference updates when possible

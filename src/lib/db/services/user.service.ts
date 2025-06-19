@@ -14,10 +14,12 @@
  * - Duplicate prevention and conflict resolution
  */
 
-import { startSession, ClientSession } from 'mongoose';
-import { User, Conversation } from '@/lib/db/models';
+import type { ClientSession } from 'mongoose';
+import { startSession } from 'mongoose';
+
 import { connectToDatabase } from '@/lib/db/connection';
-import type { IUser, IConversation } from '@/types/database';
+import { Conversation, User } from '@/lib/db/models';
+import type { IConversation, IUser } from '@/types/database';
 
 // ========================================
 // TYPE DEFINITIONS
@@ -62,7 +64,7 @@ export interface ServiceError {
   timestamp: Date;
 }
 
-export type ErrorCode = 
+export type ErrorCode =
   | 'USER_NOT_FOUND'
   | 'USER_ALREADY_EXISTS'
   | 'INVALID_CLERK_ID'
@@ -117,7 +119,7 @@ export interface UpsertResult {
  */
 export function transformClerkUser(clerkUser: ClerkUserData): CreateUserInput {
   const primaryEmail = clerkUser.emailAddresses?.[0]?.emailAddress;
-  
+
   if (!primaryEmail) {
     throw new Error('User must have a primary email address');
   }
@@ -135,20 +137,22 @@ export function transformClerkUser(clerkUser: ClerkUserData): CreateUserInput {
       fontSize: 'medium',
       aiModel: 'gpt-3.5-turbo',
       soundEnabled: true,
-      emailNotifications: true
+      emailNotifications: true,
     },
     subscription: {
       plan: 'free',
       status: 'active',
-      cancelAtPeriodEnd: false
-    }
+      cancelAtPeriodEnd: false,
+    },
   };
 }
 
 /**
  * Sanitize and validate user input data
  */
-export function sanitizeUserInput(input: Partial<UpdateUserInput>): Partial<UpdateUserInput> {
+export function sanitizeUserInput(
+  input: Partial<UpdateUserInput>
+): Partial<UpdateUserInput> {
   const sanitized: Partial<UpdateUserInput> = {};
 
   // Sanitize email
@@ -220,7 +224,11 @@ function isValidUrl(url: string): boolean {
  * Validate Clerk ID format
  */
 function isValidClerkId(clerkId: string): boolean {
-  return typeof clerkId === 'string' && clerkId.length > 0 && clerkId.startsWith('user_');
+  return (
+    typeof clerkId === 'string' &&
+    clerkId.length > 0 &&
+    clerkId.startsWith('user_')
+  );
 }
 
 // ========================================
@@ -230,15 +238,19 @@ function isValidClerkId(clerkId: string): boolean {
 /**
  * Create standardized error result
  */
-function createErrorResult(code: ErrorCode, message: string, details?: any): ServiceResult {
+function createErrorResult(
+  code: ErrorCode,
+  message: string,
+  details?: any
+): ServiceResult {
   return {
     success: false,
     error: {
       code,
       message,
       details,
-      timestamp: new Date()
-    }
+      timestamp: new Date(),
+    },
   };
 }
 
@@ -248,7 +260,7 @@ function createErrorResult(code: ErrorCode, message: string, details?: any): Ser
 function createSuccessResult<T>(data: T): ServiceResult<T> {
   return {
     success: true,
-    data
+    data,
   };
 }
 
@@ -260,7 +272,7 @@ function logError(operation: string, error: any, context?: any): void {
     error: error.message || error,
     stack: error.stack,
     context,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 }
 
@@ -282,49 +294,61 @@ export async function createUser(
 
     // Validate Clerk ID
     if (!isValidClerkId(clerkUserData.id)) {
-      return createErrorResult('INVALID_CLERK_ID', 'Invalid Clerk user ID format');
+      return createErrorResult(
+        'INVALID_CLERK_ID',
+        'Invalid Clerk user ID format'
+      );
     }
 
     // Transform Clerk data to our schema
     const userData = transformClerkUser(clerkUserData);
 
     // Check if user already exists
-    const existingUser = await User.findOne({ clerkId: userData.clerkId }).session(session || null);
+    const existingUser = await User.findOne({
+      clerkId: userData.clerkId,
+    }).session(session || null);
     if (existingUser) {
       return createErrorResult(
-        'USER_ALREADY_EXISTS', 
+        'USER_ALREADY_EXISTS',
         'User with this Clerk ID already exists',
         { clerkId: userData.clerkId }
       );
     }
 
     // Create new user
-    const [newUser] = await User.create([{
-      ...userData,
-      lastLoginAt: new Date(),
-      usage: {
-        totalMessages: 0,
-        totalTokens: 0,
-        messagesThisMonth: 0,
-        tokensThisMonth: 0,
-        lastResetDate: new Date()
-      }
-    }], { session });
+    const [newUser] = await User.create(
+      [
+        {
+          ...userData,
+          lastLoginAt: new Date(),
+          usage: {
+            totalMessages: 0,
+            totalTokens: 0,
+            messagesThisMonth: 0,
+            tokensThisMonth: 0,
+            lastResetDate: new Date(),
+          },
+        },
+      ],
+      { session }
+    );
 
-    console.log(`[UserService.createUser] User created successfully: ${userData.clerkId}`);
+    console.log(
+      `[UserService.createUser] User created successfully: ${userData.clerkId}`
+    );
     return createSuccessResult(newUser);
-
   } catch (error: any) {
     logError('createUser', error, { clerkId: clerkUserData?.id });
-    
+
     // Handle specific MongoDB errors
-    if (error.code === 11000) { // Duplicate key error
+    if (error.code === 11000) {
+      // Duplicate key error
       return createErrorResult(
         'USER_ALREADY_EXISTS',
         'User already exists with this email or Clerk ID'
       );
     }
-    
+
     if (error.name === 'ValidationError') {
       return createErrorResult(
         'VALIDATION_ERROR',
@@ -356,7 +380,10 @@ export async function updateUser(
 
     // Validate Clerk ID
     if (!isValidClerkId(clerkId)) {
-      return createErrorResult('INVALID_CLERK_ID', 'Invalid Clerk user ID format');
+      return createErrorResult(
+        'INVALID_CLERK_ID',
+        'Invalid Clerk user ID format'
+      );
     }
 
     // Sanitize input data
@@ -368,30 +395,29 @@ export async function updateUser(
       {
         $set: {
           ...sanitizedUpdates,
-          lastLoginAt: new Date()
-        }
+          lastLoginAt: new Date(),
+        },
       },
       {
         new: true,
         runValidators: true,
-        session
+        session,
       }
     );
 
     if (!updatedUser) {
-      return createErrorResult(
-        'USER_NOT_FOUND',
-        'User not found or inactive',
-        { clerkId }
-      );
+      return createErrorResult('USER_NOT_FOUND', 'User not found or inactive', {
+        clerkId,
+      });
     }
 
-    console.log(`[UserService.updateUser] User updated successfully: ${clerkId}`);
+    console.log(
+      `[UserService.updateUser] User updated successfully: ${clerkId}`
+    );
     return createSuccessResult(updatedUser);
-
   } catch (error: any) {
     logError('updateUser', error, { clerkId, updates });
-    
+
     if (error.name === 'ValidationError') {
       return createErrorResult(
         'VALIDATION_ERROR',
@@ -422,12 +448,15 @@ export async function upsertUser(
 
     // Validate Clerk ID
     if (!isValidClerkId(clerkUserData.id)) {
-      return createErrorResult('INVALID_CLERK_ID', 'Invalid Clerk user ID format');
+      return createErrorResult(
+        'INVALID_CLERK_ID',
+        'Invalid Clerk user ID format'
+      );
     }
 
     // Check if user exists
-    const existingUser = await User.findOne({ 
-      clerkId: clerkUserData.id 
+    const existingUser = await User.findOne({
+      clerkId: clerkUserData.id,
     }).session(session || null);
 
     if (existingUser) {
@@ -440,7 +469,7 @@ export async function upsertUser(
           firstName: userData.firstName,
           lastName: userData.lastName,
           imageUrl: userData.imageUrl,
-          username: userData.username
+          username: userData.username,
         },
         session
       );
@@ -451,22 +480,21 @@ export async function upsertUser(
 
       return createSuccessResult({
         user: updateResult.data!,
-        created: false
+        created: false,
       });
     } else {
       // Create new user
       const createResult = await createUser(clerkUserData, session);
-      
+
       if (!createResult.success) {
         return { success: false, error: createResult.error };
       }
 
       return createSuccessResult({
         user: createResult.data!,
-        created: true
+        created: true,
       });
     }
-
   } catch (error: any) {
     logError('upsertUser', error, { clerkId: clerkUserData?.id });
     return createErrorResult(
@@ -492,22 +520,20 @@ export async function deleteUser(
 
     // Validate Clerk ID
     if (!isValidClerkId(clerkId)) {
-      return createErrorResult('INVALID_CLERK_ID', 'Invalid Clerk user ID format');
+      return createErrorResult(
+        'INVALID_CLERK_ID',
+        'Invalid Clerk user ID format'
+      );
     }
 
     if (hardDelete) {
       // Hard delete - permanently remove user
-      const deletedUser = await User.findOneAndDelete(
-        { clerkId },
-        { session }
-      );
+      const deletedUser = await User.findOneAndDelete({ clerkId }, { session });
 
       if (!deletedUser) {
-        return createErrorResult(
-          'USER_NOT_FOUND',
-          'User not found',
-          { clerkId }
-        );
+        return createErrorResult('USER_NOT_FOUND', 'User not found', {
+          clerkId,
+        });
       }
 
       console.log(`[UserService.deleteUser] User hard deleted: ${clerkId}`);
@@ -519,24 +545,21 @@ export async function deleteUser(
         {
           $set: {
             isActive: false,
-            deletedAt: new Date()
-          }
+            deletedAt: new Date(),
+          },
         },
         { session }
       );
 
       if (!updatedUser) {
-        return createErrorResult(
-          'USER_NOT_FOUND',
-          'User not found',
-          { clerkId }
-        );
+        return createErrorResult('USER_NOT_FOUND', 'User not found', {
+          clerkId,
+        });
       }
 
       console.log(`[UserService.deleteUser] User soft deleted: ${clerkId}`);
       return createSuccessResult({ deleted: true, hardDelete: false });
     }
-
   } catch (error: any) {
     logError('deleteUser', error, { clerkId, hardDelete });
     return createErrorResult(
@@ -562,25 +585,21 @@ export async function getUserByClerkId(
     await connectToDatabase();
 
     if (!isValidClerkId(clerkId)) {
-      return createErrorResult('INVALID_CLERK_ID', 'Invalid Clerk user ID format');
+      return createErrorResult(
+        'INVALID_CLERK_ID',
+        'Invalid Clerk user ID format'
+      );
     }
 
-    const query = includeDeleted 
-      ? { clerkId }
-      : { clerkId, isActive: true };
+    const query = includeDeleted ? { clerkId } : { clerkId, isActive: true };
 
     const user = await User.findOne(query);
 
     if (!user) {
-      return createErrorResult(
-        'USER_NOT_FOUND',
-        'User not found',
-        { clerkId }
-      );
+      return createErrorResult('USER_NOT_FOUND', 'User not found', { clerkId });
     }
 
     return createSuccessResult(user);
-
   } catch (error: any) {
     logError('getUserByClerkId', error, { clerkId });
     return createErrorResult(
@@ -598,10 +617,10 @@ export async function withTransaction<T>(
   operation: (session: ClientSession) => Promise<T>
 ): Promise<T> {
   const session = await startSession();
-  
+
   try {
     let result: T;
-    
+
     await session.withTransaction(async () => {
       result = await operation(session);
     });
@@ -622,7 +641,9 @@ export async function withTransaction<T>(
 /**
  * Handle Clerk user.created webhook
  */
-export async function handleUserCreated(clerkUserData: ClerkUserData): Promise<ServiceResult<IUser>> {
+export async function handleUserCreated(
+  clerkUserData: ClerkUserData
+): Promise<ServiceResult<IUser>> {
   return withTransaction(async (session) => {
     const result = await createUser(clerkUserData, session);
     if (!result.success) {
@@ -635,7 +656,9 @@ export async function handleUserCreated(clerkUserData: ClerkUserData): Promise<S
 /**
  * Handle Clerk user.updated webhook
  */
-export async function handleUserUpdated(clerkUserData: ClerkUserData): Promise<ServiceResult<UpsertResult>> {
+export async function handleUserUpdated(
+  clerkUserData: ClerkUserData
+): Promise<ServiceResult<UpsertResult>> {
   return withTransaction(async (session) => {
     const result = await upsertUser(clerkUserData, session);
     if (!result.success) {
@@ -649,7 +672,7 @@ export async function handleUserUpdated(clerkUserData: ClerkUserData): Promise<S
  * Handle Clerk user.deleted webhook
  */
 export async function handleUserDeleted(
-  clerkId: string, 
+  clerkId: string,
   hardDelete: boolean = false
 ): Promise<ServiceResult<{ deleted: boolean; hardDelete: boolean }>> {
   return withTransaction(async (session) => {
@@ -677,7 +700,10 @@ export async function getUserWithConversations(
     await connectToDatabase();
 
     if (!isValidClerkId(clerkId)) {
-      return createErrorResult('INVALID_CLERK_ID', 'Invalid Clerk user ID format');
+      return createErrorResult(
+        'INVALID_CLERK_ID',
+        'Invalid Clerk user ID format'
+      );
     }
 
     // Get user
@@ -689,13 +715,15 @@ export async function getUserWithConversations(
     const user = userResult.data!;
 
     // Get user's conversations
-    const conversations = await Conversation.getUserConversations(clerkId, limit);
+    const conversations = await Conversation.getUserConversations(
+      clerkId,
+      limit
+    );
 
     return createSuccessResult({
       ...user,
-      conversationList: conversations
+      conversationList: conversations,
     });
-
   } catch (error: any) {
     logError('getUserWithConversations', error, { clerkId });
     return createErrorResult(
@@ -718,16 +746,20 @@ export async function deleteUserConversations(
     await connectToDatabase();
 
     if (!isValidClerkId(clerkId)) {
-      return createErrorResult('INVALID_CLERK_ID', 'Invalid Clerk user ID format');
+      return createErrorResult(
+        'INVALID_CLERK_ID',
+        'Invalid Clerk user ID format'
+      );
     }
 
     // Delete all user conversations
     const result = await Conversation.deleteUserConversations(clerkId);
 
-    console.log(`[UserService.deleteUserConversations] Deleted ${result.deletedCount} conversations for user: ${clerkId}`);
-    
-    return createSuccessResult({ deletedCount: result.deletedCount });
+    console.log(
+      `[UserService.deleteUserConversations] Deleted ${result.deletedCount} conversations for user: ${clerkId}`
+    );
 
+    return createSuccessResult({ deletedCount: result.deletedCount });
   } catch (error: any) {
     logError('deleteUserConversations', error, { clerkId });
     return createErrorResult(
@@ -742,20 +774,23 @@ export async function deleteUserConversations(
  * Get user conversation statistics
  * Returns conversation counts and activity metrics
  */
-export async function getUserConversationStats(
-  clerkId: string
-): Promise<ServiceResult<{
-  totalConversations: number;
-  activeConversations: number;
-  archivedConversations: number;
-  recentConversations: number;
-  totalMessages: number;
-}>> {
+export async function getUserConversationStats(clerkId: string): Promise<
+  ServiceResult<{
+    totalConversations: number;
+    activeConversations: number;
+    archivedConversations: number;
+    recentConversations: number;
+    totalMessages: number;
+  }>
+> {
   try {
     await connectToDatabase();
 
     if (!isValidClerkId(clerkId)) {
-      return createErrorResult('INVALID_CLERK_ID', 'Invalid Clerk user ID format');
+      return createErrorResult(
+        'INVALID_CLERK_ID',
+        'Invalid Clerk user ID format'
+      );
     }
 
     // Get various conversation counts
@@ -763,26 +798,37 @@ export async function getUserConversationStats(
       totalConversations,
       activeConversations,
       archivedConversations,
-      recentConversations
+      recentConversations,
     ] = await Promise.all([
       Conversation.countUserConversations(clerkId),
-      Conversation.getActiveConversations(clerkId).then(convs => convs.length),
-      Conversation.getArchivedConversations(clerkId).then(convs => convs.length),
-      Conversation.getRecentConversations(clerkId, 7).then(convs => convs.length)
+      Conversation.getActiveConversations(clerkId).then(
+        (convs) => convs.length
+      ),
+      Conversation.getArchivedConversations(clerkId).then(
+        (convs) => convs.length
+      ),
+      Conversation.getRecentConversations(clerkId, 7).then(
+        (convs) => convs.length
+      ),
     ]);
 
     // Calculate total messages across all conversations
-    const conversations = await Conversation.find({ clerkId, status: { $ne: 'deleted' } });
-    const totalMessages = conversations.reduce((sum, conv) => sum + conv.messageCount, 0);
+    const conversations = await Conversation.find({
+      clerkId,
+      status: { $ne: 'deleted' },
+    });
+    const totalMessages = conversations.reduce(
+      (sum, conv) => sum + conv.messageCount,
+      0
+    );
 
     return createSuccessResult({
       totalConversations,
       activeConversations,
       archivedConversations,
       recentConversations,
-      totalMessages
+      totalMessages,
     });
-
   } catch (error: any) {
     logError('getUserConversationStats', error, { clerkId });
     return createErrorResult(
@@ -805,7 +851,10 @@ export async function archiveInactiveConversations(
     await connectToDatabase();
 
     if (!isValidClerkId(clerkId)) {
-      return createErrorResult('INVALID_CLERK_ID', 'Invalid Clerk user ID format');
+      return createErrorResult(
+        'INVALID_CLERK_ID',
+        'Invalid Clerk user ID format'
+      );
     }
 
     const cutoffDate = new Date();
@@ -818,21 +867,22 @@ export async function archiveInactiveConversations(
         status: 'active',
         $or: [
           { lastMessageAt: { $lt: cutoffDate } },
-          { updatedAt: { $lt: cutoffDate } }
-        ]
+          { updatedAt: { $lt: cutoffDate } },
+        ],
       },
       {
         $set: {
           status: 'archived',
-          archivedAt: new Date()
-        }
+          archivedAt: new Date(),
+        },
       }
     );
 
-    console.log(`[UserService.archiveInactiveConversations] Archived ${result.modifiedCount} conversations for user: ${clerkId}`);
-    
-    return createSuccessResult({ archivedCount: result.modifiedCount });
+    console.log(
+      `[UserService.archiveInactiveConversations] Archived ${result.modifiedCount} conversations for user: ${clerkId}`
+    );
 
+    return createSuccessResult({ archivedCount: result.modifiedCount });
   } catch (error: any) {
     logError('archiveInactiveConversations', error, { clerkId, inactiveDays });
     return createErrorResult(
@@ -843,4 +893,4 @@ export async function archiveInactiveConversations(
   }
 }
 
-// All types are already exported with their interface declarations above 
+// All types are already exported with their interface declarations above

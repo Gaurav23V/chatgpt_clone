@@ -1,29 +1,28 @@
 /**
  * Database Health Check API Route
- * 
+ *
  * This endpoint demonstrates the database utilities and provides
  * a comprehensive health check for the database connection.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
-import { 
-  performHealthCheck,
-  getQueryPerformanceStats,
-  monitorConnection,
-  debugConnection,
-  type IDatabaseHealthCheck,
-  type IConnectionMonitor
-} from '@/lib/db/utils';
 import { withTiming } from '@/lib/db/middleware';
+import {
+  debugConnection,
+  getQueryPerformanceStats,
+  type IConnectionMonitor,
+  type IDatabaseHealthCheck,
+  monitorConnection,
+  performHealthCheck,
+} from '@/lib/db/utils';
 
 export async function GET(request: NextRequest) {
   try {
     // Perform comprehensive health check with timing
-    const { result: healthCheck, duration: healthCheckDuration } = await withTiming(
-      () => performHealthCheck(),
-      'Database Health Check'
-    );
+    const { result: healthCheck, duration: healthCheckDuration } =
+      await withTiming(() => performHealthCheck(), 'Database Health Check');
 
     // Get connection monitoring info
     const connectionMonitor = monitorConnection();
@@ -56,7 +55,6 @@ export async function GET(request: NextRequest) {
         'X-DB-Latency': String(healthCheck.latency),
       },
     });
-
   } catch (error) {
     console.error('❌ Health check API error:', error);
 
@@ -77,4 +75,4 @@ export async function GET(request: NextRequest) {
       },
     });
   }
-} 
+}

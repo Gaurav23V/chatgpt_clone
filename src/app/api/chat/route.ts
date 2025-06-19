@@ -16,18 +16,18 @@
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+
+import { withTiming } from '@/lib/db/middleware';
 // TODO: Import auth from Clerk when authentication is enabled
 // import { auth } from '@clerk/nextjs/server';
-
 import {
-  safeDbOperation,
-  withPerformanceMonitoring,
-  sanitizeQuery,
-  parseMongoError,
   MongoErrorType,
+  parseMongoError,
+  safeDbOperation,
+  sanitizeQuery,
+  withPerformanceMonitoring,
   withRetry,
 } from '@/lib/db/utils';
-import { withTiming } from '@/lib/db/middleware';
 
 export async function POST(request: NextRequest) {
   try {
@@ -74,36 +74,38 @@ export async function POST(request: NextRequest) {
 
     // Demonstrate safe database operations with utilities
     // Example: Get or create chat conversation with error handling
-    const chatOperation = await safeDbOperation(
-      async () => {
-        // Simulate database operation with performance monitoring
-        return await withPerformanceMonitoring(
-          async () => {
-            // In a real implementation, this would be:
-            // if (chatId) {
-            //   return await Chat.findOne(sanitizeQuery({ _id: chatId, userId }));
-            // } else {
-            //   return await Chat.create({ userId, title: message.substring(0, 50) });
-            // }
-            
-            // Mock delay to simulate database operation
-            await new Promise(resolve => setTimeout(resolve, 100));
-            return { id: chatId || `chat_${Date.now()}`, userId: _userId };
-          },
-          { query: 'findOrCreateChat', collection: 'chats' }
-        );
-      },
-      'Get or create chat conversation'
-    );
+    const chatOperation = await safeDbOperation(async () => {
+      // Simulate database operation with performance monitoring
+      return await withPerformanceMonitoring(
+        async () => {
+          // In a real implementation, this would be:
+          // if (chatId) {
+          //   return await Chat.findOne(sanitizeQuery({ _id: chatId, userId }));
+          // } else {
+          //   return await Chat.create({ userId, title: message.substring(0, 50) });
+          // }
+
+          // Mock delay to simulate database operation
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          return { id: chatId || `chat_${Date.now()}`, userId: _userId };
+        },
+        { query: 'findOrCreateChat', collection: 'chats' }
+      );
+    }, 'Get or create chat conversation');
 
     if (!chatOperation.success) {
       console.error('Chat operation failed:', chatOperation.error);
       return NextResponse.json(
-        { 
+        {
           error: chatOperation.error.userMessage,
           code: chatOperation.error.type,
         },
-        { status: chatOperation.error.type === MongoErrorType.CONNECTION_ERROR ? 503 : 500 }
+        {
+          status:
+            chatOperation.error.type === MongoErrorType.CONNECTION_ERROR
+              ? 503
+              : 500,
+        }
       );
     }
 
@@ -162,12 +164,13 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const chatId = searchParams.get('chatId');
-    
+
     // Demonstrate pagination utilities
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
     const sortBy = searchParams.get('sortBy') || 'createdAt';
-    const sortOrder = (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc';
+    const sortOrder =
+      (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc';
 
     if (!chatId) {
       return NextResponse.json(
@@ -177,52 +180,52 @@ export async function GET(request: NextRequest) {
     }
 
     // Demonstrate safe database operations with pagination
-    const chatResult = await safeDbOperation(
-      async () => {
-        return await withTiming(
-          async () => {
-            // In real implementation, this would use our pagination helpers:
-            // const filter = sanitizeQuery({ chatId, userId });
-            // const options = { page, limit, sortBy, sortOrder };
-            // return await executePaginatedQuery(Message, filter, options, 
-            //   projectFields(['content', 'role', 'timestamp', 'metadata']));
-            
-            // Mock paginated response
-            await new Promise(resolve => setTimeout(resolve, 50));
-            
-            const mockMessages = Array.from({ length: Math.min(limit, 5) }, (_, i) => ({
-              id: `msg_${i + 1}`,
-              content: `Mock message ${i + 1} for chat ${chatId}`,
-              role: i % 2 === 0 ? 'user' : 'assistant',
-              timestamp: new Date(Date.now() - (i * 1000000)).toISOString(),
-            }));
+    const chatResult = await safeDbOperation(async () => {
+      return await withTiming(async () => {
+        // In real implementation, this would use our pagination helpers:
+        // const filter = sanitizeQuery({ chatId, userId });
+        // const options = { page, limit, sortBy, sortOrder };
+        // return await executePaginatedQuery(Message, filter, options,
+        //   projectFields(['content', 'role', 'timestamp', 'metadata']));
 
-            return {
-              data: mockMessages,
-              pagination: {
-                page,
-                limit,
-                total: 25, // Mock total
-                totalPages: Math.ceil(25 / limit),
-                hasNextPage: page < Math.ceil(25 / limit),
-                hasPrevPage: page > 1,
-              },
-            };
-          },
-          'Get paginated chat messages'
+        // Mock paginated response
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        const mockMessages = Array.from(
+          { length: Math.min(limit, 5) },
+          (_, i) => ({
+            id: `msg_${i + 1}`,
+            content: `Mock message ${i + 1} for chat ${chatId}`,
+            role: i % 2 === 0 ? 'user' : 'assistant',
+            timestamp: new Date(Date.now() - i * 1000000).toISOString(),
+          })
         );
-      },
-      'Get chat messages with pagination'
-    );
+
+        return {
+          data: mockMessages,
+          pagination: {
+            page,
+            limit,
+            total: 25, // Mock total
+            totalPages: Math.ceil(25 / limit),
+            hasNextPage: page < Math.ceil(25 / limit),
+            hasPrevPage: page > 1,
+          },
+        };
+      }, 'Get paginated chat messages');
+    }, 'Get chat messages with pagination');
 
     if (!chatResult.success) {
       const mongoError = chatResult.error;
       return NextResponse.json(
-        { 
+        {
           error: mongoError.userMessage,
           code: mongoError.type,
         },
-        { status: mongoError.type === MongoErrorType.CONNECTION_ERROR ? 503 : 500 }
+        {
+          status:
+            mongoError.type === MongoErrorType.CONNECTION_ERROR ? 503 : 500,
+        }
       );
     }
 
@@ -245,13 +248,14 @@ export async function GET(request: NextRequest) {
         'X-Total-Messages': String(paginatedResult.pagination.total),
       },
     });
-
   } catch (error) {
     console.error('Chat API error:', error);
-    const mongoError = parseMongoError(error instanceof Error ? error : new Error('Unknown error'));
-    
+    const mongoError = parseMongoError(
+      error instanceof Error ? error : new Error('Unknown error')
+    );
+
     return NextResponse.json(
-      { 
+      {
         error: mongoError.userMessage,
         code: mongoError.type,
       },

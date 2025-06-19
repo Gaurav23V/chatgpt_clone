@@ -1,16 +1,19 @@
 # Authentication Guard Components Usage Guide
 
-This guide demonstrates how to use the authentication guard components in your ChatGPT clone application.
+This guide demonstrates how to use the authentication guard components in your ChatGPT clone
+application.
 
 ## Overview
 
-The authentication guard components provide component-level protection beyond the route middleware. They handle different protection levels, loading states, and smooth transitions for a better user experience.
+The authentication guard components provide component-level protection beyond the route middleware.
+They handle different protection levels, loading states, and smooth transitions for a better user
+experience.
 
 ### Available Components
 
 1. **AuthGuard** - Main authentication guard with full customization
 2. **BasicAuthGuard** - Simple authentication check
-3. **ChatAuthGuard** - Chat-specific guard with custom loading states  
+3. **ChatAuthGuard** - Chat-specific guard with custom loading states
 4. **ApiAuthGuard** - Lightweight guard for API call protection
 
 ## Installation
@@ -18,7 +21,13 @@ The authentication guard components provide component-level protection beyond th
 The components are already set up in your project. Import them from:
 
 ```tsx
-import { AuthGuard, BasicAuthGuard, ChatAuthGuard, ApiAuthGuard, useApiAuth } from '@/components/auth';
+import {
+  AuthGuard,
+  BasicAuthGuard,
+  ChatAuthGuard,
+  ApiAuthGuard,
+  useApiAuth,
+} from '@/components/auth';
 ```
 
 ## Usage Examples
@@ -34,8 +43,8 @@ import { BasicAuthGuard } from '@/components/auth';
 export default function SettingsPage() {
   return (
     <BasicAuthGuard>
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">User Settings</h1>
+      <div className='p-6'>
+        <h1 className='text-2xl font-bold'>User Settings</h1>
         <p>This content is only visible to authenticated users.</p>
       </div>
     </BasicAuthGuard>
@@ -44,6 +53,7 @@ export default function SettingsPage() {
 ```
 
 **Props:**
+
 - `children`: React components to protect
 - `redirectTo?`: Where to redirect unauthenticated users (default: `/sign-in`)
 - `showLoading?`: Show loading state (default: `true`)
@@ -68,6 +78,7 @@ export default function ChatPage() {
 ```
 
 **Props:**
+
 - `children`: Chat components to protect
 - `showSidebar?`: Whether to show sidebar in loading state (default: `true`)
 
@@ -81,7 +92,7 @@ import { ApiAuthGuard } from '@/components/auth';
 
 function UserProfile() {
   return (
-    <ApiAuthGuard 
+    <ApiAuthGuard
       onUnauthenticated={() => {
         console.log('User not authenticated, redirecting...');
         window.location.href = '/sign-in';
@@ -94,6 +105,7 @@ function UserProfile() {
 ```
 
 **Props:**
+
 - `children`: Components to protect
 - `onUnauthenticated?`: Callback when user is not authenticated
 - `fallback?`: Custom fallback component
@@ -108,8 +120,8 @@ Main guard with full customization including role-based access control.
 import { AuthGuard } from '@/components/auth';
 
 const CustomLoader = () => (
-  <div className="flex items-center justify-center h-screen">
-    <div className="text-lg">Loading admin panel...</div>
+  <div className='flex h-screen items-center justify-center'>
+    <div className='text-lg'>Loading admin panel...</div>
   </div>
 );
 
@@ -117,7 +129,7 @@ export default function AdminPage() {
   return (
     <AuthGuard
       requireRole={['pro', 'enterprise']}
-      redirectTo="/upgrade"
+      redirectTo='/upgrade'
       loadingComponent={<CustomLoader />}
       showLoading={true}
     >
@@ -128,6 +140,7 @@ export default function AdminPage() {
 ```
 
 **Props:**
+
 - `children`: Components to protect
 - `requireRole?`: Array of required user roles
 - `redirectTo?`: Where to redirect unauthenticated users
@@ -166,7 +179,7 @@ function DataFetcher() {
     try {
       const response = await fetch('/api/data', {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       const data = await response.json();
@@ -178,10 +191,7 @@ function DataFetcher() {
 
   return (
     <div>
-      <button 
-        onClick={fetchData}
-        disabled={!isSignedIn}
-      >
+      <button onClick={fetchData} disabled={!isSignedIn}>
         Fetch Data
       </button>
     </div>
@@ -200,16 +210,12 @@ import { ChatAuthGuard } from '@/components/auth';
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
   return (
     <ChatAuthGuard>
-      <div className="h-screen flex bg-gray-50 dark:bg-gray-900">
+      <div className='flex h-screen bg-gray-50 dark:bg-gray-900'>
         {/* Sidebar */}
-        <div className="hidden md:flex md:w-64 md:flex-col">
-          {/* Sidebar content */}
-        </div>
-        
+        <div className='hidden md:flex md:w-64 md:flex-col'>{/* Sidebar content */}</div>
+
         {/* Main content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {children}
-        </div>
+        <div className='flex flex-1 flex-col overflow-hidden'>{children}</div>
       </div>
     </ChatAuthGuard>
   );
@@ -244,7 +250,7 @@ export function ChatInput() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ message }),
       });
@@ -261,17 +267,17 @@ export function ChatInput() {
   };
 
   return (
-    <div className="flex gap-2">
+    <div className='flex gap-2'>
       <input
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        placeholder="Type your message..."
-        className="flex-1 p-2 border rounded"
+        placeholder='Type your message...'
+        className='flex-1 rounded border p-2'
       />
-      <button 
+      <button
         onClick={sendMessage}
         disabled={!isSignedIn || !message.trim()}
-        className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
+        className='rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50'
       >
         Send
       </button>
@@ -288,45 +294,45 @@ import { AuthGuard } from '@/components/auth';
 
 export function SubscriptionPanel() {
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Subscription Settings</h2>
-      
+    <div className='space-y-4'>
+      <h2 className='text-xl font-semibold'>Subscription Settings</h2>
+
       {/* Basic features for all authenticated users */}
-      <div className="p-4 border rounded">
+      <div className='rounded border p-4'>
         <h3>Basic Features</h3>
         <p>Available to all users</p>
       </div>
 
       {/* Pro features */}
-      <AuthGuard 
+      <AuthGuard
         requireRole={['pro', 'enterprise']}
         fallback={
-          <div className="p-4 border rounded bg-gray-50">
+          <div className='rounded border bg-gray-50 p-4'>
             <h3>Pro Features</h3>
             <p>Upgrade to Pro to access these features</p>
-            <button className="mt-2 px-4 py-2 bg-blue-600 text-white rounded">
+            <button className='mt-2 rounded bg-blue-600 px-4 py-2 text-white'>
               Upgrade to Pro
             </button>
           </div>
         }
       >
-        <div className="p-4 border rounded bg-green-50">
+        <div className='rounded border bg-green-50 p-4'>
           <h3>Pro Features</h3>
           <p>Advanced chat options, export features, etc.</p>
         </div>
       </AuthGuard>
 
       {/* Enterprise features */}
-      <AuthGuard 
+      <AuthGuard
         requireRole={['enterprise']}
         fallback={
-          <div className="p-4 border rounded bg-gray-50">
+          <div className='rounded border bg-gray-50 p-4'>
             <h3>Enterprise Features</h3>
             <p>Contact sales for enterprise access</p>
           </div>
         }
       >
-        <div className="p-4 border rounded bg-purple-50">
+        <div className='rounded border bg-purple-50 p-4'>
           <h3>Enterprise Features</h3>
           <p>Team management, advanced analytics, etc.</p>
         </div>
@@ -339,20 +345,24 @@ export function SubscriptionPanel() {
 ## Best Practices
 
 1. **Choose the Right Guard**: Use the most specific guard for your use case
+
    - `BasicAuthGuard` for simple pages
    - `ChatAuthGuard` for chat interfaces
    - `ApiAuthGuard` for API-heavy components
    - `AuthGuard` for complex requirements
 
 2. **Handle Loading States**: Always provide good loading experiences
+
    - Use skeleton screens for better perceived performance
    - Match loading states to your actual UI
 
 3. **Graceful Fallbacks**: Provide meaningful fallback content
+
    - Clear messaging about why authentication is required
    - Easy access to sign-in/sign-up flows
 
 4. **Performance**: Use guards efficiently
+
    - Don't wrap every small component individually
    - Consider guard placement for optimal re-renders
 
@@ -396,9 +406,9 @@ test('renders protected content when authenticated', () => {
       </BasicAuthGuard>
     </ClerkProvider>
   );
-  
+
   expect(screen.getByText('Protected Content')).toBeInTheDocument();
 });
 ```
 
-The authentication guard components are now ready to use throughout your ChatGPT clone application! 
+The authentication guard components are now ready to use throughout your ChatGPT clone application!

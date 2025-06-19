@@ -45,9 +45,8 @@ async function runVerification() {
       cwd: projectRoot,
       env: {
         ...process.env,
-      }
+      },
     });
-
   } catch (error) {
     console.error('❌ Failed to run setup verification:');
     console.error(error.message);

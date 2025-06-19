@@ -17,8 +17,11 @@
  * - Type-safe operations
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+
 import { auth } from '@clerk/nextjs/server';
+
 import { getUserByClerkId, updateUser, withTransaction } from '@/lib/db';
 import type { IUser } from '@/types/database';
 
@@ -30,19 +33,19 @@ import type { IUser } from '@/types/database';
  * Valid theme options
  */
 const VALID_THEMES = ['light', 'dark', 'system'] as const;
-type Theme = typeof VALID_THEMES[number];
+type Theme = (typeof VALID_THEMES)[number];
 
 /**
  * Valid AI model options
  */
 const VALID_MODELS = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'] as const;
-type AIModel = typeof VALID_MODELS[number];
+type AIModel = (typeof VALID_MODELS)[number];
 
 /**
  * Valid font size options
  */
 const VALID_FONT_SIZES = ['small', 'medium', 'large'] as const;
-type FontSize = typeof VALID_FONT_SIZES[number];
+type FontSize = (typeof VALID_FONT_SIZES)[number];
 
 /**
  * Preference update input interface
@@ -99,10 +102,12 @@ function isValidFontSize(fontSize: any): fontSize is FontSize {
  * Validate language code (basic validation for 2-5 character codes)
  */
 function isValidLanguage(language: any): language is string {
-  return typeof language === 'string' && 
-         language.length >= 2 && 
-         language.length <= 5 &&
-         /^[a-z]{2}(-[A-Z]{2})?$/.test(language);
+  return (
+    typeof language === 'string' &&
+    language.length >= 2 &&
+    language.length <= 5 &&
+    /^[a-z]{2}(-[A-Z]{2})?$/.test(language)
+  );
 }
 
 /**
@@ -145,7 +150,9 @@ function validatePreferences(input: any): {
     if (isValidModel(input.aiModel)) {
       preferences.aiModel = input.aiModel;
     } else {
-      errors.push(`Invalid aiModel. Must be one of: ${VALID_MODELS.join(', ')}`);
+      errors.push(
+        `Invalid aiModel. Must be one of: ${VALID_MODELS.join(', ')}`
+      );
     }
   }
 
@@ -154,7 +161,9 @@ function validatePreferences(input: any): {
     if (isValidLanguage(input.language)) {
       preferences.language = input.language.toLowerCase();
     } else {
-      errors.push('Invalid language code. Must be 2-5 characters (e.g., "en", "en-US")');
+      errors.push(
+        'Invalid language code. Must be 2-5 characters (e.g., "en", "en-US")'
+      );
     }
   }
 
@@ -163,7 +172,9 @@ function validatePreferences(input: any): {
     if (isValidFontSize(input.fontSize)) {
       preferences.fontSize = input.fontSize;
     } else {
-      errors.push(`Invalid fontSize. Must be one of: ${VALID_FONT_SIZES.join(', ')}`);
+      errors.push(
+        `Invalid fontSize. Must be one of: ${VALID_FONT_SIZES.join(', ')}`
+      );
     }
   }
 
@@ -187,7 +198,7 @@ function validatePreferences(input: any): {
   return {
     valid: errors.length === 0,
     preferences: errors.length === 0 ? preferences : undefined,
-    errors
+    errors,
   };
 }
 
@@ -199,25 +210,31 @@ function validatePreferences(input: any): {
  * Create standardized error response
  */
 function createErrorResponse(
-  code: string, 
-  message: string, 
+  code: string,
+  message: string,
   status: number = 400,
   details?: any
 ): NextResponse {
-  return NextResponse.json({
-    success: false,
-    error: { code, message, details }
-  }, { status });
+  return NextResponse.json(
+    {
+      success: false,
+      error: { code, message, details },
+    },
+    { status }
+  );
 }
 
 /**
  * Create standardized success response
  */
 function createSuccessResponse<T>(data: T, status: number = 200): NextResponse {
-  return NextResponse.json({
-    success: true,
-    data
-  }, { status });
+  return NextResponse.json(
+    {
+      success: true,
+      data,
+    },
+    { status }
+  );
 }
 
 /**
@@ -228,7 +245,7 @@ async function getAuthenticatedUser(clerkId: string): Promise<{
   error?: NextResponse;
 }> {
   const userResult = await getUserByClerkId(clerkId);
-  
+
   if (!userResult.success) {
     if (userResult.error?.code === 'USER_NOT_FOUND') {
       return {
@@ -236,17 +253,17 @@ async function getAuthenticatedUser(clerkId: string): Promise<{
           'USER_NOT_FOUND',
           'User profile not found. Please sign in again.',
           404
-        )
+        ),
       };
     }
-    
+
     return {
       error: createErrorResponse(
         'DATABASE_ERROR',
         'Failed to fetch user data',
         500,
         userResult.error
-      )
+      ),
     };
   }
 
@@ -265,7 +282,7 @@ export async function GET(): Promise<NextResponse> {
   try {
     // Check authentication
     const { userId } = await auth();
-    
+
     if (!userId) {
       return createErrorResponse(
         'UNAUTHENTICATED',
@@ -278,19 +295,14 @@ export async function GET(): Promise<NextResponse> {
     const { user, error } = await getAuthenticatedUser(userId);
     if (error) return error;
     if (!user) {
-      return createErrorResponse(
-        'USER_NOT_FOUND',
-        'User not found',
-        404
-      );
+      return createErrorResponse('USER_NOT_FOUND', 'User not found', 404);
     }
 
     // Return user preferences
     return createSuccessResponse({
       preferences: user.preferences,
-      lastUpdated: user.updatedAt
+      lastUpdated: user.updatedAt,
     });
-
   } catch (error) {
     console.error('[GET /api/user/preferences] Error:', error);
     return createErrorResponse(
@@ -309,7 +321,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
   try {
     // Check authentication
     const { userId } = await auth();
-    
+
     if (!userId) {
       return createErrorResponse(
         'UNAUTHENTICATED',
@@ -341,7 +353,10 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    if (!validation.preferences || Object.keys(validation.preferences).length === 0) {
+    if (
+      !validation.preferences ||
+      Object.keys(validation.preferences).length === 0
+    ) {
       return createErrorResponse(
         'NO_UPDATES',
         'No valid preference updates provided',
@@ -353,11 +368,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     const { user, error } = await getAuthenticatedUser(userId);
     if (error) return error;
     if (!user) {
-      return createErrorResponse(
-        'USER_NOT_FOUND',
-        'User not found',
-        404
-      );
+      return createErrorResponse('USER_NOT_FOUND', 'User not found', 404);
     }
 
     // Update user preferences in database with transaction
@@ -368,8 +379,8 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
           preferences: {
             // Merge with existing preferences
             ...user.preferences,
-            ...validation.preferences
-          }
+            ...validation.preferences,
+          },
         },
         session
       );
@@ -389,9 +400,8 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     return createSuccessResponse({
       preferences: updateResult.data!.preferences,
       lastUpdated: updateResult.data!.updatedAt,
-      message: 'Preferences updated successfully'
+      message: 'Preferences updated successfully',
     });
-
   } catch (error) {
     console.error('[PUT /api/user/preferences] Error:', error);
     return createErrorResponse(
@@ -428,4 +438,4 @@ export async function OPTIONS(): Promise<NextResponse> {
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     },
   });
-} 
+}
