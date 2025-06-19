@@ -6,7 +6,7 @@
  * clear documentation of the data structure.
  */
 
-import { Types } from 'mongoose';
+import type { Types } from 'mongoose';
 
 /**
  * Base interface for all database documents
@@ -268,14 +268,37 @@ export type AttachmentStatus = IAttachment['status'];
 /**
  * Utility types for creating and updating documents
  */
-export type CreateUserData = Omit<IUser, keyof BaseDocument | 'conversations' | 'usage'>;
-export type UpdateUserData = Partial<Omit<IUser, keyof BaseDocument | 'clerkId'>>;
+export type CreateUserData = Omit<
+  IUser,
+  keyof BaseDocument | 'conversations' | 'usage'
+>;
+export type UpdateUserData = Partial<
+  Omit<IUser, keyof BaseDocument | 'clerkId'>
+>;
 
-export type CreateConversationData = Omit<IConversation, keyof BaseDocument | 'messages' | 'messageCount' | 'totalTokens'>;
-export type UpdateConversationData = Partial<Omit<IConversation, keyof BaseDocument | 'userId' | 'clerkId'>>;
+export type CreateConversationData = Omit<
+  IConversation,
+  keyof BaseDocument | 'messages' | 'messageCount' | 'totalTokens'
+>;
+export type UpdateConversationData = Partial<
+  Omit<IConversation, keyof BaseDocument | 'userId' | 'clerkId'>
+>;
 
-export type CreateMessageData = Omit<IMessage, keyof BaseDocument | 'attachments'>;
-export type UpdateMessageData = Partial<Omit<IMessage, keyof BaseDocument | 'conversationId' | 'userId' | 'clerkId'>>;
+export type CreateMessageData = Omit<
+  IMessage,
+  keyof BaseDocument | 'attachments'
+>;
+export type UpdateMessageData = Partial<
+  Omit<IMessage, keyof BaseDocument | 'conversationId' | 'userId' | 'clerkId'>
+>;
 
-export type CreateAttachmentData = Omit<IAttachment, keyof BaseDocument | 'downloadCount'>;
-export type UpdateAttachmentData = Partial<Omit<IAttachment, keyof BaseDocument | 'messageId' | 'conversationId' | 'userId' | 'clerkId'>>;
+export type CreateAttachmentData = Omit<
+  IAttachment,
+  keyof BaseDocument | 'downloadCount'
+>;
+export type UpdateAttachmentData = Partial<
+  Omit<
+    IAttachment,
+    keyof BaseDocument | 'messageId' | 'conversationId' | 'userId' | 'clerkId'
+  >
+>;

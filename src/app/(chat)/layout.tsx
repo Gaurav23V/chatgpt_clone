@@ -8,8 +8,9 @@
  * - Authentication protection via middleware
  */
 
-import { ReactNode } from 'react';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
+
+import type { ReactNode } from 'react';
 
 interface ChatLayoutProps {
   children: ReactNode;
@@ -25,32 +26,32 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
   // This layout assumes the user is already authenticated
 
   return (
-    <div className="h-screen flex bg-gray-50 dark:bg-gray-900">
+    <div className='flex h-screen bg-gray-50 dark:bg-gray-900'>
       {/* Sidebar */}
-      <div className="hidden md:flex md:w-64 md:flex-col">
-        <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
+      <div className='hidden md:flex md:w-64 md:flex-col'>
+        <div className='flex min-h-0 flex-1 flex-col border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
           {/* Sidebar Header */}
-          <div className="flex-shrink-0 flex items-center px-4 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <div className='flex flex-shrink-0 items-center border-b border-gray-200 px-4 py-4 dark:border-gray-700'>
+            <h2 className='text-lg font-semibold text-gray-900 dark:text-white'>
               ChatGPT Clone
             </h2>
             {/* TODO: Add new chat button */}
           </div>
 
           {/* Chat History */}
-          <div className="flex-1 overflow-y-auto">
+          <div className='flex-1 overflow-y-auto'>
             {/* TODO: Implement ChatSidebar component */}
-            <div className="p-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+            <div className='p-4'>
+              <p className='text-sm text-gray-500 dark:text-gray-400'>
                 Chat history will appear here
               </p>
             </div>
           </div>
 
           {/* User Menu */}
-          <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 p-4">
+          <div className='flex-shrink-0 border-t border-gray-200 p-4 dark:border-gray-700'>
             {/* TODO: Add user profile and settings */}
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+            <div className='text-sm text-gray-500 dark:text-gray-400'>
               User menu placeholder
             </div>
           </div>
@@ -58,8 +59,8 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <main className="flex-1 relative overflow-y-auto focus:outline-none">
+      <div className='flex flex-1 flex-col overflow-hidden'>
+        <main className='relative flex-1 overflow-y-auto focus:outline-none'>
           {children}
         </main>
       </div>

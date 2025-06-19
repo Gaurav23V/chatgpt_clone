@@ -13,12 +13,26 @@
 // Export existing config
 export * from './clerk-config';
 
+// Export redirect utilities
+export * from './redirect-utils';
+
+// Export error handling utilities
+export * from './error-utils';
+
+// Export auth guard components
+export {
+  ApiAuthGuard,
+  AuthGuard,
+  BasicAuthGuard,
+  ChatAuthGuard,
+  useApiAuth,
+} from '@/components/auth';
+
 // TODO: Export auth services when they are created
 // export { AuthService } from './auth-service';
 // export { SessionManager } from './session-manager';
 // export { PermissionChecker } from './permissions';
 // export { UserSync } from './user-sync';
-// export { AuthGuard } from './auth-guard';
 
 // Placeholder exports to prevent import errors
 export const AuthServices = {

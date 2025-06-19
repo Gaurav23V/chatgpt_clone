@@ -297,7 +297,11 @@ export interface BatchUploadResponse {
 export interface FileValidationResult {
   isValid: boolean;
   errors: Array<{
-    code: 'FILE_TOO_LARGE' | 'INVALID_TYPE' | 'MALICIOUS_CONTENT' | 'CORRUPTED_FILE';
+    code:
+      | 'FILE_TOO_LARGE'
+      | 'INVALID_TYPE'
+      | 'MALICIOUS_CONTENT'
+      | 'CORRUPTED_FILE';
     message: string;
     field?: string;
   }>;
@@ -379,8 +383,13 @@ export interface FileSearchOptions {
 /**
  * Utility types for creating and updating file records
  */
-export type CreateFileData = Omit<ProcessedFileMetadata, 'id' | 'downloadCount' | 'lastAccessedAt'>;
-export type UpdateFileData = Partial<Pick<ProcessedFileMetadata, 'isPublic' | 'expiresAt' | 'extractedText'>>;
+export type CreateFileData = Omit<
+  ProcessedFileMetadata,
+  'id' | 'downloadCount' | 'lastAccessedAt'
+>;
+export type UpdateFileData = Partial<
+  Pick<ProcessedFileMetadata, 'isPublic' | 'expiresAt' | 'extractedText'>
+>;
 
 /**
  * Error codes for file upload operations
@@ -398,4 +407,5 @@ export const FILE_UPLOAD_ERROR_CODES = {
   FILE_CORRUPTED: 'FILE_CORRUPTED',
 } as const;
 
-export type FileUploadErrorCode = typeof FILE_UPLOAD_ERROR_CODES[keyof typeof FILE_UPLOAD_ERROR_CODES];
+export type FileUploadErrorCode =
+  (typeof FILE_UPLOAD_ERROR_CODES)[keyof typeof FILE_UPLOAD_ERROR_CODES];

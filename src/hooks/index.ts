@@ -12,25 +12,37 @@
 
 // Export user-related hooks from user context
 export {
+  useAuthState,
+  useAuthTransition,
+  useCurrentConversation,
   useUserContext,
   useUserPreferences,
   useUserSettings,
-  useCurrentConversation,
-  useAuthState,
-  useAuthTransition,
 } from '../contexts/user-context';
 
 // Export auth state change hook
+export type {
+  AuthStateChangeEvent,
+  AuthTransitionState,
+  CleanupConfig,
+} from './useAuthStateChange';
 export { useAuthStateChange } from './useAuthStateChange';
-export type { AuthStateChangeEvent, AuthTransitionState, CleanupConfig } from './useAuthStateChange';
 
 // Export persisted preferences hooks
 export {
+  useInterfacePreferences,
+  useModelPreference,
   usePersistedPreferences,
   useThemePreference,
-  useModelPreference,
-  useInterfacePreferences,
 } from './usePersistedPreferences';
+
+// Export auth error handling hooks
+export {
+  useAuthError,
+  useAuthNetworkError,
+  useAutoRecovery,
+  useErrorRecovery,
+} from './useAuthError';
 
 // TODO: Export additional custom hooks when they are created
 // export { useChat } from './useChat';

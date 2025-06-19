@@ -20,26 +20,31 @@
  * - UPLOADCARE_CDN_BASE: Custom CDN base URL
  */
 
-import {
+import type {
+  FileTransformation,
   FileUploadConfig,
+  ProcessedFileMetadata,
   StorageServiceConfig,
   SupportedFileType,
-  FileTransformation,
   UploadcareUploadResponse,
-  ProcessedFileMetadata
 } from '@/types/file-upload';
 
 /**
  * Environment variable validation
  */
-const UPLOADCARE_PUBLIC_KEY = process.env.UPLOADCARE_PUBLIC_KEY || process.env.NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY;
+const UPLOADCARE_PUBLIC_KEY =
+  process.env.UPLOADCARE_PUBLIC_KEY ||
+  process.env.NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY;
 const UPLOADCARE_SECRET_KEY = process.env.UPLOADCARE_SECRET_KEY;
 const UPLOADCARE_WEBHOOK_URL = process.env.UPLOADCARE_WEBHOOK_URL;
-const UPLOADCARE_CDN_BASE = process.env.UPLOADCARE_CDN_BASE || 'https://ucarecdn.com';
+const UPLOADCARE_CDN_BASE =
+  process.env.UPLOADCARE_CDN_BASE || 'https://ucarecdn.com';
 
 // Validate required environment variables
 if (!UPLOADCARE_PUBLIC_KEY) {
-  console.warn('⚠️  UPLOADCARE_PUBLIC_KEY not found. Uploadcare functionality will be limited.');
+  console.warn(
+    '⚠️  UPLOADCARE_PUBLIC_KEY not found. Uploadcare functionality will be limited.'
+  );
 }
 
 /**
@@ -157,9 +162,11 @@ export const UPLOADCARE_CONFIG = {
     // Security
     validators: [
       // File size validator
-      function(fileInfo: any) {
+      function (fileInfo: any) {
         if (fileInfo.size > UPLOADCARE_CONFIG.MAX_FILE_SIZE.FREE) {
-          throw new Error(`File is too large. Maximum size is ${UPLOADCARE_CONFIG.MAX_FILE_SIZE.FREE / (1024 * 1024)}MB`);
+          throw new Error(
+            `File is too large. Maximum size is ${UPLOADCARE_CONFIG.MAX_FILE_SIZE.FREE / (1024 * 1024)}MB`
+          );
         }
       },
     ],
@@ -219,7 +226,7 @@ export const defaultUploadcareConfig: FileUploadConfig = {
     optimize: true,
     progressive: true,
     format: 'auto',
-    extractText: false, // Uploadcare doesn't support text extraction
+    extractText: false, // Uploadcare doesn&apos;t support text extraction
     scanForMalware: true,
     resize: {
       width: 1920,
@@ -251,7 +258,10 @@ export const uploadcareServiceConfig: StorageServiceConfig = {
 /**
  * Upload widget configuration for different use cases
  */
-export const getUploadcareWidgetConfig = (fileType?: SupportedFileType, userId?: string) => {
+export const getUploadcareWidgetConfig = (
+  fileType?: SupportedFileType,
+  userId?: string
+) => {
   const baseConfig = {
     ...UPLOADCARE_CONFIG.WIDGET_SETTINGS,
 
@@ -321,21 +331,27 @@ export const transformUploadcareResponse = (
     fileExtension: `.${fileExtension}`,
     url: response.cdnUrl,
     secureUrl: response.cdnUrl, // Uploadcare uses HTTPS by default
-    thumbnailUrl: response.isImage ? `${response.cdnUrl}-/resize/300x300/-/crop/300x300/center/-/format/webp/` : undefined,
+    thumbnailUrl: response.isImage
+      ? `${response.cdnUrl}-/resize/300x300/-/crop/300x300/center/-/format/webp/`
+      : undefined,
     provider: 'uploadcare',
     status: response.isStored ? 'completed' : 'pending',
     uploadedAt: new Date(),
 
     // Image metadata
-    imageMetadata: response.imageInfo ? {
-      width: response.imageInfo.width,
-      height: response.imageInfo.height,
-      format: response.imageInfo.format,
-      hasTransparency: response.imageInfo.format === 'PNG' || response.imageInfo.format === 'GIF',
-      colorSpace: response.imageInfo.colorMode || 'sRGB',
-      orientation: response.imageInfo.orientation,
-      dpi: response.imageInfo.dpi?.[0],
-    } : undefined,
+    imageMetadata: response.imageInfo
+      ? {
+          width: response.imageInfo.width,
+          height: response.imageInfo.height,
+          format: response.imageInfo.format,
+          hasTransparency:
+            response.imageInfo.format === 'PNG' ||
+            response.imageInfo.format === 'GIF',
+          colorSpace: response.imageInfo.colorMode || 'sRGB',
+          orientation: response.imageInfo.orientation,
+          dpi: response.imageInfo.dpi?.[0],
+        }
+      : undefined,
 
     // Security scan (Uploadcare provides built-in scanning)
     securityScan: {
@@ -421,7 +437,9 @@ export const validateUploadcareConfig = (): boolean => {
   const isValid = !!UPLOADCARE_PUBLIC_KEY;
 
   if (!isValid) {
-    console.error('❌ Uploadcare configuration is incomplete. Please check environment variables.');
+    console.error(
+      '❌ Uploadcare configuration is incomplete. Please check environment variables.'
+    );
   }
 
   return isValid;
@@ -443,7 +461,9 @@ export const generateUploadcareSignature = (expire: number): string => {
 /**
  * Get file information from Uploadcare API
  */
-export const getUploadcareFileInfo = async (uuid: string): Promise<UploadcareUploadResponse | null> => {
+export const getUploadcareFileInfo = async (
+  uuid: string
+): Promise<UploadcareUploadResponse | null> => {
   if (!UPLOADCARE_PUBLIC_KEY) {
     throw new Error('Uploadcare public key not configured');
   }
@@ -451,7 +471,7 @@ export const getUploadcareFileInfo = async (uuid: string): Promise<UploadcareUpl
   try {
     const response = await fetch(`https://api.uploadcare.com/files/${uuid}/`, {
       headers: {
-        'Authorization': `Uploadcare.Simple ${UPLOADCARE_PUBLIC_KEY}:${UPLOADCARE_SECRET_KEY}`,
+        Authorization: `Uploadcare.Simple ${UPLOADCARE_PUBLIC_KEY}:${UPLOADCARE_SECRET_KEY}`,
       },
     });
 
@@ -475,12 +495,15 @@ export const deleteUploadcareFile = async (uuid: string): Promise<boolean> => {
   }
 
   try {
-    const response = await fetch(`https://api.uploadcare.com/files/${uuid}/storage/`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Uploadcare.Simple ${UPLOADCARE_PUBLIC_KEY}:${UPLOADCARE_SECRET_KEY}`,
-      },
-    });
+    const response = await fetch(
+      `https://api.uploadcare.com/files/${uuid}/storage/`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Uploadcare.Simple ${UPLOADCARE_PUBLIC_KEY}:${UPLOADCARE_SECRET_KEY}`,
+        },
+      }
+    );
 
     return response.ok;
   } catch (error) {

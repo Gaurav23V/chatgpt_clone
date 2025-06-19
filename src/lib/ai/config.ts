@@ -138,7 +138,7 @@ export const RATE_LIMITS = {
 /**
  * Export types for TypeScript support
  */
-export type AIModel = typeof AI_MODELS[keyof typeof AI_MODELS];
+export type AIModel = (typeof AI_MODELS)[keyof typeof AI_MODELS];
 export type ChatRole = 'system' | 'user' | 'assistant';
 
 /**

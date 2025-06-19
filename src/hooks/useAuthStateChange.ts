@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect, useRef, useCallback, useState } from 'react';
-import { useUser, useSession } from '@clerk/nextjs';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import { useSession, useUser } from '@clerk/nextjs';
+
 import {
-  UserPreferences,
+  clearAllPreferences,
   DEFAULT_PREFERENCES,
   loadPreferences,
   savePreferences,
-  clearAllPreferences,
+  UserPreferences,
 } from '@/lib/storage/user-preferences';
 
 /**
@@ -79,23 +81,23 @@ export function useAuthStateChange(
    * Update transition progress
    */
   const updateProgress = useCallback((progress: number) => {
-    setTransitionState(prev => ({ ...prev, progress }));
+    setTransitionState((prev) => ({ ...prev, progress }));
   }, []);
 
   /**
    * Set transition state
    */
-  const setTransition = useCallback((
-    type: AuthStateChangeEvent | null,
-    error: string | null = null
-  ) => {
-    setTransitionState({
-      isTransitioning: type !== null,
-      transitionType: type,
-      error,
-      progress: type ? 0 : 100,
-    });
-  }, []);
+  const setTransition = useCallback(
+    (type: AuthStateChangeEvent | null, error: string | null = null) => {
+      setTransitionState({
+        isTransitioning: type !== null,
+        transitionType: type,
+        error,
+        progress: type ? 0 : 100,
+      });
+    },
+    []
+  );
 
   /**
    * Clear conversation data from memory and storage
@@ -107,10 +109,11 @@ export function useAuthStateChange(
 
       // Clear conversation history from localStorage (if configured)
       if (cleanupConfig.clearConversationHistory) {
-        const conversationKeys = Object.keys(localStorage)
-          .filter(key => key.includes('conversation') || key.includes('chat'));
+        const conversationKeys = Object.keys(localStorage).filter(
+          (key) => key.includes('conversation') || key.includes('chat')
+        );
 
-        conversationKeys.forEach(key => {
+        conversationKeys.forEach((key) => {
           localStorage.removeItem(key);
         });
       }
@@ -133,18 +136,20 @@ export function useAuthStateChange(
 
     try {
       // Clear cache from localStorage
-      const cacheKeys = Object.keys(localStorage)
-        .filter(key => key.includes('cache') || key.includes('api-response'));
+      const cacheKeys = Object.keys(localStorage).filter(
+        (key) => key.includes('cache') || key.includes('api-response')
+      );
 
-      cacheKeys.forEach(key => {
+      cacheKeys.forEach((key) => {
         localStorage.removeItem(key);
       });
 
       // Clear sessionStorage cache
-      const sessionCacheKeys = Object.keys(sessionStorage)
-        .filter(key => key.includes('cache') || key.includes('api-response'));
+      const sessionCacheKeys = Object.keys(sessionStorage).filter(
+        (key) => key.includes('cache') || key.includes('api-response')
+      );
 
-      sessionCacheKeys.forEach(key => {
+      sessionCacheKeys.forEach((key) => {
         sessionStorage.removeItem(key);
       });
 
@@ -165,10 +170,14 @@ export function useAuthStateChange(
 
     try {
       // Clear temporary file references from localStorage
-      const tempKeys = Object.keys(localStorage)
-        .filter(key => key.includes('temp') || key.includes('upload') || key.includes('draft'));
+      const tempKeys = Object.keys(localStorage).filter(
+        (key) =>
+          key.includes('temp') ||
+          key.includes('upload') ||
+          key.includes('draft')
+      );
 
-      tempKeys.forEach(key => {
+      tempKeys.forEach((key) => {
         localStorage.removeItem(key);
       });
 
@@ -192,10 +201,11 @@ export function useAuthStateChange(
       sessionStorage.clear();
 
       // Clear session-specific localStorage keys
-      const sessionKeys = Object.keys(localStorage)
-        .filter(key => key.includes('session') || key.includes('current-'));
+      const sessionKeys = Object.keys(localStorage).filter(
+        (key) => key.includes('session') || key.includes('current-')
+      );
 
-      sessionKeys.forEach(key => {
+      sessionKeys.forEach((key) => {
         localStorage.removeItem(key);
       });
     } catch (error) {
@@ -206,40 +216,48 @@ export function useAuthStateChange(
   /**
    * Handle user sign-in
    */
-  const handleSignIn = useCallback(async (userId: string) => {
-    setTransition('signIn');
+  const handleSignIn = useCallback(
+    async (userId: string) => {
+      setTransition('signIn');
 
-    try {
-      updateProgress(20);
+      try {
+        updateProgress(20);
 
-      // Load user preferences
-      const preferences = await loadPreferences(userId);
-      updateProgress(40);
+        // Load user preferences
+        const preferences = await loadPreferences(userId);
+        updateProgress(40);
 
-      // Initialize default settings if needed
-      // This would integrate with your settings system
-      updateProgress(60);
+        // Initialize default settings if needed
+        // This would integrate with your settings system
+        updateProgress(60);
 
-      // Clear any stale data from previous sessions
-      await clearSessionData();
-      updateProgress(80);
+        // Clear any stale data from previous sessions
+        await clearSessionData();
+        updateProgress(80);
 
-      // Emit sign-in event for other components
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('userSignIn', {
-          detail: { userId, preferences }
-        }));
+        // Emit sign-in event for other components
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('userSignIn', {
+              detail: { userId, preferences },
+            })
+          );
+        }
+
+        updateProgress(100);
+        setTransition(null);
+
+        console.info('User signed in successfully:', userId);
+      } catch (error) {
+        console.error('Error during sign-in:', error);
+        setTransition(
+          null,
+          error instanceof Error ? error.message : 'Sign-in failed'
+        );
       }
-
-      updateProgress(100);
-      setTransition(null);
-
-      console.info('User signed in successfully:', userId);
-    } catch (error) {
-      console.error('Error during sign-in:', error);
-      setTransition(null, error instanceof Error ? error.message : 'Sign-in failed');
-    }
-  }, [updateProgress, setTransition, clearSessionData]);
+    },
+    [updateProgress, setTransition, clearSessionData]
+  );
 
   /**
    * Handle user sign-out
@@ -282,7 +300,10 @@ export function useAuthStateChange(
       console.info('User signed out and data cleared');
     } catch (error) {
       console.error('Error during sign-out cleanup:', error);
-      setTransition(null, error instanceof Error ? error.message : 'Sign-out cleanup failed');
+      setTransition(
+        null,
+        error instanceof Error ? error.message : 'Sign-out cleanup failed'
+      );
     }
   }, [
     updateProgress,
@@ -291,37 +312,45 @@ export function useAuthStateChange(
     clearCachedResponses,
     clearTempFiles,
     clearSessionData,
-    cleanupConfig.clearPreferences
+    cleanupConfig.clearPreferences,
   ]);
 
   /**
    * Handle user profile update
    */
-  const handleUserUpdate = useCallback(async (userId: string) => {
-    setTransition('userUpdate');
+  const handleUserUpdate = useCallback(
+    async (userId: string) => {
+      setTransition('userUpdate');
 
-    try {
-      updateProgress(50);
+      try {
+        updateProgress(50);
 
-      // Sync any profile changes
-      // This would integrate with your user profile system
+        // Sync any profile changes
+        // This would integrate with your user profile system
 
-      // Emit user update event
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('userUpdate', {
-          detail: { userId }
-        }));
+        // Emit user update event
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('userUpdate', {
+              detail: { userId },
+            })
+          );
+        }
+
+        updateProgress(100);
+        setTransition(null);
+
+        console.info('User profile updated:', userId);
+      } catch (error) {
+        console.error('Error during user update:', error);
+        setTransition(
+          null,
+          error instanceof Error ? error.message : 'User update failed'
+        );
       }
-
-      updateProgress(100);
-      setTransition(null);
-
-      console.info('User profile updated:', userId);
-    } catch (error) {
-      console.error('Error during user update:', error);
-      setTransition(null, error instanceof Error ? error.message : 'User update failed');
-    }
-  }, [updateProgress, setTransition]);
+    },
+    [updateProgress, setTransition]
+  );
 
   /**
    * Handle session update (token refresh, etc.)
@@ -346,41 +375,50 @@ export function useAuthStateChange(
       console.info('Session updated');
     } catch (error) {
       console.error('Error during session update:', error);
-      setTransition(null, error instanceof Error ? error.message : 'Session update failed');
+      setTransition(
+        null,
+        error instanceof Error ? error.message : 'Session update failed'
+      );
     }
   }, [updateProgress, setTransition]);
 
   /**
    * Handle account switching
    */
-  const handleAccountSwitch = useCallback(async (oldUserId: string | null, newUserId: string) => {
-    setTransition('accountSwitch');
+  const handleAccountSwitch = useCallback(
+    async (oldUserId: string | null, newUserId: string) => {
+      setTransition('accountSwitch');
 
-    try {
-      updateProgress(20);
+      try {
+        updateProgress(20);
 
-      // Clear data from previous account
-      await handleSignOut();
-      updateProgress(60);
+        // Clear data from previous account
+        await handleSignOut();
+        updateProgress(60);
 
-      // Load data for new account
-      await handleSignIn(newUserId);
-      updateProgress(100);
+        // Load data for new account
+        await handleSignIn(newUserId);
+        updateProgress(100);
 
-      setTransition(null);
+        setTransition(null);
 
-      console.info('Account switched:', { from: oldUserId, to: newUserId });
-    } catch (error) {
-      console.error('Error during account switch:', error);
-      setTransition(null, error instanceof Error ? error.message : 'Account switch failed');
-    }
-  }, [updateProgress, setTransition, handleSignOut, handleSignIn]);
+        console.info('Account switched:', { from: oldUserId, to: newUserId });
+      } catch (error) {
+        console.error('Error during account switch:', error);
+        setTransition(
+          null,
+          error instanceof Error ? error.message : 'Account switch failed'
+        );
+      }
+    },
+    [updateProgress, setTransition, handleSignOut, handleSignIn]
+  );
 
   /**
    * Main effect to monitor auth state changes
    */
   useEffect(() => {
-    // Don't process changes until Clerk is loaded
+    // don&apos;t process changes until Clerk is loaded
     if (!isLoaded) return;
 
     const currentUserId = user?.id || null;
@@ -464,21 +502,24 @@ export function useAuthStateChange(
   /**
    * Manual cleanup function for components
    */
-  const manualCleanup = useCallback(async (config?: Partial<CleanupConfig>) => {
-    const finalConfig = { ...cleanupConfig, ...config };
+  const manualCleanup = useCallback(
+    async (config?: Partial<CleanupConfig>) => {
+      const finalConfig = { ...cleanupConfig, ...config };
 
-    if (finalConfig.clearConversationHistory) await clearConversationData();
-    if (finalConfig.clearCachedResponses) await clearCachedResponses();
-    if (finalConfig.clearTempFiles) await clearTempFiles();
-    if (finalConfig.clearSessionData) await clearSessionData();
-    if (finalConfig.clearPreferences) clearAllPreferences();
-  }, [
-    cleanupConfig,
-    clearConversationData,
-    clearCachedResponses,
-    clearTempFiles,
-    clearSessionData,
-  ]);
+      if (finalConfig.clearConversationHistory) await clearConversationData();
+      if (finalConfig.clearCachedResponses) await clearCachedResponses();
+      if (finalConfig.clearTempFiles) await clearTempFiles();
+      if (finalConfig.clearSessionData) await clearSessionData();
+      if (finalConfig.clearPreferences) clearAllPreferences();
+    },
+    [
+      cleanupConfig,
+      clearConversationData,
+      clearCachedResponses,
+      clearTempFiles,
+      clearSessionData,
+    ]
+  );
 
   return {
     transitionState,

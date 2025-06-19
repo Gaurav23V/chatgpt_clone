@@ -50,7 +50,7 @@ export const CLERK_CONFIG = {
     '/api/history',
   ],
 
-  // Public routes that don't require authentication
+  // Public routes that don&apos;t require authentication
   PUBLIC_ROUTES: [
     '/',
     '/sign-in',
@@ -61,11 +61,7 @@ export const CLERK_CONFIG = {
   ],
 
   // Social sign-in providers to enable
-  SOCIAL_PROVIDERS: [
-    'google',
-    'github',
-    'discord',
-  ],
+  SOCIAL_PROVIDERS: ['google', 'github', 'discord'],
 
   // User profile fields to collect
   USER_PROFILE_FIELDS: {
@@ -196,9 +192,15 @@ export const ROLE_PERMISSIONS = {
     maxChatsPerDay: -1, // unlimited
     maxTokensPerChat: 8000,
     models: ['gpt-3.5-turbo', 'gpt-4o-mini', 'gpt-4o', 'gpt-4'],
-    features: ['basic-chat', 'chat-history', 'export-chats', 'team-sharing', 'priority-support'],
+    features: [
+      'basic-chat',
+      'chat-history',
+      'export-chats',
+      'team-sharing',
+      'priority-support',
+    ],
   },
 } as const;
 
-export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
-export type RolePermissions = typeof ROLE_PERMISSIONS[UserRole];
+export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
+export type RolePermissions = (typeof ROLE_PERMISSIONS)[UserRole];

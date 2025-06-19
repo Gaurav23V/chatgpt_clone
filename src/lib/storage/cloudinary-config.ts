@@ -22,19 +22,22 @@
  */
 
 import { Cloudinary } from '@cloudinary/url-gen';
-import {
+
+import type {
+  CloudinaryUploadResponse,
+  FileTransformation,
   FileUploadConfig,
+  ProcessedFileMetadata,
   StorageServiceConfig,
   SupportedFileType,
-  FileTransformation,
-  CloudinaryUploadResponse,
-  ProcessedFileMetadata
 } from '@/types/file-upload';
 
 /**
  * Environment variable validation
  */
-const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_CLOUD_NAME =
+  process.env.CLOUDINARY_CLOUD_NAME ||
+  process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
 const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
 const CLOUDINARY_UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET;
@@ -42,7 +45,9 @@ const CLOUDINARY_FOLDER = process.env.CLOUDINARY_FOLDER || 'chatgpt-clone';
 
 // Validate required environment variables
 if (!CLOUDINARY_CLOUD_NAME) {
-  console.warn('⚠️  CLOUDINARY_CLOUD_NAME not found. Cloudinary functionality will be limited.');
+  console.warn(
+    '⚠️  CLOUDINARY_CLOUD_NAME not found. Cloudinary functionality will be limited.'
+  );
 }
 
 /**
@@ -186,7 +191,10 @@ export const cloudinaryServiceConfig: StorageServiceConfig = {
 /**
  * Upload parameters for different file types
  */
-export const getCloudinaryUploadParams = (fileType: SupportedFileType, userId?: string) => {
+export const getCloudinaryUploadParams = (
+  fileType: SupportedFileType,
+  userId?: string
+) => {
   const baseParams = {
     cloud_name: CLOUDINARY_CLOUD_NAME,
     upload_preset: CLOUDINARY_CONFIG.UPLOAD_PRESETS.ATTACHMENTS,
@@ -260,7 +268,8 @@ export const transformCloudinaryResponse = (
     originalName: originalFile.name,
     fileName: response.original_filename,
     fileSize: response.bytes,
-    mimeType: `${response.resource_type}/${response.format}` as SupportedFileType,
+    mimeType:
+      `${response.resource_type}/${response.format}` as SupportedFileType,
     fileExtension: `.${response.format}`,
     url: response.url,
     secureUrl: response.secure_url,
@@ -270,13 +279,17 @@ export const transformCloudinaryResponse = (
     uploadedAt: new Date(response.created_at),
 
     // Image metadata
-    imageMetadata: response.width && response.height ? {
-      width: response.width,
-      height: response.height,
-      format: response.format,
-      hasTransparency: response.format === 'png' || response.format === 'gif',
-      colorSpace: 'sRGB', // Default assumption
-    } : undefined,
+    imageMetadata:
+      response.width && response.height
+        ? {
+            width: response.width,
+            height: response.height,
+            format: response.format,
+            hasTransparency:
+              response.format === 'png' || response.format === 'gif',
+            colorSpace: 'sRGB', // Default assumption
+          }
+        : undefined,
 
     // Security scan (placeholder - implement actual scanning)
     securityScan: {
@@ -336,7 +349,8 @@ export const generateOptimizedImageUrl = (
     }
   });
 
-  const transformString = transforms.length > 0 ? `/${transforms.join(',')}` : '';
+  const transformString =
+    transforms.length > 0 ? `/${transforms.join(',')}` : '';
 
   return `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload${transformString}/${publicId}`;
 };
@@ -348,7 +362,9 @@ export const validateCloudinaryConfig = (): boolean => {
   const isValid = !!(CLOUDINARY_CLOUD_NAME && CLOUDINARY_API_KEY);
 
   if (!isValid) {
-    console.error('❌ Cloudinary configuration is incomplete. Please check environment variables.');
+    console.error(
+      '❌ Cloudinary configuration is incomplete. Please check environment variables.'
+    );
   }
 
   return isValid;
@@ -357,7 +373,9 @@ export const validateCloudinaryConfig = (): boolean => {
 /**
  * Get Cloudinary upload signature (for secure uploads)
  */
-export const getCloudinarySignature = async (params: Record<string, any>): Promise<string> => {
+export const getCloudinarySignature = async (
+  params: Record<string, any>
+): Promise<string> => {
   if (!CLOUDINARY_API_SECRET) {
     throw new Error('Cloudinary API secret not configured');
   }

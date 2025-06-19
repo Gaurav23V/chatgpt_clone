@@ -33,15 +33,19 @@
  * Uncomment and implement the above code when ready to enable Clerk authentication.
  */
 
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
+import { serverRedirectUtils } from '@/lib/auth/redirect-utils';
+
 /**
- * Clerk + Next.js Middleware
+ * Clerk + Next.js Middleware with Sophisticated Redirect Logic
  * --------------------------------------------------
  * The middleware runs on every request that matches the `config.matcher` below.
- * Using Clerk's `authMiddleware` helper keeps the implementation small and
- * declarative while still giving us fine-grained control over which routes are
- * public vs. protected.
+ * Enhanced with redirect logic that remembers where users were trying to go
+ * before authentication and returns them there afterward.
  *
  * 1. Public routes (no authentication required)
  *    •   `/`                 – marketing / landing page
@@ -54,13 +58,8 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
  *    •   `/api/chat/:path*`          – chat completion endpoint
  *    •   `/api/conversations/:path*` – CRUD endpoints for conversation history
  *
- * Any request that is NOT matched by the `publicRoutes` array is considered
- * "protected". For pages, unauthenticated users are automatically redirected to
- * `/sign-in` and, once the flow is complete, returned to their original URL via
- * Clerk's built-in `redirect_url` query parameter.
- *
- * For API routes, Clerk will return a 401/403 style JSON response so client code
- * can handle it gracefully.
+ * For protected routes, unauthenticated users are redirected to `/sign-in` with
+ * a `redirect_url` parameter containing their intended destination.
  */
 
 // Route matcher helpers --------------------------------------------------
@@ -71,19 +70,78 @@ const isPublicRoute = createRouteMatcher([
   '/api/webhooks/clerk', // Webhooks must remain public so Clerk can reach them
 ]);
 
+// Special routes that need custom redirect handling
+const isSpecialChatRoute = createRouteMatcher([
+  '/c/new', // New chat creation
+  '/c/(.*)', // Existing chat routes
+]);
+
+/**
+ * Builds a secure redirect URL for authentication
+ */
+function buildSecureAuthRedirect(
+  req: NextRequest,
+  authPage: string = 'sign-in'
+): string {
+  const origin = req.nextUrl.origin;
+  const currentPath = serverRedirectUtils.getCleanPathname(req.nextUrl.href);
+
+  // Handle special route mappings
+  const specialMappings: Record<string, string> = {
+    '/c/new': '/chat',
+    '/': '/chat',
+  };
+
+  let redirectUrl = currentPath;
+  if (specialMappings[currentPath]) {
+    redirectUrl = specialMappings[currentPath];
+  }
+
+  // Build auth URL with redirect parameter
+  return serverRedirectUtils.buildAuthRedirect(authPage, redirectUrl, origin);
+}
+
 // Export Clerk middleware -------------------------------------------------
 export default clerkMiddleware(
   async (auth, req) => {
     // Skip auth checks for explicitly-public routes
     if (isPublicRoute(req)) return;
 
-    // All other paths require a valid session (will redirect or 401/403 automatically)
-    await auth.protect();
+    // Check if user is authenticated
+    const session = await auth();
+
+    if (!session.userId) {
+      // User is not authenticated - redirect to sign-in with return URL
+      const redirectUrl = buildSecureAuthRedirect(req);
+
+      // For API routes, return JSON response instead of redirect
+      if (req.nextUrl.pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          {
+            error: 'Authentication required',
+            redirectUrl: '/sign-in',
+          },
+          { status: 401 }
+        );
+      }
+
+      // For page routes, redirect to sign-in with return URL
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // User is authenticated - continue
+    return;
   },
   {
-    // Helpful request-time logs during local development
+    // Enhanced configuration
     debug: process.env.NODE_ENV === 'development',
-  },
+
+    // Custom redirect URLs for Clerk
+    signInUrl: '/sign-in',
+    signUpUrl: '/sign-up',
+    afterSignInUrl: '/chat',
+    afterSignUpUrl: '/chat',
+  }
 );
 
 /**

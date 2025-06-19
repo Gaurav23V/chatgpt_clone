@@ -1,18 +1,21 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+
 import { useUser } from '@clerk/nextjs';
-import {
-  UserPreferences,
-  DEFAULT_PREFERENCES,
-  savePreferences,
-  loadPreferences,
-} from '@/lib/storage/user-preferences';
+import type { ReactNode } from 'react';
+
 import { useAuthStateChange } from '@/hooks/useAuthStateChange';
+import type { UserPreferences } from '@/lib/storage/user-preferences';
+import {
+  DEFAULT_PREFERENCES,
+  loadPreferences,
+  savePreferences,
+} from '@/lib/storage/user-preferences';
 
 /**
  * User Settings Interface (separate from preferences)
- * These are chat-specific settings that don't overlap with preferences
+ * These are chat-specific settings that don&apos;t overlap with preferences
  */
 export interface UserSettings {
   historyLimit: number;
@@ -94,9 +97,12 @@ export function UserProvider({ children }: UserProviderProps) {
   });
 
   // App-specific state - now using enhanced preferences from storage module
-  const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
+  const [preferences, setPreferences] =
+    useState<UserPreferences>(DEFAULT_PREFERENCES);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [currentConversationId, setCurrentConversationId] = useState<
+    string | null
+  >(null);
 
   // Loading states
   const [isLoadingPreferences, setIsLoadingPreferences] = useState(false);
@@ -156,7 +162,9 @@ export function UserProvider({ children }: UserProviderProps) {
   const loadCurrentConversation = (userId: string) => {
     try {
       const keys = getStorageKeys(userId);
-      const storedConversationId = localStorage.getItem(keys.currentConversation);
+      const storedConversationId = localStorage.getItem(
+        keys.currentConversation
+      );
       setCurrentConversationId(storedConversationId);
     } catch (error) {
       console.error('Error loading current conversation:', error);
@@ -167,7 +175,9 @@ export function UserProvider({ children }: UserProviderProps) {
   /**
    * Update user preferences using the new persistence system
    */
-  const updatePreferences = async (newPreferences: Partial<UserPreferences>) => {
+  const updatePreferences = async (
+    newPreferences: Partial<UserPreferences>
+  ) => {
     if (!clerkUser?.id) return;
 
     setIsSaving(true);
@@ -305,9 +315,15 @@ export function UserProvider({ children }: UserProviderProps) {
 
     return () => {
       // Cleanup event listeners
-      window.removeEventListener('userSignIn', handleUserSignIn as EventListener);
+      window.removeEventListener(
+        'userSignIn',
+        handleUserSignIn as EventListener
+      );
       window.removeEventListener('userSignOut', handleUserSignOut);
-      window.removeEventListener('clearConversations', handleClearConversations);
+      window.removeEventListener(
+        'clearConversations',
+        handleClearConversations
+      );
     };
   }, []);
 
@@ -317,11 +333,17 @@ export function UserProvider({ children }: UserProviderProps) {
    */
   useEffect(() => {
     // Only handle cases not covered by useAuthStateChange
-    if (isLoaded && isSignedIn && clerkUser?.id && !transitionState.isTransitioning) {
-      // If auth state handler isn't running, load data manually
-      const hasData = preferences !== DEFAULT_PREFERENCES ||
-                     settings !== DEFAULT_SETTINGS ||
-                     currentConversationId !== null;
+    if (
+      isLoaded &&
+      isSignedIn &&
+      clerkUser?.id &&
+      !transitionState.isTransitioning
+    ) {
+      // If auth state handler isn&apos;t running, load data manually
+      const hasData =
+        preferences !== DEFAULT_PREFERENCES ||
+        settings !== DEFAULT_SETTINGS ||
+        currentConversationId !== null;
 
       if (!hasData) {
         loadUserPreferences(clerkUser.id);
@@ -365,9 +387,7 @@ export function UserProvider({ children }: UserProviderProps) {
   };
 
   return (
-    <UserContext.Provider value={contextValue}>
-      {children}
-    </UserContext.Provider>
+    <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>
   );
 }
 
@@ -388,7 +408,8 @@ export function useUserContext() {
  * Hook to access user preferences
  */
 export function useUserPreferences() {
-  const { preferences, updatePreferences, isLoadingPreferences, isSaving } = useUserContext();
+  const { preferences, updatePreferences, isLoadingPreferences, isSaving } =
+    useUserContext();
 
   return {
     preferences,
@@ -402,7 +423,8 @@ export function useUserPreferences() {
  * Hook to access user settings
  */
 export function useUserSettings() {
-  const { settings, updateSettings, isLoadingSettings, isSaving } = useUserContext();
+  const { settings, updateSettings, isLoadingSettings, isSaving } =
+    useUserContext();
 
   return {
     settings,
@@ -428,7 +450,14 @@ export function useCurrentConversation() {
  * Hook to check if user is fully loaded and authenticated
  */
 export function useAuthState() {
-  const { clerkUser, isSignedIn, isLoaded, isTransitioning, transitionType, transitionError } = useUserContext();
+  const {
+    clerkUser,
+    isSignedIn,
+    isLoaded,
+    isTransitioning,
+    transitionType,
+    transitionError,
+  } = useUserContext();
 
   return {
     user: clerkUser,
@@ -445,7 +474,8 @@ export function useAuthState() {
  * Hook to access auth transition state and cleanup functions
  */
 export function useAuthTransition() {
-  const { isTransitioning, transitionType, transitionError, manualCleanup } = useUserContext();
+  const { isTransitioning, transitionType, transitionError, manualCleanup } =
+    useUserContext();
 
   return {
     isTransitioning,

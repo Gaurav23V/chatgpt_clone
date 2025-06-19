@@ -1,10 +1,12 @@
-import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
-import { ClerkProvider } from '@clerk/nextjs';
-import { Inter } from 'next/font/google';
 import { Suspense } from 'react';
 
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono, Inter } from 'next/font/google';
+
+import { ClerkProvider } from '@clerk/nextjs';
+
 import { UserProvider } from '@/contexts/user-context';
+
 import './globals.css';
 
 /**
@@ -38,7 +40,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'ChatGPT Clone',
-  description: 'A ChatGPT-style conversational AI interface built with Next.js, Clerk & OpenAI.',
+  description:
+    'A ChatGPT-style conversational AI interface built with Next.js, Clerk & OpenAI.',
 };
 
 export default function RootLayout({
@@ -53,7 +56,9 @@ export default function RootLayout({
           className={`${inter.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
         >
           <UserProvider>
-            <Suspense fallback={<div className='py-6 text-center'>Loading...</div>}>
+            <Suspense
+              fallback={<div className='py-6 text-center'>Loading...</div>}
+            >
               {children}
             </Suspense>
           </UserProvider>

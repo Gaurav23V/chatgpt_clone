@@ -28,71 +28,76 @@
  */
 
 // Export all storage configurations
-export { default as cloudinaryConfig, cloudinary } from './cloudinary-config';
+import type {
+  FileUploadConfig,
+  FileValidationResult,
+  StorageProvider,
+  StorageServiceConfig,
+  SupportedFileType,
+} from '@/types/file-upload';
+import { FILE_UPLOAD_ERROR_CODES } from '@/types/file-upload';
+
+import {
+  cloudinaryServiceConfig,
+  validateCloudinaryConfig,
+} from './cloudinary-config';
+import {
+  uploadcareServiceConfig,
+  validateUploadcareConfig,
+} from './uploadcare-config';
+
+export { cloudinary, default as cloudinaryConfig } from './cloudinary-config';
 export { default as uploadcareConfig } from './uploadcare-config';
 
 // Export specific functions and configurations
 export {
   // Cloudinary exports
   CLOUDINARY_CONFIG,
-  defaultCloudinaryConfig,
   cloudinaryServiceConfig,
+  defaultCloudinaryConfig,
+  generateOptimizedImageUrl,
+  getCloudinarySignature,
   getCloudinaryUploadParams,
   transformCloudinaryResponse,
-  generateOptimizedImageUrl,
   validateCloudinaryConfig,
-  getCloudinarySignature,
 } from './cloudinary-config';
-
 export {
-  // Uploadcare exports
-  UPLOADCARE_CONFIG,
   defaultUploadcareConfig,
-  uploadcareServiceConfig,
-  getUploadcareWidgetConfig,
-  transformUploadcareResponse,
+  deleteUploadcareFile,
   generateOptimizedUploadcareUrl,
-  validateUploadcareConfig,
   generateUploadcareSignature,
   getUploadcareFileInfo,
-  deleteUploadcareFile,
+  getUploadcareWidgetConfig,
+  transformUploadcareResponse,
+  // Uploadcare exports
+  UPLOADCARE_CONFIG,
+  uploadcareServiceConfig,
+  validateUploadcareConfig,
 } from './uploadcare-config';
 
 // Export types
 export type {
+  BaseFileInfo,
+  BatchUploadResponse,
+  CloudinaryUploadResponse,
+  CreateFileData,
+  FileProcessingOptions,
+  FileSearchOptions,
+  FileTransformation,
   FileUploadConfig,
+  FileUploadErrorCode,
+  FileUploadResponse,
+  FileValidationResult,
+  ImageMetadata,
+  ProcessedFileMetadata,
+  StorageProvider,
   StorageServiceConfig,
   SupportedFileType,
-  StorageProvider,
-  FileTransformation,
-  ProcessedFileMetadata,
-  FileUploadResponse,
-  CloudinaryUploadResponse,
+  UpdateFileData,
   UploadcareUploadResponse,
   UploadProgress,
-  BatchUploadResponse,
-  FileValidationResult,
-  FileProcessingOptions,
-  ImageMetadata,
-  BaseFileInfo,
   UploadStatus,
-  FileSearchOptions,
-  CreateFileData,
-  UpdateFileData,
-  FileUploadErrorCode,
 } from '@/types/file-upload';
-
-import {
-  StorageProvider,
-  StorageServiceConfig,
-  FileUploadConfig,
-  FileValidationResult,
-  SupportedFileType,
-  FILE_UPLOAD_ERROR_CODES
-} from '@/types/file-upload';
-
-import { cloudinaryServiceConfig, validateCloudinaryConfig } from './cloudinary-config';
-import { uploadcareServiceConfig, validateUploadcareConfig } from './uploadcare-config';
 
 /**
  * Available storage providers
@@ -108,12 +113,14 @@ export const STORAGE_PROVIDERS = {
  * Default storage provider based on environment
  */
 export const DEFAULT_STORAGE_PROVIDER: StorageProvider =
-  process.env.DEFAULT_STORAGE_PROVIDER as StorageProvider || 'cloudinary';
+  (process.env.DEFAULT_STORAGE_PROVIDER as StorageProvider) || 'cloudinary';
 
 /**
  * Get storage configuration for a specific provider
  */
-export const getStorageConfig = (provider: StorageProvider): StorageServiceConfig => {
+export const getStorageConfig = (
+  provider: StorageProvider
+): StorageServiceConfig => {
   switch (provider) {
     case 'cloudinary':
       return cloudinaryServiceConfig;
@@ -133,7 +140,9 @@ export const getStorageConfig = (provider: StorageProvider): StorageServiceConfi
 /**
  * Get upload configuration for a specific provider
  */
-export const getUploadConfig = (provider: StorageProvider): FileUploadConfig => {
+export const getUploadConfig = (
+  provider: StorageProvider
+): FileUploadConfig => {
   const config = getStorageConfig(provider);
   return config.defaultConfig;
 };
@@ -185,7 +194,9 @@ export const validateFile = (
 
   // Check for potentially dangerous file extensions
   const dangerousExtensions = ['.exe', '.bat', '.cmd', '.scr', '.pif', '.jar'];
-  const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+  const fileExtension = file.name
+    .toLowerCase()
+    .substring(file.name.lastIndexOf('.'));
 
   if (dangerousExtensions.includes(fileExtension)) {
     errors.push({
@@ -228,14 +239,14 @@ export const validateFiles = (
     const validation = validateFile(file, config);
 
     // Add file index to error messages
-    validation.errors.forEach(error => {
+    validation.errors.forEach((error) => {
       allErrors.push({
         ...error,
         message: `File ${index + 1}: ${error.message}`,
       });
     });
 
-    validation.warnings?.forEach(warning => {
+    validation.warnings?.forEach((warning) => {
       allWarnings.push({
         ...warning,
         message: `File ${index + 1}: ${warning.message}`,
@@ -253,11 +264,17 @@ export const validateFiles = (
 /**
  * Get file type category
  */
-export const getFileTypeCategory = (mimeType: string): 'image' | 'document' | 'video' | 'audio' | 'other' => {
+export const getFileTypeCategory = (
+  mimeType: string
+): 'image' | 'document' | 'video' | 'audio' | 'other' => {
   if (mimeType.startsWith('image/')) return 'image';
   if (mimeType.startsWith('video/')) return 'video';
   if (mimeType.startsWith('audio/')) return 'audio';
-  if (mimeType.includes('pdf') || mimeType.startsWith('text/') || mimeType.includes('document')) {
+  if (
+    mimeType.includes('pdf') ||
+    mimeType.startsWith('text/') ||
+    mimeType.includes('document')
+  ) {
     return 'document';
   }
   return 'other';
@@ -273,7 +290,7 @@ export const formatFileSize = (bytes: number): string => {
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 };
 
 /**
@@ -283,7 +300,10 @@ export const generateUniqueFileName = (originalName: string): string => {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 8);
   const extension = originalName.substring(originalName.lastIndexOf('.'));
-  const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
+  const nameWithoutExt = originalName.substring(
+    0,
+    originalName.lastIndexOf('.')
+  );
 
   return `${nameWithoutExt}_${timestamp}_${random}${extension}`;
 };
@@ -291,7 +311,10 @@ export const generateUniqueFileName = (originalName: string): string => {
 /**
  * Validate all storage configurations
  */
-export const validateAllStorageConfigs = (): Record<StorageProvider, boolean> => {
+export const validateAllStorageConfigs = (): Record<
+  StorageProvider,
+  boolean
+> => {
   return {
     cloudinary: validateCloudinaryConfig(),
     uploadcare: validateUploadcareConfig(),
@@ -313,7 +336,9 @@ export const getAvailableProviders = (): StorageProvider[] => {
 /**
  * Storage service health check
  */
-export const checkStorageHealth = async (): Promise<Record<StorageProvider, boolean>> => {
+export const checkStorageHealth = async (): Promise<
+  Record<StorageProvider, boolean>
+> => {
   const results: Record<string, boolean> = {};
 
   // Check Cloudinary

@@ -14,7 +14,8 @@
  * - GET /api/chat?chatId=xxx - Get chat history (optional)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 // TODO: Import auth from Clerk when authentication is enabled
 // import { auth } from '@clerk/nextjs/server';
 
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
     //     { status: 401 }
     //   );
     // }
-    const userId = 'mock-user-id'; // Temporary for development
+    const _userId = 'mock-user-id'; // Temporary for development
 
     // Parse request body
     const body = await request.json();
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
 
     // Temporary mock response
     const mockResponse = {
-      id: chatId || 'chat_' + Date.now(),
+      id: chatId || `chat_${Date.now()}`,
       message: `This is a mock response to: "${message}". The actual AI integration will be implemented here.`,
       model,
       timestamp: new Date().toISOString(),
@@ -116,7 +117,6 @@ export async function POST(request: NextRequest) {
     };
 
     return NextResponse.json(mockResponse);
-
   } catch (error) {
     console.error('Chat API error:', error);
     return NextResponse.json(
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
     //     { status: 401 }
     //   );
     // }
-    const userId = 'mock-user-id'; // Temporary for development
+    const _userId = 'mock-user-id'; // Temporary for development
 
     const { searchParams } = new URL(request.url);
     const chatId = searchParams.get('chatId');
@@ -170,14 +170,13 @@ export async function GET(request: NextRequest) {
           content: 'Hello! How can I help you today?',
           role: 'assistant',
           timestamp: new Date().toISOString(),
-        }
+        },
       ],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
     return NextResponse.json(mockChat);
-
   } catch (error) {
     console.error('Chat API error:', error);
     return NextResponse.json(

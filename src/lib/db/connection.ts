@@ -24,8 +24,10 @@
  * - NODE_ENV: Environment mode (development/production)
  */
 
-import mongoose, { Connection, ConnectOptions } from 'mongoose';
-import { IConnectionStatus } from '@/types/database';
+import type { Connection, ConnectOptions } from 'mongoose';
+import mongoose from 'mongoose';
+
+import type { IConnectionStatus } from '@/types/database';
 
 /**
  * Global interface for storing the cached connection
@@ -48,7 +50,7 @@ declare const global: GlobalWithMongoose;
 const MONGODB_CONFIG: ConnectOptions = {
   // Connection Pool Settings (following Dub repository patterns)
   maxPoolSize: process.env.NODE_ENV === 'production' ? 10 : 5, // Maximum connections in pool
-  minPoolSize: process.env.NODE_ENV === 'production' ? 2 : 1,  // Minimum connections in pool
+  minPoolSize: process.env.NODE_ENV === 'production' ? 2 : 1, // Minimum connections in pool
   maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
   serverSelectionTimeoutMS: 5000, // How long to try selecting a server
   socketTimeoutMS: 45000, // How long a send or receive on a socket can take
@@ -70,7 +72,7 @@ const MONGODB_CONFIG: ConnectOptions = {
 
   ...(process.env.NODE_ENV === 'production' && {
     // Production-specific settings
-    autoIndex: false, // Don't build indexes automatically in production
+    autoIndex: false, // don&apos;t build indexes automatically in production
     debug: false, // Disable debug mode for performance
   }),
 };
@@ -127,7 +129,9 @@ export async function connectToDatabase(): Promise<Connection> {
       .connect(MONGODB_URI!, MONGODB_CONFIG)
       .then((mongoose) => {
         console.log('✅ MongoDB connected successfully');
-        console.log(`📍 Connected to: ${mongoose.connection.host}:${mongoose.connection.port}`);
+        console.log(
+          `📍 Connected to: ${mongoose.connection.host}:${mongoose.connection.port}`
+        );
         console.log(`🗄️  Database: ${mongoose.connection.name}`);
 
         // Set up connection event listeners

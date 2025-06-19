@@ -35,7 +35,9 @@ const validators = {
       new URL(url);
       return url;
     } catch {
-      throw new Error(`Environment variable ${name} must be a valid URL, got: ${url}`);
+      throw new Error(
+        `Environment variable ${name} must be a valid URL, got: ${url}`
+      );
     }
   },
 
@@ -47,14 +49,20 @@ const validators = {
     return defaultValue;
   },
 
-  number: (value: string | undefined, name: string, defaultValue?: number): number => {
+  number: (
+    value: string | undefined,
+    name: string,
+    defaultValue?: number
+  ): number => {
     if (!value) {
       if (defaultValue !== undefined) return defaultValue;
       throw new Error(`Environment variable ${name} is required but not set`);
     }
     const num = parseInt(value, 10);
     if (isNaN(num)) {
-      throw new Error(`Environment variable ${name} must be a number, got: ${value}`);
+      throw new Error(
+        `Environment variable ${name} must be a number, got: ${value}`
+      );
     }
     return num;
   },
@@ -88,34 +96,29 @@ const validators = {
  */
 const envSchema = {
   // Node.js Environment
-  NODE_ENV: () => validators.enum(
-    process.env.NODE_ENV,
-    'NODE_ENV',
-    ['development', 'staging', 'production'] as const,
-    'development'
-  ),
+  NODE_ENV: () =>
+    validators.enum(
+      process.env.NODE_ENV,
+      'NODE_ENV',
+      ['development', 'staging', 'production'] as const,
+      'development'
+    ),
 
   // Application Configuration
-  NEXT_PUBLIC_APP_URL: () => validators.url(
-    process.env.NEXT_PUBLIC_APP_URL,
-    'NEXT_PUBLIC_APP_URL'
-  ),
+  NEXT_PUBLIC_APP_URL: () =>
+    validators.url(process.env.NEXT_PUBLIC_APP_URL, 'NEXT_PUBLIC_APP_URL'),
 
   // Clerk Authentication (Required)
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: () => validators.string(
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-    'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY'
-  ),
-  CLERK_SECRET_KEY: () => validators.string(
-    process.env.CLERK_SECRET_KEY,
-    'CLERK_SECRET_KEY'
-  ),
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: () =>
+    validators.string(
+      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+      'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY'
+    ),
+  CLERK_SECRET_KEY: () =>
+    validators.string(process.env.CLERK_SECRET_KEY, 'CLERK_SECRET_KEY'),
 
   // Database Configuration (Required)
-  MONGODB_URI: () => validators.string(
-    process.env.MONGODB_URI,
-    'MONGODB_URI'
-  ),
+  MONGODB_URI: () => validators.string(process.env.MONGODB_URI, 'MONGODB_URI'),
 
   // OpenAI API (Required)
   OPENAI_API_KEY: () => {
@@ -127,31 +130,42 @@ const envSchema = {
   },
 
   // Storage Providers (At least one required)
-  CLOUDINARY_CLOUD_NAME: () => validators.optionalString(process.env.CLOUDINARY_CLOUD_NAME),
-  CLOUDINARY_API_KEY: () => validators.optionalString(process.env.CLOUDINARY_API_KEY),
-  CLOUDINARY_API_SECRET: () => validators.optionalString(process.env.CLOUDINARY_API_SECRET),
+  CLOUDINARY_CLOUD_NAME: () =>
+    validators.optionalString(process.env.CLOUDINARY_CLOUD_NAME),
+  CLOUDINARY_API_KEY: () =>
+    validators.optionalString(process.env.CLOUDINARY_API_KEY),
+  CLOUDINARY_API_SECRET: () =>
+    validators.optionalString(process.env.CLOUDINARY_API_SECRET),
 
-  UPLOADCARE_PUBLIC_KEY: () => validators.optionalString(process.env.UPLOADCARE_PUBLIC_KEY),
-  UPLOADCARE_SECRET_KEY: () => validators.optionalString(process.env.UPLOADCARE_SECRET_KEY),
+  UPLOADCARE_PUBLIC_KEY: () =>
+    validators.optionalString(process.env.UPLOADCARE_PUBLIC_KEY),
+  UPLOADCARE_SECRET_KEY: () =>
+    validators.optionalString(process.env.UPLOADCARE_SECRET_KEY),
 
   // Optional Configuration
-  DEFAULT_STORAGE_PROVIDER: () => validators.enum(
-    process.env.DEFAULT_STORAGE_PROVIDER,
-    'DEFAULT_STORAGE_PROVIDER',
-    ['cloudinary', 'uploadcare'] as const,
-    'cloudinary'
-  ),
+  DEFAULT_STORAGE_PROVIDER: () =>
+    validators.enum(
+      process.env.DEFAULT_STORAGE_PROVIDER,
+      'DEFAULT_STORAGE_PROVIDER',
+      ['cloudinary', 'uploadcare'] as const,
+      'cloudinary'
+    ),
 
-  ENABLE_FILE_UPLOADS: () => validators.boolean(process.env.ENABLE_FILE_UPLOADS, true),
-  MAX_FILE_SIZE: () => validators.number(process.env.MAX_FILE_SIZE, 'MAX_FILE_SIZE', 10485760), // 10MB default
+  ENABLE_FILE_UPLOADS: () =>
+    validators.boolean(process.env.ENABLE_FILE_UPLOADS, true),
+  MAX_FILE_SIZE: () =>
+    validators.number(process.env.MAX_FILE_SIZE, 'MAX_FILE_SIZE', 10485760), // 10MB default
 
   // Development Configuration
   DEBUG_MODE: () => validators.boolean(process.env.DEBUG_MODE, false),
-  DISABLE_AUTH_IN_DEV: () => validators.boolean(process.env.DISABLE_AUTH_IN_DEV, false),
-  MOCK_EXTERNAL_APIS: () => validators.boolean(process.env.MOCK_EXTERNAL_APIS, false),
+  DISABLE_AUTH_IN_DEV: () =>
+    validators.boolean(process.env.DISABLE_AUTH_IN_DEV, false),
+  MOCK_EXTERNAL_APIS: () =>
+    validators.boolean(process.env.MOCK_EXTERNAL_APIS, false),
 
   // Build Configuration
-  BUILD_STANDALONE: () => validators.boolean(process.env.BUILD_STANDALONE, false),
+  BUILD_STANDALONE: () =>
+    validators.boolean(process.env.BUILD_STANDALONE, false),
   ANALYZE: () => validators.boolean(process.env.ANALYZE, false),
 };
 
@@ -172,18 +186,26 @@ function validateEnvironment() {
     try {
       config[key] = validator();
     } catch (error) {
-      errors.push(error instanceof Error ? error.message : `Unknown error validating ${key}`);
+      errors.push(
+        error instanceof Error
+          ? error.message
+          : `Unknown error validating ${key}`
+      );
     }
   }
 
   // Check storage provider configuration
-  const hasCloudinary = config.CLOUDINARY_CLOUD_NAME && config.CLOUDINARY_API_KEY && config.CLOUDINARY_API_SECRET;
-  const hasUploadcare = config.UPLOADCARE_PUBLIC_KEY && config.UPLOADCARE_SECRET_KEY;
+  const hasCloudinary =
+    config.CLOUDINARY_CLOUD_NAME &&
+    config.CLOUDINARY_API_KEY &&
+    config.CLOUDINARY_API_SECRET;
+  const hasUploadcare =
+    config.UPLOADCARE_PUBLIC_KEY && config.UPLOADCARE_SECRET_KEY;
 
   if (config.ENABLE_FILE_UPLOADS && !hasCloudinary && !hasUploadcare) {
     errors.push(
       'File uploads are enabled but no storage provider is configured. ' +
-      'Please configure either Cloudinary or Uploadcare credentials.'
+        'Please configure either Cloudinary or Uploadcare credentials.'
     );
   }
 
@@ -200,7 +222,7 @@ function validateEnvironment() {
     }
 
     if (warnings.length > 0) {
-      console.warn('\n' + warnings.join('\n') + '\n');
+      console.warn(`\n${warnings.join('\n')}\n`);
     }
   }
 
@@ -224,7 +246,7 @@ function validateEnvironment() {
     const errorMessage = [
       '❌ Environment validation failed:',
       '',
-      ...errors.map(error => `  • ${error}`),
+      ...errors.map((error) => `  • ${error}`),
       '',
       '💡 Please check your .env.local file and ensure all required variables are set.',
       '📖 See .env.example for reference and setup instructions.',
@@ -303,18 +325,27 @@ export const isStaging = env.NODE_ENV === 'staging';
 /**
  * Check if file uploads are enabled and properly configured
  */
-export const isFileUploadsEnabled = env.ENABLE_FILE_UPLOADS && (
-  (env.CLOUDINARY_CLOUD_NAME && env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET) ||
-  (env.UPLOADCARE_PUBLIC_KEY && env.UPLOADCARE_SECRET_KEY)
-);
+export const isFileUploadsEnabled =
+  env.ENABLE_FILE_UPLOADS &&
+  ((env.CLOUDINARY_CLOUD_NAME &&
+    env.CLOUDINARY_API_KEY &&
+    env.CLOUDINARY_API_SECRET) ||
+    (env.UPLOADCARE_PUBLIC_KEY && env.UPLOADCARE_SECRET_KEY));
 
 /**
  * Get the configured storage providers
  */
-export const getAvailableStorageProviders = (): ('cloudinary' | 'uploadcare')[] => {
+export const getAvailableStorageProviders = (): (
+  | 'cloudinary'
+  | 'uploadcare'
+)[] => {
   const providers: ('cloudinary' | 'uploadcare')[] = [];
 
-  if (env.CLOUDINARY_CLOUD_NAME && env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET) {
+  if (
+    env.CLOUDINARY_CLOUD_NAME &&
+    env.CLOUDINARY_API_KEY &&
+    env.CLOUDINARY_API_SECRET
+  ) {
     providers.push('cloudinary');
   }
 
@@ -336,10 +367,16 @@ export const logEnvironmentSummary = (): void => {
   console.log('\n🚀 Environment Configuration:');
   console.log(`   Mode: ${env.NODE_ENV}`);
   console.log(`   App URL: ${env.NEXT_PUBLIC_APP_URL}`);
-  console.log(`   File Uploads: ${isFileUploadsEnabled ? '✅ Enabled' : '❌ Disabled'}`);
-  console.log(`   Storage Providers: ${availableProviders.length > 0 ? availableProviders.join(', ') : 'None'}`);
+  console.log(
+    `   File Uploads: ${isFileUploadsEnabled ? '✅ Enabled' : '❌ Disabled'}`
+  );
+  console.log(
+    `   Storage Providers: ${availableProviders.length > 0 ? availableProviders.join(', ') : 'None'}`
+  );
   console.log(`   Default Provider: ${env.DEFAULT_STORAGE_PROVIDER}`);
-  console.log(`   Max File Size: ${(env.MAX_FILE_SIZE / 1024 / 1024).toFixed(1)}MB`);
+  console.log(
+    `   Max File Size: ${(env.MAX_FILE_SIZE / 1024 / 1024).toFixed(1)}MB`
+  );
   console.log('');
 };
 
@@ -351,7 +388,10 @@ export const logEnvironmentSummary = (): void => {
  * Development-only function to validate environment without throwing
  * Useful for debugging environment issues
  */
-export const validateEnvironmentSafe = (): { success: boolean; errors: string[] } => {
+export const validateEnvironmentSafe = (): {
+  success: boolean;
+  errors: string[];
+} => {
   if (!isDevelopment) {
     return { success: true, errors: [] };
   }
@@ -360,8 +400,12 @@ export const validateEnvironmentSafe = (): { success: boolean; errors: string[] 
     validateEnvironment();
     return { success: true, errors: [] };
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown validation error';
-    const errors = message.split('\n').filter(line => line.trim().startsWith('•')).map(line => line.trim().substring(1).trim());
+    const message =
+      error instanceof Error ? error.message : 'Unknown validation error';
+    const errors = message
+      .split('\n')
+      .filter((line) => line.trim().startsWith('•'))
+      .map((line) => line.trim().substring(1).trim());
     return { success: false, errors };
   }
 };

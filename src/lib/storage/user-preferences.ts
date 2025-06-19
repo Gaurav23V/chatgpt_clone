@@ -79,7 +79,12 @@ function validatePreferences(data: any): data is UserPreferences {
   if (!data || typeof data !== 'object') return false;
 
   const requiredFields: (keyof UserPreferences)[] = [
-    'theme', 'model', 'language', 'fontSize', 'sendOnEnter', 'showCodeLineNumbers'
+    'theme',
+    'model',
+    'language',
+    'fontSize',
+    'sendOnEnter',
+    'showCodeLineNumbers',
   ];
 
   for (const field of requiredFields) {
@@ -88,7 +93,13 @@ function validatePreferences(data: any): data is UserPreferences {
 
   // Validate specific field types and values
   const validThemes = ['light', 'dark', 'system'];
-  const validModels = ['gpt-3.5-turbo', 'gpt-4o-mini', 'gpt-4o', 'gpt-4', 'gpt-4-turbo'];
+  const validModels = [
+    'gpt-3.5-turbo',
+    'gpt-4o-mini',
+    'gpt-4o',
+    'gpt-4',
+    'gpt-4-turbo',
+  ];
   const validFontSizes = ['small', 'medium', 'large'];
 
   if (!validThemes.includes(data.theme)) return false;
@@ -105,11 +116,11 @@ function validatePreferences(data: any): data is UserPreferences {
  * Migrate preferences from older versions
  */
 function migratePreferences(data: any, fromVersion: number): UserPreferences {
-  let migrated = { ...data };
+  const migrated = { ...data };
 
   // Migration from version 0 (legacy format) to version 1
   if (fromVersion < 1) {
-    // Add new fields with defaults if they don't exist
+    // Add new fields with defaults if they don&apos;t exist
     if (!('sendOnEnter' in migrated)) {
       migrated.sendOnEnter = DEFAULT_PREFERENCES.sendOnEnter;
     }
@@ -130,7 +141,8 @@ function migratePreferences(data: any, fromVersion: number): UserPreferences {
     language: migrated.language || DEFAULT_PREFERENCES.language,
     fontSize: migrated.fontSize || DEFAULT_PREFERENCES.fontSize,
     sendOnEnter: migrated.sendOnEnter ?? DEFAULT_PREFERENCES.sendOnEnter,
-    showCodeLineNumbers: migrated.showCodeLineNumbers ?? DEFAULT_PREFERENCES.showCodeLineNumbers,
+    showCodeLineNumbers:
+      migrated.showCodeLineNumbers ?? DEFAULT_PREFERENCES.showCodeLineNumbers,
   };
 }
 
@@ -182,7 +194,9 @@ export async function savePreferences(
 /**
  * Load user preferences from localStorage
  */
-export async function loadPreferences(userId: string): Promise<UserPreferences> {
+export async function loadPreferences(
+  userId: string
+): Promise<UserPreferences> {
   if (!userId) {
     console.warn('Cannot load preferences: userId is required');
     return DEFAULT_PREFERENCES;
@@ -225,8 +239,13 @@ export async function loadPreferences(userId: string): Promise<UserPreferences> 
 
     // Check if migration is needed
     if (storageData.version < STORAGE_VERSION) {
-      console.info(`Migrating preferences from version ${storageData.version} to ${STORAGE_VERSION}`);
-      const migrated = migratePreferences(storageData.preferences, storageData.version);
+      console.info(
+        `Migrating preferences from version ${storageData.version} to ${STORAGE_VERSION}`
+      );
+      const migrated = migratePreferences(
+        storageData.preferences,
+        storageData.version
+      );
 
       // Save migrated preferences
       await savePreferences(userId, migrated);
@@ -283,7 +302,9 @@ export async function migrateAllPreferences(): Promise<void> {
 
   try {
     const keys = Object.keys(localStorage);
-    const preferenceKeys = keys.filter(key => key.startsWith(STORAGE_KEY_PREFIX));
+    const preferenceKeys = keys.filter((key) =>
+      key.startsWith(STORAGE_KEY_PREFIX)
+    );
 
     for (const key of preferenceKeys) {
       try {
@@ -293,12 +314,12 @@ export async function migrateAllPreferences(): Promise<void> {
         const parsed = JSON.parse(stored);
 
         // Extract userId from key
-        const userId = key.replace(`${STORAGE_KEY_PREFIX}-`, '');
+        const _userId = key.replace(`${STORAGE_KEY_PREFIX}-`, '');
 
         if (!parsed.version || parsed.version < STORAGE_VERSION) {
-          console.info(`Migrating preferences for user ${userId}`);
-          const currentPrefs = await loadPreferences(userId);
-          await savePreferences(userId, currentPrefs);
+          console.info(`Migrating preferences for user ${_userId}`);
+          const currentPrefs = await loadPreferences(_userId);
+          await savePreferences(_userId, currentPrefs);
         }
       } catch (error) {
         console.error(`Failed to migrate preferences for key ${key}:`, error);
@@ -329,7 +350,9 @@ export function getStorageStats(): {
 
   try {
     const keys = Object.keys(localStorage);
-    const preferenceKeys = keys.filter(key => key.startsWith(STORAGE_KEY_PREFIX));
+    const preferenceKeys = keys.filter((key) =>
+      key.startsWith(STORAGE_KEY_PREFIX)
+    );
 
     let totalSize = 0;
     for (const key of preferenceKeys) {
@@ -367,7 +390,9 @@ export function clearAllPreferences(): boolean {
 
   try {
     const keys = Object.keys(localStorage);
-    const preferenceKeys = keys.filter(key => key.startsWith(STORAGE_KEY_PREFIX));
+    const preferenceKeys = keys.filter((key) =>
+      key.startsWith(STORAGE_KEY_PREFIX)
+    );
 
     for (const key of preferenceKeys) {
       localStorage.removeItem(key);

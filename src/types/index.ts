@@ -11,19 +11,31 @@
  */
 
 // Export existing types
+export * from './auth';
+
+// Export auth error types with explicit naming to avoid conflicts
+export type {
+  AuthErrorAlertProps,
+  AuthErrorBoundaryProps,
+  AuthErrorContext,
+  AuthErrorPageProps,
+  AuthErrorType,
+  AuthRetryButtonProps,
+  AuthError as DetailedAuthError,
+  ErrorRecoveryStrategy,
+  ErrorSeverity,
+  RecoveryActionType,
+  UseAuthErrorReturn,
+  UseErrorRecoveryReturn,
+} from './auth-errors';
 export * from './database';
 export * from './file-upload';
 
 // Export user context types (settings and extended state)
-export type {
-  UserSettings,
-  ExtendedUserState,
-} from '../contexts/user-context';
+export type { ExtendedUserState, UserSettings } from '../contexts/user-context';
 
 // Export enhanced user preferences from storage module
-export type {
-  UserPreferences,
-} from '../lib/storage/user-preferences';
+export type { UserPreferences } from '../lib/storage/user-preferences';
 
 // Export auth state change types
 export type {

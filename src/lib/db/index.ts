@@ -11,47 +11,47 @@
  */
 
 // Connection utilities
-export {
-  connectToDatabase,
-  getConnectionStatus,
-  testConnection,
-  closeConnection,
-  CONNECTION_STATES,
-} from './connection';
-
 // Import for internal use
+import type { IConnectionStatus } from '@/types/database';
+
 import {
+  closeConnection as _closeConnection,
+  CONNECTION_STATES as _CONNECTION_STATES,
   connectToDatabase as _connectToDatabase,
   getConnectionStatus as _getConnectionStatus,
   testConnection as _testConnection,
-  closeConnection as _closeConnection,
-  CONNECTION_STATES as _CONNECTION_STATES,
 } from './connection';
 
-import type { IConnectionStatus } from '@/types/database';
+export {
+  closeConnection,
+  CONNECTION_STATES,
+  connectToDatabase,
+  getConnectionStatus,
+  testConnection,
+} from './connection';
 
 // Database types
 export type {
-  IUser,
-  IConversation,
-  IMessage,
+  AttachmentStatus,
+  ConversationStatus,
+  CreateAttachmentData,
+  CreateConversationData,
+  CreateMessageData,
+  CreateUserData,
   IAttachment,
   IConnectionStatus,
-  IPaginationOptions,
+  IConversation,
+  IMessage,
   IPaginatedResponse,
+  IPaginationOptions,
   ISearchOptions,
-  UserRole,
-  ConversationStatus,
+  IUser,
   MessageRole,
-  AttachmentStatus,
-  CreateUserData,
-  UpdateUserData,
-  CreateConversationData,
-  UpdateConversationData,
-  CreateMessageData,
-  UpdateMessageData,
-  CreateAttachmentData,
   UpdateAttachmentData,
+  UpdateConversationData,
+  UpdateMessageData,
+  UpdateUserData,
+  UserRole,
 } from '@/types/database';
 
 // Models will be exported here once created

@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
 import { useUser } from '@clerk/nextjs';
+
+import type { UserPreferences } from '@/lib/storage/user-preferences';
 import {
-  UserPreferences,
   DEFAULT_PREFERENCES,
-  savePreferences,
   loadPreferences,
   resetPreferences,
+  savePreferences,
 } from '@/lib/storage/user-preferences';
 
 /**
@@ -42,7 +44,8 @@ export function usePersistedPreferences(): UsePersistedPreferencesReturn {
   const { user, isLoaded } = useUser();
 
   // State management
-  const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
+  const [preferences, setPreferences] =
+    useState<UserPreferences>(DEFAULT_PREFERENCES);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +73,9 @@ export function usePersistedPreferences(): UsePersistedPreferencesReturn {
       }
     } catch (err) {
       if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : 'Failed to load preferences');
+        setError(
+          err instanceof Error ? err.message : 'Failed to load preferences'
+        );
         setPreferences(DEFAULT_PREFERENCES);
       }
     } finally {
@@ -83,60 +88,68 @@ export function usePersistedPreferences(): UsePersistedPreferencesReturn {
   /**
    * Save preferences with debouncing
    */
-  const debouncedSave = useCallback(async (userId: string, prefs: UserPreferences) => {
-    if (!mountedRef.current) return;
-
-    // Clear existing timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    // Set new timeout for debounced save
-    saveTimeoutRef.current = setTimeout(async () => {
+  const debouncedSave = useCallback(
+    async (userId: string, prefs: UserPreferences) => {
       if (!mountedRef.current) return;
 
-      setIsSaving(true);
-      setError(null);
+      // Clear existing timeout
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
 
-      try {
-        const success = await savePreferences(userId, prefs);
+      // Set new timeout for debounced save
+      saveTimeoutRef.current = setTimeout(async () => {
+        if (!mountedRef.current) return;
 
-        if (mountedRef.current) {
-          if (success) {
-            setLastSaved(new Date());
-          } else {
-            setError('Failed to save preferences');
+        setIsSaving(true);
+        setError(null);
+
+        try {
+          const success = await savePreferences(userId, prefs);
+
+          if (mountedRef.current) {
+            if (success) {
+              setLastSaved(new Date());
+            } else {
+              setError('Failed to save preferences');
+            }
+          }
+        } catch (err) {
+          if (mountedRef.current) {
+            setError(
+              err instanceof Error ? err.message : 'Failed to save preferences'
+            );
+          }
+        } finally {
+          if (mountedRef.current) {
+            setIsSaving(false);
           }
         }
-      } catch (err) {
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : 'Failed to save preferences');
-        }
-      } finally {
-        if (mountedRef.current) {
-          setIsSaving(false);
-        }
-      }
-    }, SAVE_DEBOUNCE_DELAY);
-  }, []);
+      }, SAVE_DEBOUNCE_DELAY);
+    },
+    []
+  );
 
   /**
    * Update preferences with auto-save
    */
-  const updatePreferences = useCallback(async (updates: Partial<UserPreferences>) => {
-    if (!user?.id || !isLoaded) {
-      setError('User not authenticated');
-      return;
-    }
+  const updatePreferences = useCallback(
+    async (updates: Partial<UserPreferences>) => {
+      if (!user?.id || !isLoaded) {
+        setError('User not authenticated');
+        return;
+      }
 
-    const newPreferences = { ...preferences, ...updates };
+      const newPreferences = { ...preferences, ...updates };
 
-    // Update state immediately for responsive UI
-    setPreferences(newPreferences);
+      // Update state immediately for responsive UI
+      setPreferences(newPreferences);
 
-    // Save to storage (debounced)
-    await debouncedSave(user.id, newPreferences);
-  }, [user?.id, isLoaded, preferences, debouncedSave]);
+      // Save to storage (debounced)
+      await debouncedSave(user.id, newPreferences);
+    },
+    [user?.id, isLoaded, preferences, debouncedSave]
+  );
 
   /**
    * Reset preferences to defaults
@@ -163,7 +176,9 @@ export function usePersistedPreferences(): UsePersistedPreferencesReturn {
       }
     } catch (err) {
       if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : 'Failed to reset preferences');
+        setError(
+          err instanceof Error ? err.message : 'Failed to reset preferences'
+        );
       }
     } finally {
       if (mountedRef.current) {
@@ -225,7 +240,8 @@ export function usePersistedPreferences(): UsePersistedPreferencesReturn {
  * Hook for managing specific preference categories
  */
 export function useThemePreference() {
-  const { preferences, updatePreferences, isLoading, isSaving } = usePersistedPreferences();
+  const { preferences, updatePreferences, isLoading, isSaving } =
+    usePersistedPreferences();
 
   return {
     theme: preferences.theme,
@@ -236,7 +252,8 @@ export function useThemePreference() {
 }
 
 export function useModelPreference() {
-  const { preferences, updatePreferences, isLoading, isSaving } = usePersistedPreferences();
+  const { preferences, updatePreferences, isLoading, isSaving } =
+    usePersistedPreferences();
 
   return {
     model: preferences.model,
@@ -247,17 +264,21 @@ export function useModelPreference() {
 }
 
 export function useInterfacePreferences() {
-  const { preferences, updatePreferences, isLoading, isSaving } = usePersistedPreferences();
+  const { preferences, updatePreferences, isLoading, isSaving } =
+    usePersistedPreferences();
 
   return {
     fontSize: preferences.fontSize,
     language: preferences.language,
     sendOnEnter: preferences.sendOnEnter,
     showCodeLineNumbers: preferences.showCodeLineNumbers,
-    setFontSize: (fontSize: UserPreferences['fontSize']) => updatePreferences({ fontSize }),
+    setFontSize: (fontSize: UserPreferences['fontSize']) =>
+      updatePreferences({ fontSize }),
     setLanguage: (language: string) => updatePreferences({ language }),
-    setSendOnEnter: (sendOnEnter: boolean) => updatePreferences({ sendOnEnter }),
-    setShowCodeLineNumbers: (showCodeLineNumbers: boolean) => updatePreferences({ showCodeLineNumbers }),
+    setSendOnEnter: (sendOnEnter: boolean) =>
+      updatePreferences({ sendOnEnter }),
+    setShowCodeLineNumbers: (showCodeLineNumbers: boolean) =>
+      updatePreferences({ showCodeLineNumbers }),
     isLoading,
     isSaving,
   };

@@ -49,7 +49,7 @@ async function verifyCoreDependencies(): Promise<VerificationResult[]> {
       category: 'Core Dependencies',
       name: 'Next.js',
       status: 'success',
-      message: 'Next.js is properly installed and importable'
+      message: 'Next.js is properly installed and importable',
     });
   } catch (error) {
     results.push({
@@ -57,7 +57,7 @@ async function verifyCoreDependencies(): Promise<VerificationResult[]> {
       name: 'Next.js',
       status: 'error',
       message: 'Next.js import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -68,7 +68,7 @@ async function verifyCoreDependencies(): Promise<VerificationResult[]> {
       category: 'Core Dependencies',
       name: 'React',
       status: 'success',
-      message: 'React is properly installed and importable'
+      message: 'React is properly installed and importable',
     });
   } catch (error) {
     results.push({
@@ -76,7 +76,7 @@ async function verifyCoreDependencies(): Promise<VerificationResult[]> {
       name: 'React',
       status: 'error',
       message: 'React import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -88,7 +88,9 @@ async function verifyCoreDependencies(): Promise<VerificationResult[]> {
       category: 'Core Dependencies',
       name: 'TypeScript',
       status: hasTypes ? 'success' : 'warning',
-      message: hasTypes ? 'TypeScript environment is properly configured' : 'TypeScript types may not be fully configured'
+      message: hasTypes
+        ? 'TypeScript environment is properly configured'
+        : 'TypeScript types may not be fully configured',
     });
   } catch (error) {
     results.push({
@@ -96,7 +98,7 @@ async function verifyCoreDependencies(): Promise<VerificationResult[]> {
       name: 'TypeScript',
       status: 'error',
       message: 'TypeScript configuration issue',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -116,7 +118,7 @@ async function verifyAIDependencies(): Promise<VerificationResult[]> {
       category: 'AI Dependencies',
       name: 'AI SDK',
       status: 'success',
-      message: 'AI SDK is properly installed and importable'
+      message: 'AI SDK is properly installed and importable',
     });
   } catch (error) {
     results.push({
@@ -124,7 +126,7 @@ async function verifyAIDependencies(): Promise<VerificationResult[]> {
       name: 'AI SDK',
       status: 'error',
       message: 'AI SDK import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -135,7 +137,7 @@ async function verifyAIDependencies(): Promise<VerificationResult[]> {
       category: 'AI Dependencies',
       name: 'OpenAI SDK',
       status: 'success',
-      message: 'OpenAI SDK is properly installed and importable'
+      message: 'OpenAI SDK is properly installed and importable',
     });
   } catch (error) {
     results.push({
@@ -143,7 +145,7 @@ async function verifyAIDependencies(): Promise<VerificationResult[]> {
       name: 'OpenAI SDK',
       status: 'error',
       message: 'OpenAI SDK import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -156,7 +158,7 @@ async function verifyAIDependencies(): Promise<VerificationResult[]> {
         category: 'Authentication',
         name: 'Clerk Next.js',
         status: 'success',
-        message: 'Clerk Next.js is properly installed and importable'
+        message: 'Clerk Next.js is properly installed and importable',
       });
     }
   } catch (error) {
@@ -167,7 +169,7 @@ async function verifyAIDependencies(): Promise<VerificationResult[]> {
         category: 'Authentication',
         name: 'Clerk Next.js',
         status: 'success',
-        message: 'Clerk Next.js components are available'
+        message: 'Clerk Next.js components are available',
       });
     } catch (secondError) {
       results.push({
@@ -175,7 +177,7 @@ async function verifyAIDependencies(): Promise<VerificationResult[]> {
         name: 'Clerk Next.js',
         status: 'error',
         message: 'Clerk Next.js import failed',
-        details: `Primary error: ${error instanceof Error ? error.message : 'Unknown error'}. Secondary error: ${secondError instanceof Error ? secondError.message : 'Unknown error'}`
+        details: `Primary error: ${error instanceof Error ? error.message : 'Unknown error'}. Secondary error: ${secondError instanceof Error ? secondError.message : 'Unknown error'}`,
       });
     }
   }
@@ -196,7 +198,7 @@ async function verifyDatabaseDependencies(): Promise<VerificationResult[]> {
       category: 'Database Dependencies',
       name: 'MongoDB Driver',
       status: 'success',
-      message: 'MongoDB driver is properly installed and importable'
+      message: 'MongoDB driver is properly installed and importable',
     });
   } catch (error) {
     results.push({
@@ -204,7 +206,7 @@ async function verifyDatabaseDependencies(): Promise<VerificationResult[]> {
       name: 'MongoDB Driver',
       status: 'error',
       message: 'MongoDB driver import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -215,7 +217,7 @@ async function verifyDatabaseDependencies(): Promise<VerificationResult[]> {
       category: 'Database Dependencies',
       name: 'Mongoose ODM',
       status: 'success',
-      message: 'Mongoose ODM is properly installed and importable'
+      message: 'Mongoose ODM is properly installed and importable',
     });
   } catch (error) {
     results.push({
@@ -223,7 +225,7 @@ async function verifyDatabaseDependencies(): Promise<VerificationResult[]> {
       name: 'Mongoose ODM',
       status: 'error',
       message: 'Mongoose ODM import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -243,7 +245,7 @@ async function verifyUIDependencies(): Promise<VerificationResult[]> {
       category: 'UI Dependencies',
       name: 'clsx',
       status: 'success',
-      message: 'clsx utility is properly installed and importable'
+      message: 'clsx utility is properly installed and importable',
     });
   } catch (error) {
     results.push({
@@ -251,7 +253,7 @@ async function verifyUIDependencies(): Promise<VerificationResult[]> {
       name: 'clsx',
       status: 'error',
       message: 'clsx import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -261,7 +263,7 @@ async function verifyUIDependencies(): Promise<VerificationResult[]> {
       category: 'UI Dependencies',
       name: 'tailwind-merge',
       status: 'success',
-      message: 'tailwind-merge is properly installed and importable'
+      message: 'tailwind-merge is properly installed and importable',
     });
   } catch (error) {
     results.push({
@@ -269,7 +271,7 @@ async function verifyUIDependencies(): Promise<VerificationResult[]> {
       name: 'tailwind-merge',
       status: 'error',
       message: 'tailwind-merge import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -279,7 +281,7 @@ async function verifyUIDependencies(): Promise<VerificationResult[]> {
       category: 'UI Dependencies',
       name: 'class-variance-authority',
       status: 'success',
-      message: 'class-variance-authority is properly installed and importable'
+      message: 'class-variance-authority is properly installed and importable',
     });
   } catch (error) {
     results.push({
@@ -287,7 +289,7 @@ async function verifyUIDependencies(): Promise<VerificationResult[]> {
       name: 'class-variance-authority',
       status: 'error',
       message: 'class-variance-authority import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -298,7 +300,7 @@ async function verifyUIDependencies(): Promise<VerificationResult[]> {
       category: 'UI Dependencies',
       name: 'lucide-react',
       status: 'success',
-      message: 'lucide-react icons are properly installed and importable'
+      message: 'lucide-react icons are properly installed and importable',
     });
   } catch (error) {
     results.push({
@@ -306,7 +308,7 @@ async function verifyUIDependencies(): Promise<VerificationResult[]> {
       name: 'lucide-react',
       status: 'error',
       message: 'lucide-react import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -317,7 +319,7 @@ async function verifyUIDependencies(): Promise<VerificationResult[]> {
     '@radix-ui/react-scroll-area',
     '@radix-ui/react-tooltip',
     '@radix-ui/react-separator',
-    '@radix-ui/react-slot'
+    '@radix-ui/react-slot',
   ];
 
   for (const component of radixComponents) {
@@ -327,7 +329,7 @@ async function verifyUIDependencies(): Promise<VerificationResult[]> {
         category: 'UI Dependencies',
         name: component,
         status: 'success',
-        message: `${component} is properly installed and importable`
+        message: `${component} is properly installed and importable`,
       });
     } catch (error) {
       results.push({
@@ -335,7 +337,7 @@ async function verifyUIDependencies(): Promise<VerificationResult[]> {
         name: component,
         status: 'error',
         message: `${component} import failed`,
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -356,7 +358,7 @@ async function verifyStorageDependencies(): Promise<VerificationResult[]> {
       category: 'Storage Dependencies',
       name: 'Cloudinary React',
       status: 'success',
-      message: 'Cloudinary React is properly installed and importable'
+      message: 'Cloudinary React is properly installed and importable',
     });
   } catch (error) {
     results.push({
@@ -364,7 +366,7 @@ async function verifyStorageDependencies(): Promise<VerificationResult[]> {
       name: 'Cloudinary React',
       status: 'error',
       message: 'Cloudinary React import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -374,7 +376,7 @@ async function verifyStorageDependencies(): Promise<VerificationResult[]> {
       category: 'Storage Dependencies',
       name: 'Cloudinary URL Gen',
       status: 'success',
-      message: 'Cloudinary URL generator is properly installed and importable'
+      message: 'Cloudinary URL generator is properly installed and importable',
     });
   } catch (error) {
     results.push({
@@ -382,7 +384,7 @@ async function verifyStorageDependencies(): Promise<VerificationResult[]> {
       name: 'Cloudinary URL Gen',
       status: 'error',
       message: 'Cloudinary URL generator import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -393,7 +395,7 @@ async function verifyStorageDependencies(): Promise<VerificationResult[]> {
       category: 'Storage Dependencies',
       name: 'Uploadcare React',
       status: 'success',
-      message: 'Uploadcare React uploader is properly installed and importable'
+      message: 'Uploadcare React uploader is properly installed and importable',
     });
   } catch (error) {
     results.push({
@@ -401,7 +403,7 @@ async function verifyStorageDependencies(): Promise<VerificationResult[]> {
       name: 'Uploadcare React',
       status: 'error',
       message: 'Uploadcare React uploader import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -421,7 +423,8 @@ function verifyEnvironmentStructure(): VerificationResult[] {
   // Check if environment validation module exists and is importable
   try {
     // This will be a dynamic import to avoid circular dependencies
-    const envExists = typeof process !== 'undefined' && typeof process.env === 'object';
+    const envExists =
+      typeof process !== 'undefined' && typeof process.env === 'object';
 
     results.push({
       category: 'Environment Configuration',
@@ -429,7 +432,7 @@ function verifyEnvironmentStructure(): VerificationResult[] {
       status: envExists ? 'success' : 'error',
       message: envExists
         ? 'Environment variables object is available'
-        : 'Environment variables object is not available'
+        : 'Environment variables object is not available',
     });
 
     // Check for required environment variable names (structure only)
@@ -439,7 +442,7 @@ function verifyEnvironmentStructure(): VerificationResult[] {
       'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',
       'CLERK_SECRET_KEY',
       'MONGODB_URI',
-      'OPENAI_API_KEY'
+      'OPENAI_API_KEY',
     ];
 
     const optionalEnvVars = [
@@ -447,7 +450,7 @@ function verifyEnvironmentStructure(): VerificationResult[] {
       'CLOUDINARY_API_KEY',
       'CLOUDINARY_API_SECRET',
       'UPLOADCARE_PUBLIC_KEY',
-      'UPLOADCARE_SECRET_KEY'
+      'UPLOADCARE_SECRET_KEY',
     ];
 
     let definedRequired = 0;
@@ -466,11 +469,13 @@ function verifyEnvironmentStructure(): VerificationResult[] {
     results.push({
       category: 'Environment Configuration',
       name: 'Required Variables Structure',
-      status: definedRequired === requiredEnvVars.length ? 'success' : 'warning',
+      status:
+        definedRequired === requiredEnvVars.length ? 'success' : 'warning',
       message: `${definedRequired}/${requiredEnvVars.length} required environment variables are defined`,
-      details: definedRequired < requiredEnvVars.length
-        ? 'Some required environment variables are missing. Check .env.local file.'
-        : undefined
+      details:
+        definedRequired < requiredEnvVars.length
+          ? 'Some required environment variables are missing. Check .env.local file.'
+          : undefined,
     });
 
     results.push({
@@ -478,18 +483,18 @@ function verifyEnvironmentStructure(): VerificationResult[] {
       name: 'Optional Variables Structure',
       status: definedOptional > 0 ? 'success' : 'warning',
       message: `${definedOptional}/${optionalEnvVars.length} optional environment variables are defined`,
-      details: definedOptional === 0
-        ? 'No storage providers configured. File uploads will be disabled.'
-        : undefined
+      details:
+        definedOptional === 0
+          ? 'No storage providers configured. File uploads will be disabled.'
+          : undefined,
     });
-
   } catch (error) {
     results.push({
       category: 'Environment Configuration',
       name: 'Environment Structure',
       status: 'error',
       message: 'Failed to check environment variable structure',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -509,7 +514,7 @@ async function verifyConfigurationFiles(): Promise<VerificationResult[]> {
       category: 'Configuration Files',
       name: 'AI Configuration',
       status: 'success',
-      message: 'AI configuration file exists and is importable'
+      message: 'AI configuration file exists and is importable',
     });
   } catch (error) {
     results.push({
@@ -517,7 +522,7 @@ async function verifyConfigurationFiles(): Promise<VerificationResult[]> {
       name: 'AI Configuration',
       status: 'error',
       message: 'AI configuration file import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -528,7 +533,7 @@ async function verifyConfigurationFiles(): Promise<VerificationResult[]> {
       category: 'Configuration Files',
       name: 'Auth Configuration',
       status: 'success',
-      message: 'Authentication configuration file exists and is importable'
+      message: 'Authentication configuration file exists and is importable',
     });
   } catch (error) {
     results.push({
@@ -536,7 +541,7 @@ async function verifyConfigurationFiles(): Promise<VerificationResult[]> {
       name: 'Auth Configuration',
       status: 'error',
       message: 'Authentication configuration file import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -547,7 +552,7 @@ async function verifyConfigurationFiles(): Promise<VerificationResult[]> {
       category: 'Configuration Files',
       name: 'Database Connection',
       status: 'success',
-      message: 'Database connection configuration exists and is importable'
+      message: 'Database connection configuration exists and is importable',
     });
   } catch (error) {
     results.push({
@@ -555,7 +560,7 @@ async function verifyConfigurationFiles(): Promise<VerificationResult[]> {
       name: 'Database Connection',
       status: 'error',
       message: 'Database connection configuration import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -566,7 +571,7 @@ async function verifyConfigurationFiles(): Promise<VerificationResult[]> {
       category: 'Configuration Files',
       name: 'Cloudinary Configuration',
       status: 'success',
-      message: 'Cloudinary configuration file exists and is importable'
+      message: 'Cloudinary configuration file exists and is importable',
     });
   } catch (error) {
     results.push({
@@ -574,7 +579,7 @@ async function verifyConfigurationFiles(): Promise<VerificationResult[]> {
       name: 'Cloudinary Configuration',
       status: 'warning',
       message: 'Cloudinary configuration file import failed',
-      details: 'Cloudinary storage will not be available'
+      details: 'Cloudinary storage will not be available',
     });
   }
 
@@ -584,7 +589,7 @@ async function verifyConfigurationFiles(): Promise<VerificationResult[]> {
       category: 'Configuration Files',
       name: 'Uploadcare Configuration',
       status: 'success',
-      message: 'Uploadcare configuration file exists and is importable'
+      message: 'Uploadcare configuration file exists and is importable',
     });
   } catch (error) {
     results.push({
@@ -592,7 +597,7 @@ async function verifyConfigurationFiles(): Promise<VerificationResult[]> {
       name: 'Uploadcare Configuration',
       status: 'warning',
       message: 'Uploadcare configuration file import failed',
-      details: 'Uploadcare storage will not be available'
+      details: 'Uploadcare storage will not be available',
     });
   }
 
@@ -603,7 +608,7 @@ async function verifyConfigurationFiles(): Promise<VerificationResult[]> {
       category: 'Configuration Files',
       name: 'Utility Functions',
       status: 'success',
-      message: 'Utility functions file exists and is importable'
+      message: 'Utility functions file exists and is importable',
     });
   } catch (error) {
     results.push({
@@ -611,7 +616,7 @@ async function verifyConfigurationFiles(): Promise<VerificationResult[]> {
       name: 'Utility Functions',
       status: 'error',
       message: 'Utility functions file import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -631,7 +636,7 @@ async function verifyUIComponents(): Promise<VerificationResult[]> {
       category: 'UI Components',
       name: 'Button Component',
       status: 'success',
-      message: 'ShadCN Button component exists and is importable'
+      message: 'ShadCN Button component exists and is importable',
     });
   } catch (error) {
     results.push({
@@ -639,7 +644,7 @@ async function verifyUIComponents(): Promise<VerificationResult[]> {
       name: 'Button Component',
       status: 'error',
       message: 'ShadCN Button component import failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -654,7 +659,7 @@ async function verifyUIComponents(): Promise<VerificationResult[]> {
       status: hasUtilFunction ? 'success' : 'error',
       message: hasUtilFunction
         ? 'ShadCN utility functions are properly configured'
-        : 'ShadCN utility functions are not available'
+        : 'ShadCN utility functions are not available',
     });
   } catch (error) {
     results.push({
@@ -662,7 +667,7 @@ async function verifyUIComponents(): Promise<VerificationResult[]> {
       name: 'ShadCN Setup',
       status: 'error',
       message: 'ShadCN setup verification failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 
@@ -689,7 +694,7 @@ export async function runSetupVerification(): Promise<VerificationSummary> {
     verifyUIDependencies,
     verifyStorageDependencies,
     verifyConfigurationFiles,
-    verifyUIComponents
+    verifyUIComponents,
   ];
 
   for (const verifyFn of verificationFunctions) {
@@ -702,7 +707,7 @@ export async function runSetupVerification(): Promise<VerificationSummary> {
         name: verifyFn.name,
         status: 'error',
         message: 'Verification function failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -713,10 +718,10 @@ export async function runSetupVerification(): Promise<VerificationSummary> {
   // Calculate summary
   const summary: VerificationSummary = {
     totalChecks: allResults.length,
-    passed: allResults.filter(r => r.status === 'success').length,
-    warnings: allResults.filter(r => r.status === 'warning').length,
-    errors: allResults.filter(r => r.status === 'error').length,
-    results: allResults
+    passed: allResults.filter((r) => r.status === 'success').length,
+    warnings: allResults.filter((r) => r.status === 'warning').length,
+    errors: allResults.filter((r) => r.status === 'error').length,
+    results: allResults,
   };
 
   return summary;
@@ -737,15 +742,22 @@ export function displayVerificationResults(summary: VerificationSummary): void {
   console.log('');
 
   // Group results by category
-  const categories = [...new Set(summary.results.map(r => r.category))];
+  const categories = [...new Set(summary.results.map((r) => r.category))];
 
   for (const category of categories) {
-    const categoryResults = summary.results.filter(r => r.category === category);
+    const categoryResults = summary.results.filter(
+      (r) => r.category === category
+    );
     console.log(`\n📁 ${category}:`);
     console.log('─'.repeat(30));
 
     for (const result of categoryResults) {
-      const icon = result.status === 'success' ? '✅' : result.status === 'warning' ? '⚠️' : '❌';
+      const icon =
+        result.status === 'success'
+          ? '✅'
+          : result.status === 'warning'
+            ? '⚠️'
+            : '❌';
       console.log(`${icon} ${result.name}: ${result.message}`);
 
       if (result.details) {
@@ -755,15 +767,19 @@ export function displayVerificationResults(summary: VerificationSummary): void {
   }
 
   // Overall status
-  console.log('\n' + '═'.repeat(50));
+  console.log(`\n${'═'.repeat(50)}`);
   if (summary.errors === 0) {
     if (summary.warnings === 0) {
       console.log('🎉 All checks passed! Your setup is ready for development.');
     } else {
-      console.log('✅ Setup is functional with some warnings. Review warnings above.');
+      console.log(
+        '✅ Setup is functional with some warnings. Review warnings above.'
+      );
     }
   } else {
-    console.log('❌ Setup has errors that need to be resolved. Check the errors above.');
+    console.log(
+      '❌ Setup has errors that need to be resolved. Check the errors above.'
+    );
   }
   console.log('═'.repeat(50));
 }

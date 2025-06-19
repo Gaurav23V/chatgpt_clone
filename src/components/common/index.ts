@@ -10,9 +10,9 @@
  */
 
 // Export demo components
-export { UserPreferencesDemo } from './user-preferences-demo';
-export { EnhancedPreferencesDemo } from './enhanced-preferences-demo';
 export { AuthStateDemo } from './auth-state-demo';
+export { EnhancedPreferencesDemo } from './enhanced-preferences-demo';
+export { UserPreferencesDemo } from './user-preferences-demo';
 
 // TODO: Export additional common components when they are created
 // export { Header } from './Header';

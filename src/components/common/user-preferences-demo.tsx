@@ -1,11 +1,12 @@
 'use client';
 
 import React from 'react';
+
 import {
+  useAuthState,
+  useCurrentConversation,
   useUserPreferences,
   useUserSettings,
-  useCurrentConversation,
-  useAuthState
 } from '@/hooks';
 
 /**
@@ -18,190 +19,248 @@ import {
  */
 export function UserPreferencesDemo() {
   const { user, isSignedIn, isLoaded, isReady } = useAuthState();
-  const { preferences, updatePreferences, isLoading: prefsLoading, isSaving: prefsSaving } = useUserPreferences();
-  const { settings, updateSettings, isLoading: settingsLoading, isSaving: settingsSaving } = useUserSettings();
-  const { currentConversationId, setCurrentConversationId } = useCurrentConversation();
+  const {
+    preferences,
+    updatePreferences,
+    isLoading: prefsLoading,
+    isSaving: prefsSaving,
+  } = useUserPreferences();
+  const {
+    settings,
+    updateSettings,
+    isLoading: settingsLoading,
+    isSaving: settingsSaving,
+  } = useUserSettings();
+  const { currentConversationId, setCurrentConversationId } =
+    useCurrentConversation();
 
-  // Don't render if user data isn't loaded yet
+  // don&apos;t render if user data isn&apos;t loaded yet
   if (!isLoaded) {
-    return <div className="p-4">Loading user data...</div>;
+    return <div className='p-4'>Loading user data...</div>;
   }
 
-  // Show sign-in prompt if user isn't authenticated
+  // Show sign-in prompt if user isn&apos;t authenticated
   if (!isSignedIn) {
     return (
-      <div className="p-4 border rounded-lg">
-        <h3 className="text-lg font-semibold mb-2">User Context Demo</h3>
-        <p className="text-gray-600">Please sign in to see user preferences and settings.</p>
+      <div className='rounded-lg border p-4'>
+        <h3 className='mb-2 text-lg font-semibold'>User Context Demo</h3>
+        <p className='text-gray-600'>
+          Please sign in to see user preferences and settings.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
-      <div className="border rounded-lg p-4">
-        <h2 className="text-xl font-bold mb-4">User Context Demo</h2>
+    <div className='mx-auto max-w-2xl space-y-6 p-6'>
+      <div className='rounded-lg border p-4'>
+        <h2 className='mb-4 text-xl font-bold'>User Context Demo</h2>
 
         {/* User Info */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2">User Information</h3>
-          <div className="bg-gray-50 p-3 rounded text-sm">
-            <p><strong>Name:</strong> {user?.firstName} {user?.lastName}</p>
-            <p><strong>Email:</strong> {user?.primaryEmailAddress?.emailAddress}</p>
-            <p><strong>User ID:</strong> {user?.id}</p>
-            <p><strong>Ready:</strong> {isReady ? 'Yes' : 'No'}</p>
+        <div className='mb-6'>
+          <h3 className='mb-2 text-lg font-semibold'>User Information</h3>
+          <div className='rounded bg-gray-50 p-3 text-sm'>
+            <p>
+              <strong>Name:</strong> {user?.firstName} {user?.lastName}
+            </p>
+            <p>
+              <strong>Email:</strong> {user?.primaryEmailAddress?.emailAddress}
+            </p>
+            <p>
+              <strong>User ID:</strong> {user?.id}
+            </p>
+            <p>
+              <strong>Ready:</strong> {isReady ? 'Yes' : 'No'}
+            </p>
           </div>
         </div>
 
         {/* User Preferences */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2">
+        <div className='mb-6'>
+          <h3 className='mb-2 text-lg font-semibold'>
             User Preferences
-            {prefsLoading && <span className="text-sm text-gray-500 ml-2">(Loading...)</span>}
-            {prefsSaving && <span className="text-sm text-blue-500 ml-2">(Saving...)</span>}
+            {prefsLoading && (
+              <span className='ml-2 text-sm text-gray-500'>(Loading...)</span>
+            )}
+            {prefsSaving && (
+              <span className='ml-2 text-sm text-blue-500'>(Saving...)</span>
+            )}
           </h3>
 
-          <div className="space-y-3">
+          <div className='space-y-3'>
             {/* Theme Selection */}
             <div>
-              <label className="block text-sm font-medium mb-1">Theme:</label>
+              <label className='mb-1 block text-sm font-medium'>Theme:</label>
               <select
                 value={preferences.theme}
-                onChange={(e) => updatePreferences({ theme: e.target.value as any })}
-                className="border rounded px-3 py-1 w-full"
+                onChange={(e) =>
+                  updatePreferences({ theme: e.target.value as any })
+                }
+                className='w-full rounded border px-3 py-1'
               >
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-                <option value="system">System</option>
+                <option value='light'>Light</option>
+                <option value='dark'>Dark</option>
+                <option value='system'>System</option>
               </select>
             </div>
 
             {/* Model Selection */}
             <div>
-              <label className="block text-sm font-medium mb-1">Preferred Model:</label>
+              <label className='mb-1 block text-sm font-medium'>
+                Preferred Model:
+              </label>
               <select
                 value={preferences.model}
-                onChange={(e) => updatePreferences({ model: e.target.value })}
-                className="border rounded px-3 py-1 w-full"
+                onChange={(e) =>
+                  updatePreferences({ model: e.target.value as any })
+                }
+                className='w-full rounded border px-3 py-1'
               >
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                <option value="gpt-4o-mini">GPT-4o Mini</option>
-                <option value="gpt-4o">GPT-4o</option>
+                <option value='gpt-3.5-turbo'>GPT-3.5 Turbo</option>
+                <option value='gpt-4o-mini'>GPT-4o Mini</option>
+                <option value='gpt-4o'>GPT-4o</option>
               </select>
             </div>
 
             {/* Language Selection */}
             <div>
-              <label className="block text-sm font-medium mb-1">Language:</label>
+              <label className='mb-1 block text-sm font-medium'>
+                Language:
+              </label>
               <select
                 value={preferences.language}
-                onChange={(e) => updatePreferences({ language: e.target.value })}
-                className="border rounded px-3 py-1 w-full"
+                onChange={(e) =>
+                  updatePreferences({ language: e.target.value as any })
+                }
+                className='w-full rounded border px-3 py-1'
               >
-                <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
+                <option value='en'>English</option>
+                <option value='es'>Spanish</option>
+                <option value='fr'>French</option>
+                <option value='de'>German</option>
               </select>
             </div>
 
             {/* Font Size Selection */}
             <div>
-              <label className="block text-sm font-medium mb-1">Font Size:</label>
+              <label className='mb-1 block text-sm font-medium'>
+                Font Size:
+              </label>
               <select
                 value={preferences.fontSize}
-                onChange={(e) => updatePreferences({ fontSize: e.target.value as any })}
-                className="border rounded px-3 py-1 w-full"
+                onChange={(e) =>
+                  updatePreferences({ fontSize: e.target.value as any })
+                }
+                className='w-full rounded border px-3 py-1'
               >
-                <option value="small">Small</option>
-                <option value="medium">Medium</option>
-                <option value="large">Large</option>
+                <option value='small'>Small</option>
+                <option value='medium'>Medium</option>
+                <option value='large'>Large</option>
               </select>
             </div>
           </div>
         </div>
 
         {/* User Settings */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2">
+        <div className='mb-6'>
+          <h3 className='mb-2 text-lg font-semibold'>
             Chat Settings
-            {settingsLoading && <span className="text-sm text-gray-500 ml-2">(Loading...)</span>}
-            {settingsSaving && <span className="text-sm text-blue-500 ml-2">(Saving...)</span>}
+            {settingsLoading && (
+              <span className='ml-2 text-sm text-gray-500'>(Loading...)</span>
+            )}
+            {settingsSaving && (
+              <span className='ml-2 text-sm text-blue-500'>(Saving...)</span>
+            )}
           </h3>
 
-          <div className="space-y-3">
+          <div className='space-y-3'>
             {/* History Limit */}
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className='mb-1 block text-sm font-medium'>
                 History Limit: {settings.historyLimit}
               </label>
               <input
-                type="range"
-                min="10"
-                max="100"
-                step="10"
+                type='range'
+                min='10'
+                max='100'
+                step='10'
                 value={settings.historyLimit}
-                onChange={(e) => updateSettings({ historyLimit: parseInt(e.target.value) })}
-                className="w-full"
+                onChange={(e) =>
+                  updateSettings({ historyLimit: parseInt(e.target.value) })
+                }
+                className='w-full'
               />
             </div>
 
             {/* Default System Prompt */}
             <div>
-              <label className="block text-sm font-medium mb-1">Default System Prompt:</label>
+              <label className='mb-1 block text-sm font-medium'>
+                Default System Prompt:
+              </label>
               <textarea
                 value={settings.defaultSystemPrompt}
-                onChange={(e) => updateSettings({ defaultSystemPrompt: e.target.value })}
-                className="border rounded px-3 py-2 w-full h-20 resize-none"
-                placeholder="Enter default system prompt..."
+                onChange={(e) =>
+                  updateSettings({ defaultSystemPrompt: e.target.value })
+                }
+                className='h-20 w-full resize-none rounded border px-3 py-2'
+                placeholder='Enter default system prompt...'
               />
             </div>
 
             {/* Auto Save */}
             <div>
-              <label className="flex items-center space-x-2">
+              <label className='flex items-center space-x-2'>
                 <input
-                  type="checkbox"
+                  type='checkbox'
                   checked={settings.autoSave}
-                  onChange={(e) => updateSettings({ autoSave: e.target.checked })}
-                  className="rounded"
+                  onChange={(e) =>
+                    updateSettings({ autoSave: e.target.checked })
+                  }
+                  className='rounded'
                 />
-                <span className="text-sm font-medium">Auto-save conversations</span>
+                <span className='text-sm font-medium'>
+                  Auto-save conversations
+                </span>
               </label>
             </div>
 
             {/* Sound Effects */}
             <div>
-              <label className="flex items-center space-x-2">
+              <label className='flex items-center space-x-2'>
                 <input
-                  type="checkbox"
+                  type='checkbox'
                   checked={settings.soundEffects}
-                  onChange={(e) => updateSettings({ soundEffects: e.target.checked })}
-                  className="rounded"
+                  onChange={(e) =>
+                    updateSettings({ soundEffects: e.target.checked })
+                  }
+                  className='rounded'
                 />
-                <span className="text-sm font-medium">Sound effects</span>
+                <span className='text-sm font-medium'>Sound effects</span>
               </label>
             </div>
           </div>
         </div>
 
         {/* Current Conversation */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2">Current Conversation</h3>
-          <div className="space-y-2">
-            <p className="text-sm">
-              <strong>Active Conversation ID:</strong> {currentConversationId || 'None'}
+        <div className='mb-6'>
+          <h3 className='mb-2 text-lg font-semibold'>Current Conversation</h3>
+          <div className='space-y-2'>
+            <p className='text-sm'>
+              <strong>Active Conversation ID:</strong>{' '}
+              {currentConversationId || 'None'}
             </p>
-            <div className="flex gap-2">
+            <div className='flex gap-2'>
               <button
-                onClick={() => setCurrentConversationId('demo-conversation-123')}
-                className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                onClick={() =>
+                  setCurrentConversationId('demo-conversation-123')
+                }
+                className='rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600'
               >
                 Set Demo Conversation
               </button>
               <button
                 onClick={() => setCurrentConversationId(null)}
-                className="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+                className='rounded bg-gray-500 px-3 py-1 text-sm text-white hover:bg-gray-600'
               >
                 Clear Conversation
               </button>
@@ -210,19 +269,23 @@ export function UserPreferencesDemo() {
         </div>
 
         {/* Current Values Display */}
-        <div className="bg-gray-50 p-4 rounded">
-          <h4 className="font-semibold mb-2">Current Values (JSON):</h4>
-          <pre className="text-xs overflow-auto">
-            {JSON.stringify({
-              preferences,
-              settings,
-              currentConversationId,
-              user: {
-                id: user?.id,
-                name: `${user?.firstName} ${user?.lastName}`,
-                email: user?.primaryEmailAddress?.emailAddress
-              }
-            }, null, 2)}
+        <div className='rounded bg-gray-50 p-4'>
+          <h4 className='mb-2 font-semibold'>Current Values (JSON):</h4>
+          <pre className='overflow-auto text-xs'>
+            {JSON.stringify(
+              {
+                preferences,
+                settings,
+                currentConversationId,
+                user: {
+                  id: user?.id,
+                  name: `${user?.firstName} ${user?.lastName}`,
+                  email: user?.primaryEmailAddress?.emailAddress,
+                },
+              },
+              null,
+              2
+            )}
           </pre>
         </div>
       </div>

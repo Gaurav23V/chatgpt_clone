@@ -39,3 +39,9 @@ export const LayoutComponents = {
  * 9. SearchBar - Global search functionality
  * 10. NotificationBell - Notifications dropdown
  */
+
+export {
+  ChatPageSkeleton,
+  CompactChatSkeleton,
+  MobileChatSkeleton,
+} from './ChatPageSkeleton';
