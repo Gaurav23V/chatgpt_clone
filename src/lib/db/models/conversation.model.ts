@@ -222,22 +222,130 @@ const conversationSchema = new Schema<IConversationDocument>(
 );
 
 // ========================================
-// INDEXES
+// COMPREHENSIVE INDEX DEFINITIONS
 // ========================================
 
-// Compound indexes for optimized queries
-conversationSchema.index({ clerkId: 1, status: 1 }); // User conversations by status
-conversationSchema.index({ clerkId: 1, updatedAt: -1 }); // Recent conversations for user
-conversationSchema.index({ clerkId: 1, lastMessageAt: -1 }); // Last active conversations
-conversationSchema.index({ clerkId: 1, pinnedAt: -1 }); // Pinned conversations
-conversationSchema.index({ clerkId: 1, messageCount: -1 }); // Most active conversations
+// Primary compound index for user conversations sorted by recent activity
+conversationSchema.index(
+  { clerkId: 1, updatedAt: -1 },
+  {
+    background: true,
+    name: 'idx_user_conversations_recent',
+  }
+);
 
-// Performance indexes
-conversationSchema.index({ updatedAt: -1 }); // Recent activity across all users
-conversationSchema.index({ createdAt: -1 }); // Recently created conversations
-conversationSchema.index({ 'settings.aiModel': 1 }); // Filter by AI model
+// Compound index for filtering conversations by status
+conversationSchema.index(
+  { clerkId: 1, status: 1 },
+  {
+    background: true,
+    name: 'idx_user_conversations_status',
+  }
+);
 
-// Text search index for conversation titles and descriptions
+// Sparse compound index for pinned conversations
+conversationSchema.index(
+  { clerkId: 1, pinnedAt: -1 },
+  {
+    sparse: true,
+    background: true,
+    name: 'idx_user_pinned_conversations',
+  }
+);
+
+// Compound index for conversations sorted by recent message activity
+conversationSchema.index(
+  { clerkId: 1, lastMessageAt: -1 },
+  {
+    background: true,
+    name: 'idx_user_conversations_activity',
+  }
+);
+
+// Compound index for conversations sorted by message count
+conversationSchema.index(
+  { clerkId: 1, messageCount: -1 },
+  {
+    background: true,
+    name: 'idx_user_conversations_count',
+  }
+);
+
+// Index for archived conversation cleanup and analytics
+conversationSchema.index(
+  { status: 1, archivedAt: -1 },
+  {
+    sparse: true,
+    background: true,
+    name: 'idx_archived_conversations',
+  }
+);
+
+// Index for global recent activity across all users
+conversationSchema.index(
+  { updatedAt: -1 },
+  {
+    background: true,
+    name: 'idx_global_recent_activity',
+  }
+);
+
+// Index for conversation creation analytics
+conversationSchema.index(
+  { createdAt: -1 },
+  {
+    background: true,
+    name: 'idx_conversation_creation',
+  }
+);
+
+// Index for AI model usage analytics and filtering
+conversationSchema.index(
+  { 'settings.aiModel': 1, createdAt: -1 },
+  {
+    background: true,
+    name: 'idx_ai_model_usage',
+  }
+);
+
+// Compound index for public conversations and sharing features
+conversationSchema.index(
+  { 'settings.isPublic': 1, updatedAt: -1 },
+  {
+    background: true,
+    name: 'idx_public_conversations',
+  }
+);
+
+// Index for conversation token usage analytics
+conversationSchema.index(
+  { totalTokens: -1, clerkId: 1 },
+  {
+    background: true,
+    name: 'idx_token_usage_analytics',
+  }
+);
+
+// Sparse index for conversations with tags
+conversationSchema.index(
+  { tags: 1 },
+  {
+    sparse: true,
+    background: true,
+    name: 'idx_conversation_tags',
+  }
+);
+
+// Compound index for user conversations filtered by activity threshold
+conversationSchema.index(
+  { clerkId: 1, messageCount: 1, lastMessageAt: -1 },
+  {
+    background: true,
+    name: 'idx_user_active_conversations',
+  }
+);
+
+// Text search index for conversation search functionality
 conversationSchema.index(
   {
     title: 'text',
@@ -245,12 +353,13 @@ conversationSchema.index(
     tags: 'text',
   },
   {
+    background: true,
     weights: {
       title: 10,
       description: 5,
-      tags: 3,
+      tags: 1,
     },
-    name: 'conversation_search',
+    name: 'conversation_search_index',
   }
 );
 

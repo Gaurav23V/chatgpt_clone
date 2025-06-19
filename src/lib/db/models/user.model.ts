@@ -247,18 +247,91 @@ const userSchema = new Schema<IUserDocument>(
 );
 
 // ========================================
-// INDEXES
+// COMPREHENSIVE INDEX DEFINITIONS
 // ========================================
 
-// Compound indexes for optimized queries
-userSchema.index({ clerkId: 1, isActive: 1 }); // Primary lookup with status
-userSchema.index({ email: 1, isActive: 1 }); // Email lookup with status
-userSchema.index({ 'subscription.plan': 1, isActive: 1 }); // Subscription queries
-userSchema.index({ createdAt: 1 }); // Time-based queries
-userSchema.index({ lastLoginAt: 1 }); // Activity tracking
-userSchema.index({ 'usage.messagesThisMonth': 1 }); // Usage analytics
+// Primary unique index on clerkId for user lookups (already defined in schema)
+// This is the most critical index for performance
 
-// Text index for search functionality
+// Index on email for email-based queries and duplicate prevention (already defined in schema)
+
+// Username sparse index (already defined in schema) for username-based queries
+
+// Compound indexes for subscription queries and analytics
+userSchema.index(
+  { 'subscription.status': 1, 'subscription.plan': 1 },
+  {
+    background: true,
+    name: 'idx_subscription_status_plan',
+  }
+);
+
+// Index for active user queries sorted by last login
+userSchema.index(
+  { isActive: 1, lastLoginAt: -1 },
+  {
+    background: true,
+    name: 'idx_active_users_login',
+  }
+);
+
+// Index for user registration analytics and recent user queries
+userSchema.index(
+  { createdAt: -1 },
+  {
+    background: true,
+    name: 'idx_user_registration',
+  }
+);
+
+// Compound index for usage analytics and billing
+userSchema.index(
+  { 'subscription.plan': 1, 'usage.messagesThisMonth': -1 },
+  {
+    background: true,
+    name: 'idx_usage_analytics',
+  }
+);
+
+// Index for user activity tracking and cleanup
+userSchema.index(
+  { lastLoginAt: -1 },
+  {
+    background: true,
+    name: 'idx_last_login',
+  }
+);
+
+// Compound index for subscription management queries
+userSchema.index(
+  { 'subscription.status': 1, 'subscription.currentPeriodEnd': 1 },
+  {
+    background: true,
+    name: 'idx_subscription_expiry',
+  }
+);
+
+// Index for soft-deleted users cleanup (already sparse in schema)
+
+// Compound index for user search with status filter
+userSchema.index(
+  { isActive: 1, email: 1 },
+  {
+    background: true,
+    name: 'idx_active_email_lookup',
+  }
+);
+
+// Index for usage limits and billing cycle queries
+userSchema.index(
+  { 'usage.lastResetDate': 1 },
+  {
+    background: true,
+    name: 'idx_usage_reset_date',
+  }
+);
+
+// Text index for comprehensive user search functionality
 userSchema.index(
   {
     firstName: 'text',
@@ -267,13 +340,14 @@ userSchema.index(
     email: 'text',
   },
   {
+    background: true,
     weights: {
       username: 10,
       firstName: 5,
       lastName: 5,
-      email: 1,
+      email: 3,
     },
-    name: 'user_search',
+    name: 'user_search_index',
   }
 );
 

@@ -73,6 +73,97 @@ export * from './utils';
 // Middleware exports
 export * from './middleware';
 
+// ========================================
+// DATABASE OPTIMIZATION FEATURES
+// ========================================
+
+// Index management and performance monitoring
+export {
+  ATTACHMENT_INDEXES,
+  CONVERSATION_INDEXES,
+  ensureAllIndexes,
+  ensureModelIndexes,
+  explainQuery,
+  getDatabaseStats,
+  MESSAGE_INDEXES,
+  PERFORMANCE_HINTS,
+  // Performance monitoring
+  trackQueryTime,
+  // Index definitions and management
+  USER_INDEXES,
+  verifyIndexes,
+} from './indexes';
+
+// Query optimization utilities
+export {
+  addQueryHints,
+  analyzeQueryPerformance,
+  buildConversationMessagesQuery,
+  buildConversationStatsAggregation,
+  buildUserActivityAggregation,
+  // Query builders
+  buildUserConversationsQuery,
+  CACHE_KEYS,
+  clearQueryMetrics,
+  createProjection,
+  excludeSensitiveFields,
+  getQueryMetrics,
+  invalidateCachePattern,
+  // Query performance monitoring
+  monitorQuery,
+  // Query optimization helpers
+  optimizeReadQuery,
+  optimizeWriteQuery,
+  // Projection helpers
+  PROJECTIONS,
+  // Caching utilities
+  queryCache,
+  withCache,
+} from './query-optimization';
+
+// Data validation utilities
+export {
+  normalizeEmail,
+  normalizeUsername,
+  preventMongoInjection,
+  // Sanitization functions
+  sanitizeHTML,
+  sanitizeText,
+  throwIfInvalid,
+  // Batch validation
+  validateBatch,
+  validateConversationData,
+  // Validation functions
+  validateEmail,
+  validateEnum,
+  validateMessageData,
+  validateNumber,
+  validateObjectId,
+  validateText,
+  validateUrl,
+  // Model-specific validators
+  validateUserData,
+  // Validation errors and classes
+  ValidationException,
+} from './validation';
+
+// Database startup and initialization
+export {
+  developmentStartup,
+  environmentBasedInit,
+  // Shutdown handling
+  gracefulShutdown,
+  // Initialization functions
+  initializeDatabase as initDB,
+  nextjsInit,
+  quickStartup,
+  registerShutdownHandlers,
+} from './startup';
+
+// Re-export optimization and validation types
+export type { QueryMetrics } from './query-optimization';
+export type { ValidationError, ValidationErrorCode } from './validation';
+
 /**
  * Database initialization function
  * Call this once at application startup to ensure database connection

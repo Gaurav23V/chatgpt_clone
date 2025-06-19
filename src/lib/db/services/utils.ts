@@ -79,4 +79,4 @@ export function logError(operation: string, error: any, context?: any): void {
     context,
     timestamp: new Date().toISOString(),
   });
-} 
+}

@@ -210,30 +210,44 @@ export function validateAndSanitizePreferences(
     if (validThemes.includes(preferences.theme as any)) {
       sanitized.theme = preferences.theme;
     } else {
-      throw new Error(`Invalid theme: ${preferences.theme}. Must be one of: ${validThemes.join(', ')}`);
+      throw new Error(
+        `Invalid theme: ${preferences.theme}. Must be one of: ${validThemes.join(', ')}`
+      );
     }
   }
 
   // Validate aiModel
   if (preferences.aiModel !== undefined) {
-    const validModels = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-4o-mini', 'gpt-4o'] as const;
+    const validModels = [
+      'gpt-3.5-turbo',
+      'gpt-4',
+      'gpt-4-turbo',
+      'gpt-4o-mini',
+      'gpt-4o',
+    ] as const;
     if (validModels.includes(preferences.aiModel as any)) {
       sanitized.aiModel = preferences.aiModel;
     } else {
-      throw new Error(`Invalid AI model: ${preferences.aiModel}. Must be one of: ${validModels.join(', ')}`);
+      throw new Error(
+        `Invalid AI model: ${preferences.aiModel}. Must be one of: ${validModels.join(', ')}`
+      );
     }
   }
 
   // Validate language (ISO 639-1 format)
   if (preferences.language !== undefined) {
     const languageRegex = /^[a-z]{2}(-[A-Z]{2})?$/;
-    if (typeof preferences.language === 'string' && 
-        preferences.language.length >= 2 && 
-        preferences.language.length <= 5 &&
-        languageRegex.test(preferences.language)) {
+    if (
+      typeof preferences.language === 'string' &&
+      preferences.language.length >= 2 &&
+      preferences.language.length <= 5 &&
+      languageRegex.test(preferences.language)
+    ) {
       sanitized.language = preferences.language.toLowerCase();
     } else {
-      throw new Error(`Invalid language code: ${preferences.language}. Must be ISO 639-1 format (e.g., 'en', 'es', 'fr')`);
+      throw new Error(
+        `Invalid language code: ${preferences.language}. Must be ISO 639-1 format (e.g., 'en', 'es', 'fr')`
+      );
     }
   }
 
@@ -243,7 +257,9 @@ export function validateAndSanitizePreferences(
     if (validSizes.includes(preferences.fontSize as any)) {
       sanitized.fontSize = preferences.fontSize;
     } else {
-      throw new Error(`Invalid font size: ${preferences.fontSize}. Must be one of: ${validSizes.join(', ')}`);
+      throw new Error(
+        `Invalid font size: ${preferences.fontSize}. Must be one of: ${validSizes.join(', ')}`
+      );
     }
   }
 
@@ -715,11 +731,9 @@ export async function updateUserPreferences(
       .session(session || null);
 
     if (!existingUser) {
-      return createErrorResult(
-        'USER_NOT_FOUND',
-        'User not found or inactive',
-        { clerkId }
-      );
+      return createErrorResult('USER_NOT_FOUND', 'User not found or inactive', {
+        clerkId,
+      });
     }
 
     // Update user preferences using dot notation for better performance
@@ -773,10 +787,7 @@ export async function updateUserPreferences(
 
     // Handle custom validation errors from our sanitization
     if (error.message.includes('Invalid')) {
-      return createErrorResult(
-        'VALIDATION_ERROR',
-        error.message
-      );
+      return createErrorResult('VALIDATION_ERROR', error.message);
     }
 
     return createErrorResult(
@@ -1080,7 +1091,11 @@ export async function archiveInactiveConversations(
  */
 export async function getUserBasicInfo(
   clerkId: string
-): Promise<ServiceResult<Pick<IUser, 'clerkId' | 'email' | 'firstName' | 'lastName' | 'isActive'>>> {
+): Promise<
+  ServiceResult<
+    Pick<IUser, 'clerkId' | 'email' | 'firstName' | 'lastName' | 'isActive'>
+  >
+> {
   try {
     await connectToDatabase();
 
@@ -1115,7 +1130,9 @@ export async function getUserBasicInfo(
  * Check if user exists without fetching full document
  * Optimized for existence checks
  */
-export async function userExists(clerkId: string): Promise<ServiceResult<boolean>> {
+export async function userExists(
+  clerkId: string
+): Promise<ServiceResult<boolean>> {
   try {
     await connectToDatabase();
 
@@ -1148,7 +1165,12 @@ export async function batchUpdateUserPreferences(
     preferences: Partial<IUser['preferences']>;
   }>,
   session?: ClientSession
-): Promise<ServiceResult<{ modifiedCount: number; errors: Array<{ clerkId: string; error: string }> }>> {
+): Promise<
+  ServiceResult<{
+    modifiedCount: number;
+    errors: Array<{ clerkId: string; error: string }>;
+  }>
+> {
   try {
     await connectToDatabase();
 
@@ -1187,7 +1209,9 @@ export async function batchUpdateUserPreferences(
 
     return createSuccessResult(results);
   } catch (error: any) {
-    logError('batchUpdateUserPreferences', error, { updateCount: updates.length });
+    logError('batchUpdateUserPreferences', error, {
+      updateCount: updates.length,
+    });
     return createErrorResult(
       'DATABASE_ERROR',
       'Failed to batch update user preferences',

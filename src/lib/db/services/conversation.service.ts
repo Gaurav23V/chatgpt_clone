@@ -15,20 +15,19 @@
  * - Data validation and sanitization
  * - Consistent error handling and response format
  */
-import type { FilterQuery, ClientSession } from 'mongoose';
+import type { ClientSession, FilterQuery } from 'mongoose';
 import { Types } from 'mongoose';
 import sanitizeHtml from 'sanitize-html';
 
 import { connectToDatabase } from '@/lib/db/connection';
 import { Conversation, User } from '@/lib/db/models';
-import type { IConversation } from '@/types/database';
+import type { ServiceResult } from '@/lib/db/services/utils';
 import {
   createErrorResult,
   createSuccessResult,
   logError,
 } from '@/lib/db/services/utils';
-
-import type { ServiceResult } from '@/lib/db/services/utils';
+import type { IConversation } from '@/types/database';
 
 // ========================================
 // CONSTANTS
@@ -79,10 +78,11 @@ export interface PaginatedConversations {
  * @param title The title to sanitize.
  * @returns The sanitized title.
  */
-const sanitizeTitle = (title: string): string => sanitizeHtml(title, {
-  allowedTags: [],
-  allowedAttributes: {},
-}).trim();
+const sanitizeTitle = (title: string): string =>
+  sanitizeHtml(title, {
+    allowedTags: [],
+    allowedAttributes: {},
+  }).trim();
 
 /**
  * Validates a model name against a list of allowed models.
@@ -90,7 +90,13 @@ const sanitizeTitle = (title: string): string => sanitizeHtml(title, {
  * @returns True if the model is valid, false otherwise.
  */
 const isValidModel = (model: string): boolean => {
-  const allowedModels = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-4o-mini'];
+  const allowedModels = [
+    'gpt-3.5-turbo',
+    'gpt-4',
+    'gpt-4-turbo',
+    'gpt-4o',
+    'gpt-4o-mini',
+  ];
   return allowedModels.includes(model);
 };
 
@@ -98,7 +104,8 @@ const isValidModel = (model: string): boolean => {
  * Generates an automatic title for a new conversation.
  * @returns A default conversation title.
  */
-const generateAutoTitle = (): string => `New Conversation - ${new Date().toLocaleString()}`;
+const generateAutoTitle = (): string =>
+  `New Conversation - ${new Date().toLocaleString()}`;
 
 // ========================================
 // CORE SERVICE FUNCTIONS
@@ -125,22 +132,36 @@ export async function createConversation(
       return createErrorResult('USER_NOT_FOUND', 'User not found.');
     }
 
-    const activeCountQuery = Conversation.countDocuments({ clerkId, status: 'active' });
+    const activeCountQuery = Conversation.countDocuments({
+      clerkId,
+      status: 'active',
+    });
     if (session) activeCountQuery.session(session);
     const activeCount = await activeCountQuery;
     if (activeCount >= MAX_ACTIVE_CONVERSATIONS) {
-      return createErrorResult('MAX_CONVERSATIONS_REACHED', `Limit of ${MAX_ACTIVE_CONVERSATIONS} active conversations reached.`);
+      return createErrorResult(
+        'MAX_CONVERSATIONS_REACHED',
+        `Limit of ${MAX_ACTIVE_CONVERSATIONS} active conversations reached.`
+      );
     }
 
     const newConversationData: Partial<IConversation> = {
       clerkId,
       userId: user._id,
       title: title ? sanitizeTitle(title) : generateAutoTitle(),
-      settings: { aiModel: 'gpt-3.5-turbo', temperature: 1, maxTokens: 2048, isPublic: false, allowAnalytics: true },
+      settings: {
+        aiModel: 'gpt-3.5-turbo',
+        temperature: 1,
+        maxTokens: 2048,
+        isPublic: false,
+        allowAnalytics: true,
+      },
     };
 
     if (model) {
-      if (!isValidModel(model)) return createErrorResult('VALIDATION_ERROR', 'Invalid AI model.');
+      if (!isValidModel(model)) {
+        return createErrorResult('VALIDATION_ERROR', 'Invalid AI model.');
+      }
       newConversationData.settings!.aiModel = model;
     }
     if (systemMessage) {
@@ -154,7 +175,10 @@ export async function createConversation(
     return createSuccessResult(newConversation.toObject());
   } catch (error: any) {
     logError('createConversation', error, input);
-    return createErrorResult('DATABASE_ERROR', 'Failed to create conversation.');
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to create conversation.'
+    );
   }
 }
 
@@ -171,7 +195,10 @@ export async function getConversation(
   try {
     await connectToDatabase();
     if (!Types.ObjectId.isValid(conversationId)) {
-      return createErrorResult('INVALID_INPUT', 'Invalid conversation ID format.');
+      return createErrorResult(
+        'INVALID_INPUT',
+        'Invalid conversation ID format.'
+      );
     }
 
     const conversation = await Conversation.findOne({
@@ -181,12 +208,18 @@ export async function getConversation(
     }).lean();
 
     if (!conversation) {
-      return createErrorResult('CONVERSATION_NOT_FOUND', 'Conversation not found or access denied.');
+      return createErrorResult(
+        'CONVERSATION_NOT_FOUND',
+        'Conversation not found or access denied.'
+      );
     }
     return createSuccessResult(conversation);
   } catch (error: any) {
     logError('getConversation', error, { conversationId, clerkId });
-    return createErrorResult('DATABASE_ERROR', 'Failed to retrieve conversation.');
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to retrieve conversation.'
+    );
   }
 }
 
@@ -214,14 +247,25 @@ export async function getUserConversations(
       .limit(limit)
       .lean<IConversation[]>();
 
-    const total = await Conversation.countDocuments({ clerkId, status: 'active' });
+    const total = await Conversation.countDocuments({
+      clerkId,
+      status: 'active',
+    });
 
-    const nextCursor = conversations.length === limit ? conversations[conversations.length - 1].lastMessageAt?.toISOString() ?? null : null;
+    const nextCursor =
+      conversations.length === limit
+        ? (conversations[
+            conversations.length - 1
+          ].lastMessageAt?.toISOString() ?? null)
+        : null;
 
     return createSuccessResult({ conversations, nextCursor, total });
   } catch (error: any) {
     logError('getUserConversations', error, { clerkId, limit, cursor });
-    return createErrorResult('DATABASE_ERROR', 'Failed to retrieve conversations.');
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to retrieve conversations.'
+    );
   }
 }
 
@@ -242,31 +286,50 @@ export async function updateConversation(
   try {
     await connectToDatabase();
     if (!Types.ObjectId.isValid(conversationId)) {
-      return createErrorResult('INVALID_INPUT', 'Invalid conversation ID format.');
+      return createErrorResult(
+        'INVALID_INPUT',
+        'Invalid conversation ID format.'
+      );
     }
 
     const updatePayload: Record<string, any> = {};
     if (updates.title) updatePayload.title = sanitizeTitle(updates.title);
     if (updates.model) {
-      if (!isValidModel(updates.model)) return createErrorResult('VALIDATION_ERROR', 'Invalid AI model.');
+      if (!isValidModel(updates.model)) {
+        return createErrorResult('VALIDATION_ERROR', 'Invalid AI model.');
+      }
       updatePayload['settings.aiModel'] = updates.model;
     }
-    if (updates.systemMessage) updatePayload['settings.systemMessage'] = updates.systemMessage;
-    if (typeof updates.isPublic === 'boolean') updatePayload['settings.isPublic'] = updates.isPublic;
+    if (updates.systemMessage) {
+      updatePayload['settings.systemMessage'] = updates.systemMessage;
+    }
+    if (typeof updates.isPublic === 'boolean') {
+      updatePayload['settings.isPublic'] = updates.isPublic;
+    }
 
     const updatedConversation = await Conversation.findOneAndUpdate(
-      { _id: new Types.ObjectId(conversationId), clerkId, status: { $ne: 'deleted' } },
+      {
+        _id: new Types.ObjectId(conversationId),
+        clerkId,
+        status: { $ne: 'deleted' },
+      },
       { $set: updatePayload },
       { new: true, ...(session ? { session } : {}) }
     ).lean();
 
     if (!updatedConversation) {
-      return createErrorResult('CONVERSATION_NOT_FOUND', 'Conversation not found or access denied.');
+      return createErrorResult(
+        'CONVERSATION_NOT_FOUND',
+        'Conversation not found or access denied.'
+      );
     }
     return createSuccessResult(updatedConversation);
   } catch (error: any) {
     logError('updateConversation', error, { conversationId, clerkId, updates });
-    return createErrorResult('DATABASE_ERROR', 'Failed to update conversation.');
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to update conversation.'
+    );
   }
 }
 
@@ -285,7 +348,10 @@ export async function deleteConversation(
   try {
     await connectToDatabase();
     if (!Types.ObjectId.isValid(conversationId)) {
-      return createErrorResult('INVALID_INPUT', 'Invalid conversation ID format.');
+      return createErrorResult(
+        'INVALID_INPUT',
+        'Invalid conversation ID format.'
+      );
     }
 
     const result = await Conversation.updateOne(
@@ -295,12 +361,18 @@ export async function deleteConversation(
     );
 
     if (result.matchedCount === 0) {
-      return createErrorResult('CONVERSATION_NOT_FOUND', 'Conversation not found or access denied.');
+      return createErrorResult(
+        'CONVERSATION_NOT_FOUND',
+        'Conversation not found or access denied.'
+      );
     }
     return createSuccessResult({ deleted: true });
   } catch (error: any) {
     logError('deleteConversation', error, { conversationId, clerkId });
-    return createErrorResult('DATABASE_ERROR', 'Failed to delete conversation.');
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to delete conversation.'
+    );
   }
 }
 
@@ -319,7 +391,10 @@ export async function archiveConversation(
   try {
     await connectToDatabase();
     if (!Types.ObjectId.isValid(conversationId)) {
-      return createErrorResult('INVALID_INPUT', 'Invalid conversation ID format.');
+      return createErrorResult(
+        'INVALID_INPUT',
+        'Invalid conversation ID format.'
+      );
     }
 
     const archivedConversation = await Conversation.findOneAndUpdate(
@@ -329,23 +404,33 @@ export async function archiveConversation(
     ).lean();
 
     if (!archivedConversation) {
-      return createErrorResult('CONVERSATION_NOT_FOUND', 'Active conversation not found or access denied.');
+      return createErrorResult(
+        'CONVERSATION_NOT_FOUND',
+        'Active conversation not found or access denied.'
+      );
     }
     return createSuccessResult(archivedConversation);
   } catch (error: any) {
     logError('archiveConversation', error, { conversationId, clerkId });
-    return createErrorResult('DATABASE_ERROR', 'Failed to archive conversation.');
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to archive conversation.'
+    );
   }
 }
 
-export async function getConversationById(id: string): Promise<IConversation | null> {
-    await connectToDatabase();
-    const conversation = await Conversation.findById(id).lean();
-    return conversation;
+export async function getConversationById(
+  id: string
+): Promise<IConversation | null> {
+  await connectToDatabase();
+  const conversation = await Conversation.findById(id).lean();
+  return conversation;
 }
 
-export async function getConversationsForUser(userId: string): Promise<IConversation[]> {
-    await connectToDatabase();
-    const conversations = await Conversation.find({ clerkId: userId }).lean();
-    return conversations;
+export async function getConversationsForUser(
+  userId: string
+): Promise<IConversation[]> {
+  await connectToDatabase();
+  const conversations = await Conversation.find({ clerkId: userId }).lean();
+  return conversations;
 }

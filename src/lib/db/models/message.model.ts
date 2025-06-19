@@ -128,8 +128,112 @@ const messageSchema = new Schema<IMessageDocument>(
   }
 );
 
-// Compound index for efficient querying of messages within a conversation
-messageSchema.index({ conversationId: 1, createdAt: 1 });
+// ========================================
+// COMPREHENSIVE INDEX DEFINITIONS
+// ========================================
+
+// Primary compound index for retrieving messages in chronological order
+messageSchema.index(
+  { conversationId: 1, createdAt: 1 },
+  {
+    background: true,
+    name: 'idx_conversation_created_asc',
+  }
+);
+
+// Compound index for retrieving messages in reverse chronological order
+messageSchema.index(
+  { conversationId: 1, createdAt: -1 },
+  {
+    background: true,
+    name: 'idx_conversation_created_desc',
+  }
+);
+
+// Index for user-specific message queries and analytics
+messageSchema.index(
+  { clerkId: 1, createdAt: -1 },
+  {
+    background: true,
+    name: 'idx_user_messages',
+  }
+);
+
+// Index for filtering messages by role within conversations
+messageSchema.index(
+  { role: 1, conversationId: 1 },
+  {
+    background: true,
+    name: 'idx_role_conversation',
+  }
+);
+
+// Index for AI model usage analytics and filtering
+messageSchema.index(
+  { 'aiMetadata.model': 1, createdAt: -1 },
+  {
+    background: true,
+    name: 'idx_ai_model_analytics',
+  }
+);
+
+// Sparse index for soft-deleted messages cleanup
+messageSchema.index(
+  { deletedAt: 1 },
+  {
+    sparse: true,
+    background: true,
+    name: 'idx_deleted_messages',
+  }
+);
+
+// Text search index for message content search functionality
+messageSchema.index(
+  { content: 'text' },
+  {
+    background: true,
+    name: 'message_search_index',
+    weights: { content: 1 },
+  }
+);
+
+// Sparse index for message threading and replies
+messageSchema.index(
+  { parentMessageId: 1 },
+  {
+    sparse: true,
+    background: true,
+    name: 'idx_message_threading',
+  }
+);
+
+// Attachment-related indexes (since attachments are subdocuments)
+messageSchema.index(
+  { 'attachments.storageProvider': 1, 'attachments.createdAt': -1 },
+  {
+    sparse: true,
+    background: true,
+    name: 'idx_attachments_provider',
+  }
+);
+
+messageSchema.index(
+  { 'attachments.mimeType': 1 },
+  {
+    sparse: true,
+    background: true,
+    name: 'idx_attachments_type',
+  }
+);
+
+messageSchema.index(
+  { 'attachments.fileSize': 1 },
+  {
+    sparse: true,
+    background: true,
+    name: 'idx_attachments_size',
+  }
+);
 
 /**
  * Pre-save hook to manage edit history.

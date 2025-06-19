@@ -12,20 +12,18 @@ import { Types } from 'mongoose';
 
 import { connectToDatabase } from '@/lib/db/connection';
 import { Conversation, Message } from '@/lib/db/models';
-
-import type {
-  CreateMessageData,
-  UpdateMessageData,
-  IMessage,
-  MessageRole,
-} from '@/types/database';
-
 import {
   createErrorResult,
   createSuccessResult,
   logError,
   type ServiceResult,
 } from '@/lib/db/services/utils';
+import type {
+  CreateMessageData,
+  IMessage,
+  MessageRole,
+  UpdateMessageData,
+} from '@/types/database';
 
 // ========================================
 // CONSTANTS & VALIDATION HELPERS
@@ -53,7 +51,10 @@ function isValidAttachment(attachment: any): boolean {
     'storageProvider',
     'storageUrl',
   ];
-  return requiredFields.every((f) => typeof attachment[f] === 'string' || typeof attachment[f] === 'number');
+  return requiredFields.every(
+    (f) =>
+      typeof attachment[f] === 'string' || typeof attachment[f] === 'number'
+  );
 }
 
 // ========================================
@@ -98,7 +99,10 @@ export async function createMessage(
 
     // Content validation
     if (!messageData.content || typeof messageData.content !== 'string') {
-      return createErrorResult('VALIDATION_ERROR', 'Message content is required.');
+      return createErrorResult(
+        'VALIDATION_ERROR',
+        'Message content is required.'
+      );
     }
     if (messageData.content.length > MAX_CONTENT_LENGTH) {
       return createErrorResult(
@@ -112,7 +116,10 @@ export async function createMessage(
     if (session) conversationQuery.session(session);
     const conversation = await conversationQuery;
     if (!conversation) {
-      return createErrorResult('CONVERSATION_NOT_FOUND', 'Conversation not found.');
+      return createErrorResult(
+        'CONVERSATION_NOT_FOUND',
+        'Conversation not found.'
+      );
     }
 
     // Token counting
@@ -162,7 +169,16 @@ export async function createMessage(
 // ----------------------------------------
 
 export interface PaginatedMessages {
-  messages: Pick<IMessage, '_id' | 'role' | 'content' | 'createdAt' | 'aiMetadata' | 'isEdited' | 'attachments'>[];
+  messages: Pick<
+    IMessage,
+    | '_id'
+    | 'role'
+    | 'content'
+    | 'createdAt'
+    | 'aiMetadata'
+    | 'isEdited'
+    | 'attachments'
+  >[];
   nextCursor: string | null;
   total: number;
 }
@@ -208,9 +224,16 @@ export async function getMessages(
       deletedAt: { $exists: false },
     });
 
-    const nextCursor = messages.length === limit ? messages[messages.length - 1].createdAt?.toISOString() ?? null : null;
+    const nextCursor =
+      messages.length === limit
+        ? (messages[messages.length - 1].createdAt?.toISOString() ?? null)
+        : null;
 
-    return createSuccessResult({ messages: messages.reverse(), nextCursor, total } as any);
+    return createSuccessResult({
+      messages: messages.reverse(),
+      nextCursor,
+      total,
+    } as any);
   } catch (error: any) {
     logError('getMessages', error, { conversationId, limit, cursor });
     return createErrorResult('DATABASE_ERROR', 'Failed to fetch messages.');
@@ -239,8 +262,14 @@ export async function updateMessage(
     }
 
     if (updates.content) {
-      if (typeof updates.content !== 'string' || updates.content.trim().length === 0) {
-        return createErrorResult('VALIDATION_ERROR', 'Content must be a non-empty string.');
+      if (
+        typeof updates.content !== 'string' ||
+        updates.content.trim().length === 0
+      ) {
+        return createErrorResult(
+          'VALIDATION_ERROR',
+          'Content must be a non-empty string.'
+        );
       }
       if (updates.content.length > MAX_CONTENT_LENGTH) {
         return createErrorResult(
@@ -248,7 +277,8 @@ export async function updateMessage(
           `Message content exceeds ${MAX_CONTENT_LENGTH} characters.`
         );
       }
-      const previousTokens = message.aiMetadata?.tokenCount ?? countTokens(message.content);
+      const previousTokens =
+        message.aiMetadata?.tokenCount ?? countTokens(message.content);
       message.content = updates.content.trim();
       // Re-calculate tokens
       const newTokens = countTokens(message.content);
@@ -266,8 +296,14 @@ export async function updateMessage(
     }
 
     if (updates.attachments) {
-      if (!Array.isArray(updates.attachments) || updates.attachments.some((a) => !isValidAttachment(a))) {
-        return createErrorResult('VALIDATION_ERROR', 'Invalid attachment data.');
+      if (
+        !Array.isArray(updates.attachments) ||
+        updates.attachments.some((a) => !isValidAttachment(a))
+      ) {
+        return createErrorResult(
+          'VALIDATION_ERROR',
+          'Invalid attachment data.'
+        );
       }
       // Replace attachments completely for simplicity
       message.attachments = updates.attachments as any;
@@ -307,7 +343,8 @@ export async function deleteMessage(
     await message.save({ session });
 
     // Update conversation stats (decrement counts)
-    const tokenCount = message.aiMetadata?.tokenCount ?? countTokens(message.content);
+    const tokenCount =
+      message.aiMetadata?.tokenCount ?? countTokens(message.content);
     await Conversation.findByIdAndUpdate(
       message.conversationId,
       {
@@ -346,7 +383,11 @@ export async function addAttachment(
     const update = { $push: { attachments: attachment } };
     const options = { new: true, runValidators: true, session } as const;
 
-    const updatedMessage = await Message.findByIdAndUpdate(messageId, update, options).lean();
+    const updatedMessage = await Message.findByIdAndUpdate(
+      messageId,
+      update,
+      options
+    ).lean();
 
     if (!updatedMessage) {
       return createErrorResult('MESSAGE_NOT_FOUND', 'Message not found.');
@@ -368,9 +409,13 @@ export async function addAttachment(
  * Each item must include conversationId to which it belongs.
  */
 export async function bulkCreateMessages(
-  messages: Array<{ conversationId: string } & Omit<CreateMessageData, 'conversationId'>>,
+  messages: Array<
+    { conversationId: string } & Omit<CreateMessageData, 'conversationId'>
+  >,
   session?: ClientSession
-): Promise<ServiceResult<{ inserted: number; failed: number }, MessageErrorCode>> {
+): Promise<
+  ServiceResult<{ inserted: number; failed: number }, MessageErrorCode>
+> {
   try {
     await connectToDatabase();
 
@@ -379,7 +424,10 @@ export async function bulkCreateMessages(
     }
 
     const docs = [] as any[];
-    const convUpdates: Record<string, { messageCount: number; tokenCount: number }> = {};
+    const convUpdates: Record<
+      string,
+      { messageCount: number; tokenCount: number }
+    > = {};
 
     for (const m of messages) {
       if (!Types.ObjectId.isValid(m.conversationId)) continue;
@@ -394,16 +442,24 @@ export async function bulkCreateMessages(
       } as any;
       docs.push(doc);
 
-      if (!convUpdates[m.conversationId]) convUpdates[m.conversationId] = { messageCount: 0, tokenCount: 0 };
+      if (!convUpdates[m.conversationId]) {
+        convUpdates[m.conversationId] = { messageCount: 0, tokenCount: 0 };
+      }
       convUpdates[m.conversationId].messageCount += 1;
       convUpdates[m.conversationId].tokenCount += tokens;
     }
 
     if (docs.length === 0) {
-      return createErrorResult('VALIDATION_ERROR', 'No valid messages to insert.');
+      return createErrorResult(
+        'VALIDATION_ERROR',
+        'No valid messages to insert.'
+      );
     }
 
-    const inserted = await Message.insertMany(docs, { session, ordered: false });
+    const inserted = await Message.insertMany(docs, {
+      session,
+      ordered: false,
+    });
 
     // Update conversations in bulk
     const bulkOps = Object.entries(convUpdates).map(([convId, stats]) => ({
@@ -423,10 +479,16 @@ export async function bulkCreateMessages(
       await Conversation.bulkWrite(bulkOps, { session });
     }
 
-    return createSuccessResult({ inserted: inserted.length, failed: messages.length - inserted.length });
+    return createSuccessResult({
+      inserted: inserted.length,
+      failed: messages.length - inserted.length,
+    });
   } catch (error: any) {
     logError('bulkCreateMessages', error);
-    return createErrorResult('DATABASE_ERROR', 'Failed to bulk insert messages.');
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to bulk insert messages.'
+    );
   }
 }
 
@@ -442,7 +504,9 @@ export async function deleteConversationMessages(
     }
 
     const filter = { conversationId: new Types.ObjectId(conversationId) };
-    const { deletedCount } = await Message.deleteMany(filter).session(session || null);
+    const { deletedCount } = await Message.deleteMany(filter).session(
+      session || null
+    );
 
     // reset message counters for conversation
     await Conversation.findByIdAndUpdate(conversationId, {
@@ -452,14 +516,15 @@ export async function deleteConversationMessages(
     return createSuccessResult({ deletedCount: deletedCount ?? 0 });
   } catch (error: any) {
     logError('deleteConversationMessages', error, { conversationId });
-    return createErrorResult('DATABASE_ERROR', 'Failed to delete conversation messages.');
+    return createErrorResult(
+      'DATABASE_ERROR',
+      'Failed to delete conversation messages.'
+    );
   }
 }
 
 // Aggregated stats for a conversation
-export async function getMessageStats(
-  conversationId: string
-): Promise<
+export async function getMessageStats(conversationId: string): Promise<
   ServiceResult<
     {
       totalMessages: number;
@@ -490,7 +555,10 @@ export async function getMessageStats(
           totalMessages: { $sum: 1 },
           totalTokens: {
             $sum: {
-              $ifNull: ['$aiMetadata.tokenCount', { $ceil: { $divide: [{ $strLenCP: '$content' }, 4] } }],
+              $ifNull: [
+                '$aiMetadata.tokenCount',
+                { $ceil: { $divide: [{ $strLenCP: '$content' }, 4] } },
+              ],
             },
           },
           firstMessageAt: { $min: '$createdAt' },

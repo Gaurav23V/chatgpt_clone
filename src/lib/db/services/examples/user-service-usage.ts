@@ -6,23 +6,23 @@
  */
 
 import {
+  batchUpdateUserPreferences,
+  type ClerkUserData,
   createUser,
-  updateUser,
-  updateUserPreferences,
+  deleteUser,
+  getUserBasicInfo,
   getUserByClerkId,
   getUserPreferences,
-  getUserBasicInfo,
-  userExists,
-  deleteUser,
-  upsertUser,
-  batchUpdateUserPreferences,
   handleUserCreated,
-  handleUserUpdated,
   handleUserDeleted,
-  withTransaction,
-  type ClerkUserData,
-  type UpdateUserInput,
+  handleUserUpdated,
   type ServiceResult,
+  updateUser,
+  type UpdateUserInput,
+  updateUserPreferences,
+  upsertUser,
+  userExists,
+  withTransaction,
 } from '../user.service';
 
 // ========================================
@@ -36,15 +36,15 @@ import {
 export async function handleClerkUserCreated(clerkUserData: ClerkUserData) {
   try {
     console.log(`Creating user for Clerk ID: ${clerkUserData.id}`);
-    
+
     const result = await handleUserCreated(clerkUserData);
-    
+
     if (result.success) {
       console.log('✅ User created successfully:', result.data?.clerkId);
-      
+
       // Optional: Send welcome email, set up default preferences, etc.
       await setupNewUserDefaults(result.data!);
-      
+
       return { success: true, userId: result.data!._id };
     } else {
       console.error('❌ Failed to create user:', result.error?.message);
@@ -63,19 +63,19 @@ export async function handleClerkUserCreated(clerkUserData: ClerkUserData) {
 export async function handleClerkUserUpdated(clerkUserData: ClerkUserData) {
   try {
     console.log(`Updating user for Clerk ID: ${clerkUserData.id}`);
-    
+
     const result = await handleUserUpdated(clerkUserData);
-    
+
     if (result.success) {
       const { user, created } = result.data!;
-      
+
       if (created) {
         console.log('✅ User created (via update webhook):', user.clerkId);
         await setupNewUserDefaults(user);
       } else {
         console.log('✅ User updated successfully:', user.clerkId);
       }
-      
+
       return { success: true, user, created };
     } else {
       console.error('❌ Failed to update user:', result.error?.message);
@@ -91,18 +91,21 @@ export async function handleClerkUserUpdated(clerkUserData: ClerkUserData) {
  * Example: Handle Clerk user.deleted webhook
  * Called when user deletes their account
  */
-export async function handleClerkUserDeleted(clerkId: string, hardDelete = false) {
+export async function handleClerkUserDeleted(
+  clerkId: string,
+  hardDelete = false
+) {
   try {
     console.log(`Deleting user: ${clerkId} (hard: ${hardDelete})`);
-    
+
     const result = await handleUserDeleted(clerkId, hardDelete);
-    
+
     if (result.success) {
       console.log('✅ User deleted successfully:', clerkId);
-      
+
       // Optional: Send goodbye email, analytics cleanup, etc.
       await cleanupUserData(clerkId);
-      
+
       return { success: true, deleted: true };
     } else {
       console.error('❌ Failed to delete user:', result.error?.message);
@@ -126,7 +129,7 @@ export async function getCurrentUser(clerkId: string) {
   try {
     // Use basic info for performance if only displaying name/email
     const result = await getUserBasicInfo(clerkId);
-    
+
     if (result.success) {
       return {
         success: true,
@@ -153,10 +156,13 @@ export async function getCurrentUser(clerkId: string) {
  * Example: PUT /api/user - Update user profile
  * Used in profile/settings pages
  */
-export async function updateUserProfile(clerkId: string, updates: UpdateUserInput) {
+export async function updateUserProfile(
+  clerkId: string,
+  updates: UpdateUserInput
+) {
   try {
     const result = await updateUser(clerkId, updates);
-    
+
     if (result.success) {
       return {
         success: true,
@@ -187,7 +193,7 @@ export async function updateUserProfile(clerkId: string, updates: UpdateUserInpu
 export async function getUserPrefs(clerkId: string) {
   try {
     const result = await getUserPreferences(clerkId);
-    
+
     if (result.success) {
       return {
         success: true,
@@ -220,7 +226,7 @@ export async function updateUserPrefs(
 ) {
   try {
     const result = await updateUserPreferences(clerkId, preferences);
-    
+
     if (result.success) {
       return {
         success: true,
@@ -231,8 +237,12 @@ export async function updateUserPrefs(
       return {
         success: false,
         error: result.error?.message || 'Failed to update preferences',
-        status: result.error?.code === 'USER_NOT_FOUND' ? 404 : 
-                result.error?.code === 'VALIDATION_ERROR' ? 400 : 500,
+        status:
+          result.error?.code === 'USER_NOT_FOUND'
+            ? 404
+            : result.error?.code === 'VALIDATION_ERROR'
+              ? 400
+              : 500,
       };
     }
   } catch (error) {
@@ -270,11 +280,11 @@ export async function verifyUserExists(clerkId: string): Promise<boolean> {
 export async function getUserForAuth(clerkId: string) {
   try {
     const result = await getUserBasicInfo(clerkId);
-    
+
     if (result.success) {
       return result.data;
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error getting user for auth:', error);
@@ -295,18 +305,20 @@ export async function bulkUpdatePreferences(
 ) {
   try {
     console.log(`Starting bulk update for ${updates.length} users...`);
-    
+
     const result = await batchUpdateUserPreferences(updates);
-    
+
     if (result.success) {
       const { modifiedCount, errors } = result.data!;
-      
-      console.log(`✅ Bulk update completed: ${modifiedCount} updated, ${errors.length} errors`);
-      
+
+      console.log(
+        `✅ Bulk update completed: ${modifiedCount} updated, ${errors.length} errors`
+      );
+
       if (errors.length > 0) {
         console.warn('Errors during bulk update:', errors);
       }
-      
+
       return {
         success: true,
         modifiedCount,
@@ -343,11 +355,13 @@ export async function performComplexUserOperation(clerkId: string) {
         },
         session
       );
-      
+
       if (!profileResult.success) {
-        throw new Error(`Failed to update profile: ${profileResult.error?.message}`);
+        throw new Error(
+          `Failed to update profile: ${profileResult.error?.message}`
+        );
       }
-      
+
       const preferencesResult = await updateUserPreferences(
         clerkId,
         {
@@ -356,11 +370,13 @@ export async function performComplexUserOperation(clerkId: string) {
         },
         session
       );
-      
+
       if (!preferencesResult.success) {
-        throw new Error(`Failed to update preferences: ${preferencesResult.error?.message}`);
+        throw new Error(
+          `Failed to update preferences: ${preferencesResult.error?.message}`
+        );
       }
-      
+
       return {
         success: true,
         user: preferencesResult.data,
@@ -386,11 +402,11 @@ export async function performComplexUserOperation(clerkId: string) {
 async function setupNewUserDefaults(user: any) {
   try {
     console.log(`Setting up defaults for new user: ${user.clerkId}`);
-    
+
     // Example: Set default preferences based on location/browser
     // Example: Create welcome conversation
     // Example: Send welcome email
-    
+
     console.log('✅ New user setup completed');
   } catch (error) {
     console.error('❌ Error setting up new user:', error);
@@ -403,11 +419,11 @@ async function setupNewUserDefaults(user: any) {
 async function cleanupUserData(clerkId: string) {
   try {
     console.log(`Cleaning up data for deleted user: ${clerkId}`);
-    
+
     // Example: Remove from analytics
     // Example: Cancel subscriptions
     // Example: Archive conversations
-    
+
     console.log('✅ User data cleanup completed');
   } catch (error) {
     console.error('❌ Error cleaning up user data:', error);
@@ -427,9 +443,9 @@ export function handleServiceResult<T>(
       data: result.data,
     };
   }
-  
+
   console.error(`${operation} failed:`, result.error);
-  
+
   const statusMap = {
     USER_NOT_FOUND: 404,
     VALIDATION_ERROR: 400,
@@ -440,10 +456,10 @@ export function handleServiceResult<T>(
     TRANSACTION_ERROR: 500,
     UNKNOWN_ERROR: 500,
   };
-  
+
   return {
     success: false,
     error: result.error?.message || 'Unknown error',
     status: statusMap[result.error?.code as keyof typeof statusMap] || 500,
   };
-} 
+}
