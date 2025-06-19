@@ -9,14 +9,20 @@
  * - Query sanitization
  * - Connection management
  *
+ * Updated to work with Vercel AI SDK streaming responses and handle new conversation creation.
+ *
  * Endpoints:
- * - POST /api/chat - Send a message and get AI response
+ * - POST /api/chat - Send a message and get AI response (streaming)
  * - GET /api/chat?chatId=xxx - Get chat history (optional)
  */
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { openai } from '@ai-sdk/openai';
+import { streamText } from 'ai';
+
+import { CHAT_CONFIG, DEFAULT_MODEL } from '@/lib/ai/config';
 import { withTiming } from '@/lib/db/middleware';
 // TODO: Import auth from Clerk when authentication is enabled
 // import { auth } from '@clerk/nextjs/server';
@@ -43,12 +49,12 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { message, chatId, model = 'gpt-3.5-turbo' } = body;
+    const { messages, conversationId, model = DEFAULT_MODEL } = body;
 
     // Validate required fields
-    if (!message || typeof message !== 'string') {
+    if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
-        { error: 'Message is required' },
+        { error: 'Messages array is required' },
         { status: 400 }
       );
     }
@@ -72,6 +78,12 @@ export async function POST(request: NextRequest) {
     //   );
     // }
 
+    // Generate conversation ID for new conversations
+    const isNewConversation = !conversationId;
+    const finalConversationId =
+      conversationId ||
+      `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
     // Demonstrate safe database operations with utilities
     // Example: Get or create chat conversation with error handling
     const chatOperation = await safeDbOperation(async () => {
@@ -79,15 +91,29 @@ export async function POST(request: NextRequest) {
       return await withPerformanceMonitoring(
         async () => {
           // In a real implementation, this would be:
-          // if (chatId) {
-          //   return await Chat.findOne(sanitizeQuery({ _id: chatId, userId }));
+          // if (conversationId) {
+          //   return await Chat.findOne(sanitizeQuery({ _id: conversationId, userId }));
           // } else {
-          //   return await Chat.create({ userId, title: message.substring(0, 50) });
+          //   const firstMessage = messages[0]?.content || 'New Chat';
+          //   return await Chat.create({
+          //     _id: finalConversationId,
+          //     userId,
+          //     clerkId: _userId,
+          //     title: firstMessage.substring(0, 50),
+          //     settings: { aiModel: model }
+          //   });
           // }
 
           // Mock delay to simulate database operation
           await new Promise((resolve) => setTimeout(resolve, 100));
-          return { id: chatId || `chat_${Date.now()}`, userId: _userId };
+
+          const firstMessage = messages[0]?.content || 'New Chat';
+          return {
+            id: finalConversationId,
+            userId: _userId,
+            title: firstMessage.substring(0, 50),
+            isNew: isNewConversation,
+          };
         },
         { query: 'findOrCreateChat', collection: 'chats' }
       );
@@ -111,36 +137,63 @@ export async function POST(request: NextRequest) {
 
     const chat = chatOperation.data;
 
-    // TODO: Call AI service
-    // const aiResponse = await getAIResponse({
-    //   message,
-    //   history: chatHistory,
-    //   model,
-    //   userId,
-    // });
+    // Create streaming response using Vercel AI SDK
+    const result = await streamText({
+      model: openai(model),
+      messages: [
+        {
+          role: 'system',
+          content: CHAT_CONFIG.SYSTEM_MESSAGE,
+        },
+        ...messages,
+      ],
+      ...CHAT_CONFIG.MODEL_PARAMS.default,
+      onFinish: async (result) => {
+        // TODO: Save conversation and messages to database
+        console.log('Conversation finished:', {
+          conversationId: chat.id,
+          messageCount: messages.length + 1,
+          tokens: result.usage?.totalTokens,
+          finishReason: result.finishReason,
+          isNewConversation: chat.isNew,
+        });
 
-    // TODO: Save AI response to database
-    // await saveMessage({
-    //   chatId: chat.id,
-    //   content: aiResponse.content,
-    //   role: 'assistant',
-    //   timestamp: new Date(),
-    //   metadata: {
-    //     model,
-    //     tokens: aiResponse.tokens,
-    //   },
-    // });
+        // In a real implementation, this would save the messages:
+        // await saveMessages([
+        //   {
+        //     conversationId: chat.id,
+        //     role: 'user',
+        //     content: messages[messages.length - 1].content,
+        //     userId: _userId,
+        //   },
+        //   {
+        //     conversationId: chat.id,
+        //     role: 'assistant',
+        //     content: result.text,
+        //     userId: _userId,
+        //     aiMetadata: {
+        //       model,
+        //       temperature: CHAT_CONFIG.MODEL_PARAMS.default.temperature,
+        //       maxTokens: CHAT_CONFIG.MODEL_PARAMS.default.maxTokens,
+        //       tokenCount: result.usage?.totalTokens || 0,
+        //       finishReason: result.finishReason || 'stop',
+        //       responseTime: Date.now() - startTime,
+        //     },
+        //   },
+        // ]);
+      },
+    });
 
-    // Temporary mock response
-    const mockResponse = {
-      id: chatId || `chat_${Date.now()}`,
-      message: `This is a mock response to: "${message}". The actual AI integration will be implemented here.`,
-      model,
-      timestamp: new Date().toISOString(),
-      tokens: 50, // Mock token count
-    };
+    // Convert to response with custom headers
+    const response = result.toDataStreamResponse();
 
-    return NextResponse.json(mockResponse);
+    // Add conversation ID to headers for frontend to handle redirect
+    if (chat.isNew) {
+      response.headers.set('X-Conversation-ID', chat.id);
+      response.headers.set('X-Is-New-Conversation', 'true');
+    }
+
+    return response;
   } catch (error) {
     console.error('Chat API error:', error);
     return NextResponse.json(

@@ -30,23 +30,15 @@ export default function SignInPage() {
     <div className='space-y-6'>
       {/* Page Header */}
       <div className='text-center'>
-        <h2 className='text-2xl font-semibold tracking-tight text-gray-900 dark:text-white'>
-          Welcome back
-        </h2>
-        <p className='mt-2 text-sm text-gray-600 dark:text-gray-400'>
-          Sign in to your ChatGPT Clone account
-        </p>
+        <h2 className='mb-2 text-2xl font-semibold text-black'>Welcome back</h2>
       </div>
-
-      {/* CAPTCHA Widget for Bot Protection */}
-      <div id='clerk-captcha' data-cl-theme='auto' data-cl-size='normal'></div>
 
       {/* Clerk SignIn Component with Redirect Handling */}
       <div>
         <Suspense
           fallback={
             <div className='flex items-center justify-center p-8'>
-              <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-green-600'></div>
+              <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-black'></div>
             </div>
           }
         >

@@ -10,27 +10,30 @@
  * - Message actions (copy, edit, delete)
  */
 
-// TODO: Export chat components when they are created
-// export { ChatMessages } from './ChatMessages';
-// export { ChatInput } from './ChatInput';
+// Main chat components
+export { ChatArea } from './ChatArea';
+export { InputArea } from './InputArea';
+export { MessageBubble } from './MessageBubble';
+export { WelcomeScreen } from './WelcomeScreen';
+
+// TODO: Export additional chat components when they are created
 // export { ChatSidebar } from './ChatSidebar';
-// export { MessageBubble } from './MessageBubble';
 // export { TypingIndicator } from './TypingIndicator';
 // export { ChatHeader } from './ChatHeader';
-
-// Placeholder exports to prevent import errors
-export const ChatComponents = {
-  // This object will be replaced with actual component exports
-  placeholder: true,
-};
+// export { MessageActions } from './MessageActions';
+// export { ModelSelector } from './ModelSelector';
+// export { ChatSettings } from './ChatSettings';
+// export { ExportChat } from './ExportChat';
 
 /**
- * Planned Chat Components:
+ * Available Chat Components:
  *
- * 1. ChatMessages - Display chat message history
- * 2. ChatInput - Input field for new messages with send button
- * 3. ChatSidebar - Sidebar with chat history and navigation
- * 4. MessageBubble - Individual message display component
+ * ✅ ChatArea - Main chat interface with message streaming
+ * ✅ MessageBubble - Individual message display with actions
+ * ✅ InputArea - Message input with auto-resize and send functionality
+ * ✅ WelcomeScreen - v0's welcome screen for new conversations
+ *
+ * TODO: Additional planned components:
  * 5. TypingIndicator - Shows when AI is generating response
  * 6. ChatHeader - Header with chat title and actions
  * 7. MessageActions - Copy, edit, delete message actions

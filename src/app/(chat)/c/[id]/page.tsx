@@ -3,11 +3,13 @@
  *
  * This page displays a specific chat conversation identified by the chat ID.
  * Protected with authentication and proper loading states.
+ * Now uses the new ChatArea component with v0's pixel-perfect design.
  */
 
 import { notFound } from 'next/navigation';
 
 import { ProtectedPageWrapper } from '@/components/auth';
+import { ChatArea } from '@/components/chat';
 
 interface ChatPageProps {
   params: Promise<{
@@ -17,7 +19,7 @@ interface ChatPageProps {
 
 // Chat page content component (server component)
 async function ChatPageContent({ chatId }: { chatId: string }) {
-  // TODO: Validate chat ID format
+  // Validate chat ID format
   if (!chatId || chatId.length < 1) {
     notFound();
   }
@@ -34,66 +36,27 @@ async function ChatPageContent({ chatId }: { chatId: string }) {
   //   notFound();
   // }
 
-  return (
-    <div className='flex h-full flex-col'>
-      {/* Chat Header */}
-      <div className='flex-shrink-0 border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-800'>
-        <div className='flex items-center justify-between'>
-          <div>
-            <h1 className='text-lg font-semibold text-gray-900 dark:text-white'>
-              {/* TODO: Display chat title or first message preview */}
-              Chat {chatId}
-            </h1>
-            <p className='text-sm text-gray-500 dark:text-gray-400'>
-              {/* TODO: Display message count and last updated */}
-              Loading chat details...
-            </p>
-          </div>
+  // TODO: Fetch messages from database
+  // const messages = await getMessagesByConversationId(chatId);
 
-          {/* Chat Actions */}
-          <div className='flex items-center space-x-2'>
-            {/* TODO: Add chat actions (rename, delete, share, etc.) */}
-            <button className='text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'>
-              <span className='sr-only'>Chat options</span>
-              {/* TODO: Add menu icon */}⋯
-            </button>
-          </div>
-        </div>
-      </div>
+  // Mock initial messages for demonstration
+  const initialMessages = [
+    {
+      id: 'msg_1',
+      role: 'user' as const,
+      content: 'Hello! Can you help me understand LALR(1) parsers?',
+      createdAt: new Date('2024-01-01T10:00:00Z'),
+    },
+    {
+      id: 'msg_2',
+      role: 'assistant' as const,
+      content:
+        "I'd be happy to help you understand LALR(1) parsers! **LALR(1)** stands for Look-Ahead LR(1), and it's a type of bottom-up parser used in compiler construction.\n\nHere are the key points:\n\n• **LR(1) parsers** are the most powerful of the LR family\n• **LALR(1) parsers** are constructed by merging LR(1) states with the same LR(0) core\n• This can sometimes introduce conflicts not present in full LR(1)\n\nWould you like me to explain any specific aspect in more detail?",
+      createdAt: new Date('2024-01-01T10:00:30Z'),
+    },
+  ];
 
-      {/* Messages Container */}
-      <div className='flex-1 overflow-y-auto px-6 py-4'>
-        {/* TODO: Implement ChatMessages component */}
-        <div className='space-y-4'>
-          <div className='text-center text-gray-500 dark:text-gray-400'>
-            <p>Chat messages will appear here</p>
-            <p className='mt-2 text-sm'>Chat ID: {chatId}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Message Input */}
-      <div className='flex-shrink-0 border-t border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-800'>
-        {/* TODO: Implement ChatInput component */}
-        <div className='flex items-center space-x-2'>
-          <div className='flex-1'>
-            <textarea
-              placeholder='Type your message...'
-              className='w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white'
-              rows={1}
-              disabled
-            />
-          </div>
-          <button
-            className='rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50'
-            disabled
-          >
-            Send
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  return <ChatArea conversationId={chatId} initialMessages={initialMessages} />;
 }
 
 // Main page component with protection

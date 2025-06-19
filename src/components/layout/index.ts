@@ -45,3 +45,9 @@ export {
   CompactChatSkeleton,
   MobileChatSkeleton,
 } from './ChatPageSkeleton';
+
+// New v0-inspired layout components
+export { ChatLayout } from './ChatLayout';
+export { ConversationView } from './ConversationView';
+export { Sidebar } from './Sidebar';
+export { TopBar } from './TopBar';
