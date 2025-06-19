@@ -16,17 +16,23 @@ import type { IConnectionStatus } from '@/types/database';
 
 import {
   closeConnection as _closeConnection,
-  CONNECTION_STATES as _CONNECTION_STATES,
+  connectDB as _connectDB,
   connectToDatabase as _connectToDatabase,
+  CONNECTION_STATES as _CONNECTION_STATES,
+  disconnectDB as _disconnectDB,
   getConnectionStatus as _getConnectionStatus,
+  isConnected as _isConnected,
   testConnection as _testConnection,
 } from './connection';
 
 export {
   closeConnection,
-  CONNECTION_STATES,
+  connectDB,
   connectToDatabase,
+  CONNECTION_STATES,
+  disconnectDB,
   getConnectionStatus,
+  isConnected,
   testConnection,
 } from './connection';
 
@@ -60,6 +66,12 @@ export { User, Conversation } from './models';
 // Service exports
 export * from './services/user.service';
 export * from './services/conversation.service';
+
+// Utility exports
+export * from './utils';
+
+// Middleware exports
+export * from './middleware';
 
 /**
  * Database initialization function
@@ -111,6 +123,9 @@ export async function getDatabaseHealth(): Promise<{
  */
 export default {
   connectToDatabase: _connectToDatabase,
+  connectDB: _connectDB,
+  disconnectDB: _disconnectDB,
+  isConnected: _isConnected,
   getConnectionStatus: _getConnectionStatus,
   testConnection: _testConnection,
   closeConnection: _closeConnection,

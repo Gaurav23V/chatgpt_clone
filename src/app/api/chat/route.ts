@@ -2,12 +2,12 @@
  * Chat API Route
  *
  * This API route handles chat requests and provides responses using AI models.
- * It supports:
- * - Creating new chat conversations
- * - Adding messages to existing conversations
- * - Streaming responses from AI models
- * - Rate limiting and user authentication
- * - Message persistence to database
+ * It demonstrates the use of database utilities for:
+ * - Performance monitoring
+ * - Error handling
+ * - Safe database operations
+ * - Query sanitization
+ * - Connection management
  *
  * Endpoints:
  * - POST /api/chat - Send a message and get AI response
@@ -18,6 +18,16 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 // TODO: Import auth from Clerk when authentication is enabled
 // import { auth } from '@clerk/nextjs/server';
+
+import {
+  safeDbOperation,
+  withPerformanceMonitoring,
+  sanitizeQuery,
+  parseMongoError,
+  MongoErrorType,
+  withRetry,
+} from '@/lib/db/utils';
+import { withTiming } from '@/lib/db/middleware';
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,30 +72,42 @@ export async function POST(request: NextRequest) {
     //   );
     // }
 
-    // TODO: Get or create chat conversation
-    // let chat;
-    // if (chatId) {
-    //   chat = await getChatById(chatId);
-    //   if (!chat || chat.userId !== userId) {
-    //     return NextResponse.json(
-    //       { error: 'Chat not found' },
-    //       { status: 404 }
-    //     );
-    //   }
-    // } else {
-    //   chat = await createNewChat(userId, message);
-    // }
+    // Demonstrate safe database operations with utilities
+    // Example: Get or create chat conversation with error handling
+    const chatOperation = await safeDbOperation(
+      async () => {
+        // Simulate database operation with performance monitoring
+        return await withPerformanceMonitoring(
+          async () => {
+            // In a real implementation, this would be:
+            // if (chatId) {
+            //   return await Chat.findOne(sanitizeQuery({ _id: chatId, userId }));
+            // } else {
+            //   return await Chat.create({ userId, title: message.substring(0, 50) });
+            // }
+            
+            // Mock delay to simulate database operation
+            await new Promise(resolve => setTimeout(resolve, 100));
+            return { id: chatId || `chat_${Date.now()}`, userId: _userId };
+          },
+          { query: 'findOrCreateChat', collection: 'chats' }
+        );
+      },
+      'Get or create chat conversation'
+    );
 
-    // TODO: Save user message to database
-    // await saveMessage({
-    //   chatId: chat.id,
-    //   content: message,
-    //   role: 'user',
-    //   timestamp: new Date(),
-    // });
+    if (!chatOperation.success) {
+      console.error('Chat operation failed:', chatOperation.error);
+      return NextResponse.json(
+        { 
+          error: chatOperation.error.userMessage,
+          code: chatOperation.error.type,
+        },
+        { status: chatOperation.error.type === MongoErrorType.CONNECTION_ERROR ? 503 : 500 }
+      );
+    }
 
-    // TODO: Get chat history for context
-    // const chatHistory = await getChatHistory(chat.id);
+    const chat = chatOperation.data;
 
     // TODO: Call AI service
     // const aiResponse = await getAIResponse({
@@ -140,6 +162,12 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const chatId = searchParams.get('chatId');
+    
+    // Demonstrate pagination utilities
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const sortBy = searchParams.get('sortBy') || 'createdAt';
+    const sortOrder = (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc';
 
     if (!chatId) {
       return NextResponse.json(
@@ -148,39 +176,85 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // TODO: Get chat history from database
-    // const chat = await getChatById(chatId);
-    // if (!chat || chat.userId !== userId) {
-    //   return NextResponse.json(
-    //     { error: 'Chat not found' },
-    //     { status: 404 }
-    //   );
-    // }
+    // Demonstrate safe database operations with pagination
+    const chatResult = await safeDbOperation(
+      async () => {
+        return await withTiming(
+          async () => {
+            // In real implementation, this would use our pagination helpers:
+            // const filter = sanitizeQuery({ chatId, userId });
+            // const options = { page, limit, sortBy, sortOrder };
+            // return await executePaginatedQuery(Message, filter, options, 
+            //   projectFields(['content', 'role', 'timestamp', 'metadata']));
+            
+            // Mock paginated response
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            const mockMessages = Array.from({ length: Math.min(limit, 5) }, (_, i) => ({
+              id: `msg_${i + 1}`,
+              content: `Mock message ${i + 1} for chat ${chatId}`,
+              role: i % 2 === 0 ? 'user' : 'assistant',
+              timestamp: new Date(Date.now() - (i * 1000000)).toISOString(),
+            }));
 
-    // TODO: Get messages for this chat
-    // const messages = await getChatMessages(chatId);
+            return {
+              data: mockMessages,
+              pagination: {
+                page,
+                limit,
+                total: 25, // Mock total
+                totalPages: Math.ceil(25 / limit),
+                hasNextPage: page < Math.ceil(25 / limit),
+                hasPrevPage: page > 1,
+              },
+            };
+          },
+          'Get paginated chat messages'
+        );
+      },
+      'Get chat messages with pagination'
+    );
 
-    // Temporary mock response
-    const mockChat = {
+    if (!chatResult.success) {
+      const mongoError = chatResult.error;
+      return NextResponse.json(
+        { 
+          error: mongoError.userMessage,
+          code: mongoError.type,
+        },
+        { status: mongoError.type === MongoErrorType.CONNECTION_ERROR ? 503 : 500 }
+      );
+    }
+
+    const { result: paginatedResult, duration } = chatResult.data;
+
+    const response = {
       id: chatId,
       title: `Chat ${chatId}`,
-      messages: [
-        {
-          id: 'msg_1',
-          content: 'Hello! How can I help you today?',
-          role: 'assistant',
-          timestamp: new Date().toISOString(),
-        },
-      ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      messages: paginatedResult.data,
+      pagination: paginatedResult.pagination,
+      metadata: {
+        queryDuration: duration,
+        timestamp: new Date().toISOString(),
+      },
     };
 
-    return NextResponse.json(mockChat);
+    return NextResponse.json(response, {
+      headers: {
+        'X-Query-Duration': String(duration),
+        'X-Total-Messages': String(paginatedResult.pagination.total),
+      },
+    });
+
   } catch (error) {
     console.error('Chat API error:', error);
+    const mongoError = parseMongoError(error instanceof Error ? error : new Error('Unknown error'));
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: mongoError.userMessage,
+        code: mongoError.type,
+      },
       { status: 500 }
     );
   }

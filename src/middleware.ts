@@ -68,6 +68,7 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)', // Clerk sign-in flow
   '/sign-up(.*)', // Clerk sign-up flow
   '/api/webhooks/clerk', // Webhooks must remain public so Clerk can reach them
+  '/api/health', // Health check endpoint should be public for monitoring
 ]);
 
 // Special routes that need custom redirect handling

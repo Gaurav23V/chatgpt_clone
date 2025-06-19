@@ -48,8 +48,8 @@ declare const global: GlobalWithMongoose;
  * Optimized for both development and production environments
  */
 const MONGODB_CONFIG: ConnectOptions = {
-  // Connection Pool Settings (following Dub repository patterns)
-  maxPoolSize: process.env.NODE_ENV === 'production' ? 10 : 5, // Maximum connections in pool
+  // Connection Pool Settings (matching your requirements)
+  maxPoolSize: 10, // Maximum connections in pool
   minPoolSize: process.env.NODE_ENV === 'production' ? 2 : 1, // Minimum connections in pool
   maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
   serverSelectionTimeoutMS: 5000, // How long to try selecting a server
@@ -72,7 +72,7 @@ const MONGODB_CONFIG: ConnectOptions = {
 
   ...(process.env.NODE_ENV === 'production' && {
     // Production-specific settings
-    autoIndex: false, // don&apos;t build indexes automatically in production
+    autoIndex: false, // don't build indexes automatically in production
     debug: false, // Disable debug mode for performance
   }),
 };
@@ -301,6 +301,33 @@ export const CONNECTION_STATES = {
   DISCONNECTING: 3,
   UNINITIALIZED: 99,
 } as const;
+
+// =============================================================================
+// HELPER FUNCTIONS (Convenience aliases for your requirements)
+// =============================================================================
+
+/**
+ * Initialize MongoDB connection
+ * Alias for connectToDatabase() to match your requirements
+ * 
+ * @returns Promise<Connection> - MongoDB connection instance
+ */
+export const connectDB = connectToDatabase;
+
+/**
+ * Close MongoDB connection gracefully
+ * Alias for closeConnection() to match your requirements
+ */
+export const disconnectDB = closeConnection;
+
+/**
+ * Check if MongoDB is connected
+ * 
+ * @returns boolean - True if connected, false otherwise
+ */
+export const isConnected = (): boolean => {
+  return mongoose.connection.readyState === 1;
+};
 
 /**
  * Default export for convenience
