@@ -34,15 +34,27 @@ export const ConversationStatusEnum = [
   'deleted',
 ] as const;
 export const AIModelEnum = [
+  // OpenAI
   'gpt-3.5-turbo',
   'gpt-4',
   'gpt-4-turbo',
   'gpt-4o',
   'gpt-4o-mini',
-  // Groq / LLaMA / other providers
+
+  // Groq / Llama and others
+  'llama-3.3-70b-versatile',
   'llama-3.1-8b-instant',
-  'llama-3-70b',
-  'mixtral-8x7b',
+  'llama-guard-3-8b',
+  'llama3-70b-8192',
+  'llama3-8b-8192',
+  'mixtral-8x7b-32768',
+  'gemma2-9b-it',
+  'qwen-qwq-32b',
+  'qwen-2-5-32b',
+  'mistral-saba-24b',
+  'deepseek-r1-distill-qwen-32b',
+  'deepseek-r1-distill-llama-70b',
+  'whisper-large-v3',
 ] as const;
 
 export type ConversationStatus = (typeof ConversationStatusEnum)[number];

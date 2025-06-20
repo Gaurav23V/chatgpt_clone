@@ -11,6 +11,8 @@ import { useCurrentConversation } from '@/contexts/user-context';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 
+import { ModelProvider } from '@/contexts/model-context';
+
 interface ChatLayoutProps {
   children: React.ReactNode;
 }
@@ -86,25 +88,27 @@ export function ChatLayout({ children }: ChatLayoutProps) {
   }
 
   return (
-    <div className='flex h-screen bg-[#212121] text-white'>
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    <ModelProvider>
+      <div className='flex h-screen bg-[#212121] text-white'>
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className='flex min-w-0 flex-1 flex-col'>
-        <TopBar
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          sidebarOpen={sidebarOpen}
-          title={
-            conversationId && conversationId !== 'new'
-              ? `Chat ${conversationId}`
-              : undefined
-          }
-          showShare={!!conversationId && conversationId !== 'new'}
-          isHomePage={!conversationId || conversationId === 'new'}
-          user={user}
-        />
+        <div className='flex min-w-0 flex-1 flex-col'>
+          <TopBar
+            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+            sidebarOpen={sidebarOpen}
+            title={
+              conversationId && conversationId !== 'new'
+                ? `Chat ${conversationId}`
+                : undefined
+            }
+            showShare={!!conversationId && conversationId !== 'new'}
+            isHomePage={!conversationId || conversationId === 'new'}
+            user={user}
+          />
 
-        <div className='flex-1 overflow-hidden'>{children}</div>
+          <div className='flex-1 overflow-hidden'>{children}</div>
+        </div>
       </div>
-    </div>
+    </ModelProvider>
   );
 }

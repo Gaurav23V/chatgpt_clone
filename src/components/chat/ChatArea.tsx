@@ -2,14 +2,11 @@
 
 import { useEffect, useRef } from 'react';
 
-import { useRouter } from 'next/navigation';
+import { useGroqChat } from '@/hooks/useGroqChat';
 
-import { useAuth } from '@clerk/nextjs';
-import { useChat } from 'ai/react';
+import { useModel } from '@/contexts/model-context';
 
 import { Button } from '@/components/ui/button';
-import { useCurrentConversation } from '@/contexts/user-context';
-
 import { InputArea } from './InputArea';
 import { MessageBubble } from './MessageBubble';
 import { WelcomeScreen } from './WelcomeScreen';
@@ -30,9 +27,6 @@ export function ChatArea({
   initialMessages = [],
   onConversationCreated,
 }: ChatAreaProps) {
-  const { userId } = useAuth();
-  const router = useRouter();
-  const { setCurrentConversationId } = useCurrentConversation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Transform initial messages to match useChat format
@@ -43,38 +37,33 @@ export function ChatArea({
     createdAt: msg.createdAt || new Date(),
   }));
 
-  // Use Vercel AI SDK's useChat hook
+  const { selectedModel } = useModel();
+
   const {
     messages,
-    input,
-    handleInputChange,
-    handleSubmit,
     append,
     reload,
-    stop,
     isLoading,
     error,
-  } = useChat({
+  } = useGroqChat({
     api: '/api/chat',
+    initialMessages: formattedInitialMessages,
+    model: selectedModel,
     headers: {
       'X-Conversation-ID': conversationId || '',
     },
-    // Provide any pre-existing messages so they appear immediately after navigation
-    initialMessages: formattedInitialMessages,
     onResponse: async (response) => {
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
 
-      // Handle conversation redirect
       const newConversationId = response.headers.get('X-Conversation-ID');
       if (newConversationId && !conversationId && onConversationCreated) {
         console.log('New conversation created:', newConversationId);
         onConversationCreated(newConversationId);
       }
     },
-    onFinish: (message) => {
-      console.log('Chat finished:', message);
-    },
+    onStreamEnd: () => {},
+    onStreamStart: () => {},
     onError: (error) => {
       console.error('Chat error:', error);
     },

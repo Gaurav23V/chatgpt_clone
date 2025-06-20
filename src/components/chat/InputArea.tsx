@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Mic, Plus, Send, Settings } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import ModelSelector from './ModelSelector';
 
 interface InputAreaProps {
   onSubmit: (message: string) => void;
@@ -62,6 +63,10 @@ export function InputArea({
   return (
     <div className='bg-background/95 supports-[backdrop-filter]:bg-background/60 border-t border-[#444444] p-4 backdrop-blur'>
       <div className='mx-auto max-w-3xl'>
+        {/* Model selector positioned above the input area */}
+        <div className='mb-2 flex justify-start'>
+          <ModelSelector />
+        </div>
         <form onSubmit={handleSubmit}>
           <div className='chat-input relative'>
             <textarea

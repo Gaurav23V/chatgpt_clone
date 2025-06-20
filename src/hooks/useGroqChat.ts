@@ -24,9 +24,11 @@ export interface GroqChatConfig {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  headers?: Record<string, string>;
   onStreamStart?: () => void;
   onStreamEnd?: () => void;
   onError?: (error: Error) => void;
+  onResponse?: (response: Response) => void;
   onRetry?: (attempt: number) => void;
 }
 
@@ -75,9 +77,11 @@ export function useGroqChat(config: GroqChatConfig = {}): UseGroqChatReturn {
     model = 'llama-3.3-70b-versatile',
     temperature = 0.7,
     maxTokens = 2000,
+    headers = {},
     onStreamStart = () => {},
     onStreamEnd = () => {},
     onError = () => {},
+    onResponse = () => {},
     onRetry = () => {},
   } = config;
 
@@ -115,6 +119,7 @@ export function useGroqChat(config: GroqChatConfig = {}): UseGroqChatReturn {
   } = useAIChat({
     api,
     initialMessages,
+    headers,
     body: {
       model,
       temperature,
@@ -131,6 +136,7 @@ export function useGroqChat(config: GroqChatConfig = {}): UseGroqChatReturn {
 
       streamStartTime.current = Date.now();
       onStreamStart();
+      onResponse(response);
     },
     onFinish: (message) => {
       const responseTime = Date.now() - streamStartTime.current;

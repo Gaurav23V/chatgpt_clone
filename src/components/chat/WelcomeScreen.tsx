@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Mic, Plus, Send, Settings } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import ModelSelector from './ModelSelector';
 
 interface WelcomeScreenProps {
   onSubmit: (message: string) => void;
@@ -140,8 +141,12 @@ export function WelcomeScreen({
         ))}
       </div>
 
-      {/* Input area */}
+      {/* Input area with model selector */}
       <div className='animate-in slide-in-from-bottom-8 w-full max-w-3xl delay-500 duration-700'>
+        {/* Model selector positioned above the input area */}
+        <div className='mb-2 flex justify-start'>
+          <ModelSelector />
+        </div>
         <form onSubmit={handleSubmit}>
           <div className='chat-input relative'>
             <textarea
