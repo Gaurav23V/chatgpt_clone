@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -37,39 +38,41 @@ const toDate = (value: string | Date | undefined): Date => {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [searchTerm, setSearchTerm] = useState('');
   const [_conversations, setConversations] = useState<ConversationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch conversations on mount
-  useEffect(() => {
-    const fetchConversations = async () => {
-      try {
-        setIsLoading(true);
-        const res = await fetch('/api/conversations?limit=100');
-        if (!res.ok) {
-          throw new Error(`Failed to fetch conversations (${res.status})`);
-        }
-        const json = await res.json();
-        const docs = json.data?.conversations || [];
-        const items: ConversationItem[] = docs.map((doc: any) => ({
-          id: doc._id ?? doc.id ?? '',
-          title: doc.title || 'Untitled',
-          lastMessageAt: doc.lastMessageAt || doc.updatedAt || new Date(),
-          updatedAt: doc.updatedAt,
-        }));
-        setConversations(items);
-      } catch (err) {
-        console.error('Failed to load conversations:', err);
-        setError('Failed to load conversations');
-      } finally {
-        setIsLoading(false);
+  const fetchConversations = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch('/api/conversations?limit=100');
+      if (!res.ok) {
+        throw new Error(`Failed to fetch conversations (${res.status})`);
       }
-    };
+      const json = await res.json();
+      const docs = json.data?.conversations || [];
+      const items: ConversationItem[] = docs.map((doc: any) => ({
+        id: doc._id ?? doc.id ?? '',
+        title: doc.title || 'Untitled',
+        lastMessageAt: doc.lastMessageAt || doc.updatedAt || new Date(),
+        updatedAt: doc.updatedAt,
+      }));
+      setConversations(items);
+    } catch (err) {
+      console.error('Failed to load conversations:', err);
+      setError('Failed to load conversations');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  // Fetch on initial mount and whenever the route changes (e.g., after creating a chat)
+  useEffect(() => {
     fetchConversations();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   // Filter conversations based on search term
   const filteredConversations = _conversations.filter((conversation) =>
