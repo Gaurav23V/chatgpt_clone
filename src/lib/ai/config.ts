@@ -3,17 +3,27 @@
  *
  * This file contains configuration constants and setup for AI functionality:
  * - ai: Vercel AI SDK React hooks and utilities for streaming chat responses
- * - openai: Official OpenAI client library for direct API interactions
+ * - groq: Fast inference with Groq LPU Inference Engine
+ * - openai: Official OpenAI client library for direct API interactions (fallback)
  */
 
-import { openai } from '@ai-sdk/openai';
+import { createOpenAI } from '@ai-sdk/openai';
+
+import { DEFAULT_GROQ_MODEL, groq, GROQ_CHAT_CONFIG } from './groq-config';
 
 // Environment validation
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-if (!OPENAI_API_KEY && process.env.NODE_ENV !== 'development') {
-  throw new Error('OPENAI_API_KEY environment variable is required');
+if (!GROQ_API_KEY && process.env.NODE_ENV === 'production') {
+  console.warn(
+    'GROQ_API_KEY environment variable is not set. GROQ functionality will be limited.'
+  );
 }
+
+// Create OpenAI client with fallback for missing key
+const openai = createOpenAI({
+  apiKey: GROQ_API_KEY || 'dummy-key-for-build',
+});
 
 /**
  * Available AI models configuration
@@ -34,75 +44,68 @@ export const AI_MODELS = {
 } as const;
 
 /**
- * Default model configuration
+ * Default model configuration - Using Groq for fast inference
  */
-export const DEFAULT_MODEL = AI_MODELS.GPT_4O_MINI;
+export const DEFAULT_MODEL = DEFAULT_GROQ_MODEL.id;
 
 /**
  * AI SDK model configurations with optimized settings
+ * Now using Groq as the primary provider for fast inference
  */
 export const aiConfig = {
-  // Primary model for chat completions
-  defaultModel: openai(DEFAULT_MODEL),
+  // Primary model for chat completions - Groq for speed
+  defaultModel: groq(DEFAULT_MODEL),
 
   // Alternative models for different use cases
   models: {
-    creative: openai(AI_MODELS.GPT_4O),
-    precise: openai(AI_MODELS.GPT_4O_MINI),
-    fast: openai(AI_MODELS.GPT_3_5_TURBO),
+    // Groq models (fast inference)
+    fast: groq('llama-3.1-8b-instant'),
+    balanced: groq('llama-3.3-70b-versatile'),
+    creative: groq('llama-3.1-70b-versatile'),
+    reasoning: groq('qwen-qwq-32b'),
+
+    // OpenAI models (fallback)
+    openai_creative: openai(AI_MODELS.GPT_4O),
+    openai_precise: openai(AI_MODELS.GPT_4O_MINI),
+    openai_fast: openai(AI_MODELS.GPT_3_5_TURBO),
   },
 };
 
 /**
  * Chat configuration constants
+ * Optimized for Groq's fast inference capabilities
  */
 export const CHAT_CONFIG = {
   // Maximum number of messages to keep in context
-  MAX_MESSAGES: 20,
+  MAX_MESSAGES: 30, // Increased for Groq's larger context windows
 
   // Maximum length for user input
-  MAX_INPUT_LENGTH: 4000,
+  MAX_INPUT_LENGTH: 8000, // Increased for better context utilization
 
   // Default system message
-  SYSTEM_MESSAGE: `You are a helpful AI assistant. You provide clear, accurate, and helpful responses while being conversational and engaging.`,
+  SYSTEM_MESSAGE: `You are a helpful AI assistant powered by Groq's ultra-fast inference. You provide clear, accurate, and helpful responses while being conversational and engaging. You can process complex requests quickly and efficiently.`,
 
-  // Model parameters for different use cases
+  // Model parameters for different use cases - optimized for Groq
   MODEL_PARAMS: {
-    // Default parameters for balanced responses
-    default: {
-      temperature: 0.7,
-      maxTokens: 1000,
-      topP: 0.9,
-      frequencyPenalty: 0.1,
-      presencePenalty: 0.1,
-    },
+    // Default parameters for balanced responses (Groq optimized)
+    default: GROQ_CHAT_CONFIG.DEFAULT_PARAMS,
 
     // Creative parameters for more diverse responses
-    creative: {
-      temperature: 0.9,
-      maxTokens: 1500,
-      topP: 0.95,
-      frequencyPenalty: 0.2,
-      presencePenalty: 0.2,
-    },
+    creative: GROQ_CHAT_CONFIG.CREATIVE_PARAMS,
 
     // Precise parameters for focused responses
     precise: {
       temperature: 0.3,
-      maxTokens: 800,
+      maxTokens: 1500,
       topP: 0.8,
-      frequencyPenalty: 0.0,
-      presencePenalty: 0.0,
+      stream: true,
     },
 
     // Fast parameters for quick responses
-    fast: {
-      temperature: 0.7,
-      maxTokens: 500,
-      topP: 0.9,
-      frequencyPenalty: 0.1,
-      presencePenalty: 0.1,
-    },
+    fast: GROQ_CHAT_CONFIG.FAST_PARAMS,
+
+    // Reasoning parameters for complex thinking
+    reasoning: GROQ_CHAT_CONFIG.REASONING_PARAMS,
   },
 
   // Streaming configuration

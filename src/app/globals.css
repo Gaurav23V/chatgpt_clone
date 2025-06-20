@@ -256,6 +256,83 @@
   animation: button-press 0.1s ease-out;
 }
 
+/* Streaming animation classes */
+.animate-stream-text {
+  animation: stream-text-appear 0.2s ease-out;
+}
+
+.animate-stream-cursor {
+  animation: stream-cursor 1s infinite;
+}
+
+.animate-connection-pulse {
+  animation: connection-pulse 2s infinite;
+}
+
+.animate-smooth-fade-in {
+  animation: smooth-fade-in 0.3s ease-out;
+}
+
+.animate-progress-flow {
+  animation: progress-flow 2s linear infinite;
+}
+
+/* Streaming text effects */
+.streaming-text {
+  position: relative;
+}
+
+.streaming-text::after {
+  content: '|';
+  animation: stream-cursor 1s infinite;
+  color: rgba(255, 255, 255, 0.6);
+  margin-left: 2px;
+}
+
+.streaming-complete .streaming-text::after {
+  display: none;
+}
+
+/* Backpressure indicator */
+.backpressure-indicator {
+  background: linear-gradient(
+    90deg,
+    rgba(59, 130, 246, 0.3) 0%,
+    rgba(147, 51, 234, 0.3) 50%,
+    rgba(59, 130, 246, 0.3) 100%
+  );
+  background-size: 200% 100%;
+  animation: progress-flow 2s linear infinite;
+  border-radius: 2px;
+  height: 2px;
+  width: 100%;
+}
+
+/* Connection status indicators */
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.connection-status.connecting {
+  color: #3b82f6;
+}
+
+.connection-status.reconnecting {
+  color: #f59e0b;
+}
+
+.connection-status.error {
+  color: #ef4444;
+}
+
+.connection-status.connected {
+  color: #10b981;
+}
+
 /* Custom utility classes for ChatGPT styling */
 .chat-gradient {
   background: linear-gradient(
@@ -284,6 +361,64 @@
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* Enhanced streaming animations for smooth text rendering */
+@keyframes stream-text-appear {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes stream-cursor {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes connection-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes smooth-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes progress-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
   }
 }
 

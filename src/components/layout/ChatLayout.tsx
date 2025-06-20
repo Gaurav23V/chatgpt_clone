@@ -87,10 +87,7 @@ export function ChatLayout({ children }: ChatLayoutProps) {
 
   return (
     <div className='flex h-screen bg-[#212121] text-white'>
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className='flex min-w-0 flex-1 flex-col'>
         <TopBar

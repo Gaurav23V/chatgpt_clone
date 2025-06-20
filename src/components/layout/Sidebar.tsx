@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
 import { UserButton } from '@clerk/nextjs';
 import {
   MoreHorizontal,
@@ -11,8 +14,6 @@ import {
   Trash2,
   Users,
 } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 
@@ -57,7 +58,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   // Filter conversations based on search term
   const filteredConversations = mockConversations.filter((conversation) =>
-    conversation.title.toLowerCase().includes(searchTerm.toLowerCase()),
+    conversation.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Group conversations by time period
@@ -71,13 +72,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     return {
       today: conversations.filter((conv) => conv.updatedAt >= today),
       yesterday: conversations.filter(
-        (conv) => conv.updatedAt >= yesterday && conv.updatedAt < today,
+        (conv) => conv.updatedAt >= yesterday && conv.updatedAt < today
       ),
       lastWeek: conversations.filter(
-        (conv) => conv.updatedAt >= lastWeek && conv.updatedAt < yesterday,
+        (conv) => conv.updatedAt >= lastWeek && conv.updatedAt < yesterday
       ),
       lastMonth: conversations.filter(
-        (conv) => conv.updatedAt >= lastMonth && conv.updatedAt < lastWeek,
+        (conv) => conv.updatedAt >= lastMonth && conv.updatedAt < lastWeek
       ),
       older: conversations.filter((conv) => conv.updatedAt < lastMonth),
     };
@@ -92,15 +93,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   };
 
   // Render conversation group
-  const renderConversationGroup = (
-    title: string,
-    conversations: any[],
-  ) => {
+  const renderConversationGroup = (title: string, conversations: any[]) => {
     if (conversations.length === 0) return null;
 
     return (
       <div className='mb-4'>
-        <h3 className='mb-2 px-3 text-xs font-medium text-gray-500 uppercase tracking-wider'>
+        <h3 className='mb-2 px-3 text-xs font-medium tracking-wider text-gray-500 uppercase'>
           {title}
         </h3>
         <div className='space-y-1'>
@@ -112,7 +110,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               className='group flex w-full items-center rounded-lg px-3 py-2 text-sm text-gray-300 transition-colors hover:bg-[#2f2f2f] hover:text-white'
             >
               <div className='flex-1 truncate'>{conversation.title}</div>
-              <div className='opacity-0 group-hover:opacity-100 flex items-center space-x-1 transition-opacity'>
+              <div className='flex items-center space-x-1 opacity-0 transition-opacity group-hover:opacity-100'>
                 <Button
                   variant='ghost'
                   size='icon'
@@ -253,7 +251,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {renderConversationGroup('Today', groupedConversations.today)}
           {renderConversationGroup('Yesterday', groupedConversations.yesterday)}
           {renderConversationGroup('Last Week', groupedConversations.lastWeek)}
-          {renderConversationGroup('Last Month', groupedConversations.lastMonth)}
+          {renderConversationGroup(
+            'Last Month',
+            groupedConversations.lastMonth
+          )}
           {renderConversationGroup('Older', groupedConversations.older)}
         </div>
       </div>
@@ -271,9 +272,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               }}
             />
             <div className='ml-3 min-w-0 flex-1'>
-              <div className='truncate text-sm font-medium'>
-                User
-              </div>
+              <div className='truncate text-sm font-medium'>User</div>
               <div className='text-xs text-gray-400'>Upgrade plan</div>
             </div>
           </div>

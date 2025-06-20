@@ -7,12 +7,12 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { useChat } from 'ai/react';
 
+import { Button } from '@/components/ui/button';
 import { useCurrentConversation } from '@/contexts/user-context';
 
 import { InputArea } from './InputArea';
 import { MessageBubble } from './MessageBubble';
 import { WelcomeScreen } from './WelcomeScreen';
-import { Button } from '@/components/ui/button';
 
 interface ChatAreaProps {
   conversationId?: string;

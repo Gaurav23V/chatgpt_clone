@@ -57,8 +57,15 @@ export {
   useErrorRecovery,
 } from './useAuthError';
 
+// Export Groq chat hook with streaming optimizations
+export type {
+  GroqChatConfig,
+  GroqChatState,
+  UseGroqChatReturn,
+} from './useGroqChat';
+export { useGroqChat } from './useGroqChat';
+
 // TODO: Export additional custom hooks when they are created
-// export { useChat } from './useChat';
 // export { useLocalStorage } from './useLocalStorage';
 // export { useDebounce } from './useDebounce';
 // export { useApi } from './useApi';
@@ -95,50 +102,59 @@ export const CustomHooks = {
  * - useModelPreference() - Manage AI model preference specifically
  * - useInterfacePreferences() - Manage UI preferences (fontSize, language, etc.)
  *
+ * Chat and Streaming Hooks:
+ * - useGroqChat() - Enhanced chat hook with Groq-specific optimizations
+ *   - Streaming response handling with backpressure management
+ *   - Automatic reconnection and retry logic
+ *   - Stream interruption and cleanup
+ *   - Performance monitoring and metrics
+ *   - Enhanced error handling for Groq API
+ *
  * Planned Additional Hooks:
  *
- * 1. useChat - Main chat functionality hook
- *    - Send messages, manage conversation state
- *    - Handle streaming responses
- *    - Manage chat history
- *
- * 2. useApi - API request management
+ * 1. useApi - API request management
  *    - Generic API calling with loading states
  *    - Error handling and retry logic
  *    - Request caching
  *
- * 3. useLocalStorage - Local storage state management
+ * 2. useLocalStorage - Local storage state management
  *    - Persist state to localStorage
  *    - Sync across tabs
  *    - Type-safe storage
  *
- * 4. useDebounce - Debounce values and functions
+ * 3. useDebounce - Debounce values and functions
  *    - Debounce input values
  *    - Debounce API calls
  *    - Configurable delay
  *
- * 5. useWebSocket - WebSocket connection management
+ * 4. useWebSocket - WebSocket connection management
  *    - Real-time chat updates
  *    - Connection status
  *    - Auto-reconnection
  *
- * 6. useTheme - Theme management
+ * 5. useTheme - Theme management
  *    - Light/dark mode toggle
  *    - System preference detection
  *    - Theme persistence
  *
- * 7. useCopyToClipboard - Copy text to clipboard
+ * 6. useCopyToClipboard - Copy text to clipboard
  *    - Copy functionality with feedback
  *    - Success/error states
  *    - Browser compatibility
  *
- * 8. useKeyboardShortcuts - Keyboard shortcut handling
+ * 7. useKeyboardShortcuts - Keyboard shortcut handling
  *    - Global shortcuts (Cmd+K, etc.)
  *    - Context-specific shortcuts
  *    - Shortcut registration
  *
- * 9. useInfiniteScroll - Infinite scrolling
+ * 8. useInfiniteScroll - Infinite scrolling
  *    - Chat history pagination
  *    - Automatic loading
  *    - Scroll position management
+ *
+ * 9. useStreamHandler - Low-level stream processing
+ *    - Parse SSE streams
+ *    - Handle partial JSON responses
+ *    - Backpressure management
+ *    - Stream interruption
  */
