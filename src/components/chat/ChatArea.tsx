@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-import { useGroqChat } from '@/hooks/useGroqChat';
+import { useGoogleChat } from '@/hooks/useGoogleChat';
 
 import { useModel } from '@/contexts/model-context';
 
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { InputArea } from './InputArea';
 import { MessageBubble } from './MessageBubble';
 import { WelcomeScreen } from './WelcomeScreen';
+import type { ChatAttachment } from './FileUploadButton';
 
 interface ChatAreaProps {
   conversationId?: string;
@@ -45,10 +46,11 @@ export function ChatArea({
     reload,
     isLoading,
     error,
-  } = useGroqChat({
+  } = useGoogleChat({
     api: '/api/chat',
     initialMessages: formattedInitialMessages,
     model: selectedModel,
+    conversationId,
     headers: {
       'X-Conversation-ID': conversationId || '',
     },
@@ -74,14 +76,15 @@ export function ChatArea({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Handle sending a message
-  const sendMessage = async (content: string) => {
+  // Handle sending a message with optional attachments
+  const sendMessage = async (content: string, attachments: ChatAttachment[] = []) => {
     console.log('Sending message:', content);
     try {
       await append({
         role: 'user',
         content,
-      });
+        attachments,
+      } as any);
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -178,7 +181,7 @@ export function ChatArea({
             disabled={isLoading}
             isLoading={isLoading}
             placeholder={
-              isLoading ? 'ChatGPT is thinking...' : 'Message ChatGPT...'
+              isLoading ? 'Google AI is thinking...' : 'Message Google AI...'
             }
           />
         </div>

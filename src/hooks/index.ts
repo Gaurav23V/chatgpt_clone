@@ -57,13 +57,17 @@ export {
   useErrorRecovery,
 } from './useAuthError';
 
-// Export Groq chat hook with streaming optimizations
-export type {
-  GroqChatConfig,
-  GroqChatState,
-  UseGroqChatReturn,
-} from './useGroqChat';
-export { useGroqChat } from './useGroqChat';
+// Export Google Generative AI hooks
+export {
+  useGoogleChat,
+  type GoogleChatConfig,
+  type GoogleChatState,
+  type UseGoogleChatReturn,
+} from './useGoogleChat';
+
+// Enhanced chat hooks
+// TODO: Create enhanced Google chat hook
+// export { default as useEnhancedGoogleChat } from './useEnhancedGoogleChat';
 
 // TODO: Export additional custom hooks when they are created
 // export { useLocalStorage } from './useLocalStorage';
@@ -103,12 +107,8 @@ export const CustomHooks = {
  * - useInterfacePreferences() - Manage UI preferences (fontSize, language, etc.)
  *
  * Chat and Streaming Hooks:
- * - useGroqChat() - Enhanced chat hook with Groq-specific optimizations
- *   - Streaming response handling with backpressure management
- *   - Automatic reconnection and retry logic
- *   - Stream interruption and cleanup
- *   - Performance monitoring and metrics
- *   - Enhanced error handling for Groq API
+ * - useGoogleChat() - Basic chat hook with Google Generative AI integration and error handling
+ * - useEnhancedGoogleChat() - Advanced chat hook with comprehensive error handling and recovery
  *
  * Planned Additional Hooks:
  *
@@ -158,3 +158,108 @@ export const CustomHooks = {
  *    - Backpressure management
  *    - Stream interruption
  */
+
+// Hook descriptions and documentation
+export const HOOK_DESCRIPTIONS = {
+  // Authentication hooks
+  useAuthError: 'Hook for handling authentication errors with automatic retry and recovery',
+  useAuthStateChange: 'Hook for monitoring and reacting to authentication state changes',
+  
+  // Preferences hooks
+  useUserPreferences: 'Hook for managing user preferences with API synchronization',
+  usePersistedPreferences: 'Hook for local storage persistence of user preferences',
+  
+  // AI Chat hooks
+  useGoogleChat: 'Basic chat hook with Google Generative AI integration and error handling',
+  useEnhancedGoogleChat: 'Advanced chat hook with comprehensive error handling and recovery',
+} as const;
+
+/**
+ * Hook categories for documentation and organization
+ */
+export const HOOK_CATEGORIES = {
+  AUTHENTICATION: {
+    name: 'Authentication',
+    description: 'Hooks for managing user authentication and session state',
+    hooks: ['useAuthError', 'useAuthStateChange'],
+  },
+  
+  PREFERENCES: {
+    name: 'User Preferences',
+    description: 'Hooks for managing user settings and preferences',
+    hooks: ['useUserPreferences', 'usePersistedPreferences'],
+  },
+  
+  AI_CHAT: {
+    name: 'AI Chat',
+    description: 'Hooks for AI chat functionality with Google Generative AI',
+    hooks: ['useGoogleChat', 'useEnhancedGoogleChat'],
+  },
+} as const;
+
+/**
+ * Available hooks metadata
+ */
+export const AVAILABLE_HOOKS = [
+  // Authentication hooks
+  {
+    name: 'useAuthError',
+    category: 'AUTHENTICATION',
+    description: HOOK_DESCRIPTIONS.useAuthError,
+    features: ['Error handling', 'Automatic retry', 'Recovery strategies'],
+  },
+  
+  {
+    name: 'useAuthStateChange', 
+    category: 'AUTHENTICATION',
+    description: HOOK_DESCRIPTIONS.useAuthStateChange,
+    features: ['State monitoring', 'Event handling', 'Callback support'],
+  },
+  
+  // Preferences hooks
+  {
+    name: 'useUserPreferences',
+    category: 'PREFERENCES', 
+    description: HOOK_DESCRIPTIONS.useUserPreferences,
+    features: ['API sync', 'Optimistic updates', 'Error handling'],
+  },
+  
+  {
+    name: 'usePersistedPreferences',
+    category: 'PREFERENCES',
+    description: HOOK_DESCRIPTIONS.usePersistedPreferences, 
+    features: ['Local storage', 'Persistence', 'Hydration'],
+  },
+  
+  // AI Chat hooks
+  {
+    name: 'useGoogleChat',
+    category: 'AI_CHAT',
+    description: HOOK_DESCRIPTIONS.useGoogleChat,
+    features: ['Google Generative AI', 'Streaming', 'Error handling', 'Retry logic'],
+  },
+  
+  {
+    name: 'useEnhancedGoogleChat',
+    category: 'AI_CHAT', 
+    description: HOOK_DESCRIPTIONS.useEnhancedGoogleChat,
+    features: ['Advanced error handling', 'Model fallback', 'Context reduction', 'Network monitoring'],
+  },
+] as const;
+
+/**
+ * Recommended hooks for common use cases
+ */
+export const RECOMMENDED_HOOKS = {
+  // For basic chat functionality
+  BASIC_CHAT: 'useGoogleChat',
+  
+  // For production chat with advanced error handling
+  PRODUCTION_CHAT: 'useEnhancedGoogleChat',
+  
+  // For user authentication
+  AUTH_HANDLING: 'useAuthStateChange',
+  
+  // For user preferences
+  PREFERENCES: 'useUserPreferences',
+} as const;

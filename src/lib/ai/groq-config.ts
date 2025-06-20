@@ -28,6 +28,12 @@ export interface GroqModelConfig {
   recommended?: boolean;
   speed?: 'fastest' | 'fast' | 'medium' | 'slow';
   special?: 'reasoning';
+  // Input modality capabilities
+  capabilities?: {
+    imageInput: boolean;
+    documentInput: boolean;
+    audioInput: boolean;
+  };
 }
 
 // Environment validation
@@ -71,6 +77,11 @@ export const GROQ_MODELS = {
     },
     recommended: true,
     type: 'chat' as const,
+    capabilities: {
+      imageInput: false,
+      documentInput: false,
+      audioInput: false,
+    },
   },
 
   LLAMA_3_1_8B: {
@@ -86,6 +97,11 @@ export const GROQ_MODELS = {
     },
     speed: 'fastest' as const,
     type: 'chat' as const,
+    capabilities: {
+      imageInput: false,
+      documentInput: false,
+      audioInput: false,
+    },
   },
 
   LLAMA_3_1_70B: {
@@ -100,6 +116,11 @@ export const GROQ_MODELS = {
       output: 0.79, // per 1M tokens
     },
     type: 'chat' as const,
+    capabilities: {
+      imageInput: true,
+      documentInput: false,
+      audioInput: false,
+    },
   },
 
   // Mixtral Models - Mistral AI's mixture of experts
@@ -115,6 +136,11 @@ export const GROQ_MODELS = {
       output: 0.24, // per 1M tokens
     },
     type: 'chat' as const,
+    capabilities: {
+      imageInput: false,
+      documentInput: false,
+      audioInput: false,
+    },
   },
 
   // Gemma Models - Google's lightweight models
@@ -130,6 +156,11 @@ export const GROQ_MODELS = {
       output: 0.2, // per 1M tokens
     },
     type: 'chat' as const,
+    capabilities: {
+      imageInput: false,
+      documentInput: false,
+      audioInput: false,
+    },
   },
 
   // Reasoning Models
@@ -146,6 +177,11 @@ export const GROQ_MODELS = {
     },
     special: 'reasoning' as const,
     type: 'chat' as const,
+    capabilities: {
+      imageInput: false,
+      documentInput: false,
+      audioInput: false,
+    },
   },
 
   DEEPSEEK_R1_DISTILL_LLAMA_70B: {
@@ -161,6 +197,11 @@ export const GROQ_MODELS = {
     },
     special: 'reasoning' as const,
     type: 'chat' as const,
+    capabilities: {
+      imageInput: false,
+      documentInput: false,
+      audioInput: false,
+    },
   },
 
   // Whisper Models - Audio processing
@@ -176,6 +217,11 @@ export const GROQ_MODELS = {
       output: 0, // No output pricing for transcription
     },
     type: 'audio' as const,
+    capabilities: {
+      imageInput: false,
+      documentInput: false,
+      audioInput: true,
+    },
   },
 } as const;
 

@@ -32,9 +32,7 @@ import type {
 /**
  * Environment variable validation
  */
-const UPLOADCARE_PUBLIC_KEY =
-  process.env.UPLOADCARE_PUBLIC_KEY ||
-  process.env.NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY;
+export const UPLOADCARE_PUBLIC_KEY = process.env.NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY || '';
 const UPLOADCARE_SECRET_KEY = process.env.UPLOADCARE_SECRET_KEY;
 const UPLOADCARE_WEBHOOK_URL = process.env.UPLOADCARE_WEBHOOK_URL;
 const UPLOADCARE_CDN_BASE =
@@ -526,4 +524,11 @@ export default {
   generateSignature: generateUploadcareSignature,
   getFileInfo: getUploadcareFileInfo,
   deleteFile: deleteUploadcareFile,
+};
+
+export const uploadcareOptions = {
+  publicKey: UPLOADCARE_PUBLIC_KEY,
+  integration: 'chatgpt-clone-react',
+  secureSignature: undefined,
+  secureExpire: undefined,
 };

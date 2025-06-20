@@ -6,7 +6,7 @@
  */
 
 import type { Document, Model, Types } from 'mongoose';
-import { model, Schema } from 'mongoose';
+import { model, models, Schema } from 'mongoose';
 
 import type { IMessage } from '@/types/database';
 
@@ -257,9 +257,8 @@ interface IMessageModel extends Model<IMessageDocument> {
   // Future static methods can be defined here
 }
 
-const MessageModel = model<IMessageDocument, IMessageModel>(
-  'Message',
-  messageSchema
-);
+const MessageModel = (models.Message || 
+  model<IMessageDocument, IMessageModel>('Message', messageSchema)
+) as Model<IMessageDocument, IMessageModel>;
 
 export default MessageModel;

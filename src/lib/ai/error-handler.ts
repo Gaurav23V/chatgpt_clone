@@ -2,7 +2,7 @@
  * AI Chat Error Handler
  *
  * Comprehensive error handling system for AI chat functionality:
- * - Groq API error handling with specific error types
+ * - Google Generative AI error handling with specific error types
  * - Network failure detection and recovery
  * - Authentication error management
  * - Model availability and fallback strategies
@@ -11,21 +11,22 @@
  */
 
 import {
-  GROQ_MODELS,
-  groqErrorHandling,
-  groqModelHelpers,
-} from './groq-config';
+  GOOGLE_MODELS,
+  googleErrorHandling,
+  googleModelHelpers,
+} from './google-config';
 
 /**
  * AI Chat Error Types
  */
 export type AIErrorType =
-  | 'GROQ_RATE_LIMIT'
-  | 'GROQ_AUTH_ERROR'
-  | 'GROQ_API_UNAVAILABLE'
-  | 'GROQ_MODEL_UNAVAILABLE'
-  | 'GROQ_CONTEXT_LENGTH_EXCEEDED'
-  | 'GROQ_QUOTA_EXCEEDED'
+  | 'GOOGLE_RATE_LIMIT'
+  | 'GOOGLE_AUTH_ERROR'
+  | 'GOOGLE_API_UNAVAILABLE'
+  | 'GOOGLE_MODEL_UNAVAILABLE'
+  | 'GOOGLE_CONTEXT_LENGTH_EXCEEDED'
+  | 'GOOGLE_QUOTA_EXCEEDED'
+  | 'GOOGLE_CONTENT_FILTER'
   | 'NETWORK_ERROR'
   | 'NETWORK_TIMEOUT'
   | 'NETWORK_OFFLINE'
@@ -36,624 +37,331 @@ export type AIErrorType =
   | 'UNKNOWN_ERROR';
 
 /**
- * Error Severity Levels
+ * AI Error interface with metadata
  */
-export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
-
-/**
- * Recovery Action Types
- */
-export type RecoveryAction =
-  | 'retry'
-  | 'retry_with_backoff'
-  | 'fallback_model'
-  | 'reduce_context'
-  | 'wait_and_retry'
-  | 'manual_retry'
-  | 'contact_support'
-  | 'refresh_page';
-
-/**
- * AI Chat Error Interface
- */
-export interface AIError {
+export interface AIError extends Error {
   type: AIErrorType;
-  severity: ErrorSeverity;
-  message: string;
-  userMessage: string;
-  code?: string | number;
+  code?: string;
   retryable: boolean;
-  recoveryActions: RecoveryAction[];
   retryAfter?: number; // seconds
-  context?: {
+  metadata?: {
     model?: string;
     requestId?: string;
-    timestamp: number;
-    userAgent?: string;
-    endpoint?: string;
+    timestamp?: number;
+    context?: any;
   };
 }
 
 /**
- * Error Recovery Configuration
+ * Error classification and recovery strategies
+ */
+export const errorClassification = {
+  // Google Generative AI specific errors
+  'API key': { type: 'GOOGLE_AUTH_ERROR' as AIErrorType, retryable: false },
+  'authentication': { type: 'GOOGLE_AUTH_ERROR' as AIErrorType, retryable: false },
+  'quota': { type: 'GOOGLE_QUOTA_EXCEEDED' as AIErrorType, retryable: true, retryAfter: 3600 as number | undefined },
+  'rate limit': { type: 'GOOGLE_RATE_LIMIT' as AIErrorType, retryable: true, retryAfter: 60 as number | undefined },
+  'content': { type: 'GOOGLE_CONTENT_FILTER' as AIErrorType, retryable: false },
+  'model not found': { type: 'GOOGLE_MODEL_UNAVAILABLE' as AIErrorType, retryable: true },
+  'service unavailable': { type: 'GOOGLE_API_UNAVAILABLE' as AIErrorType, retryable: true },
+  'context length': { type: 'GOOGLE_CONTEXT_LENGTH_EXCEEDED' as AIErrorType, retryable: false },
+  
+  // Network errors
+  'network': { type: 'NETWORK_ERROR' as AIErrorType, retryable: true },
+  'timeout': { type: 'NETWORK_TIMEOUT' as AIErrorType, retryable: true },
+  'offline': { type: 'NETWORK_OFFLINE' as AIErrorType, retryable: true },
+  
+  // Stream errors
+  'stream': { type: 'STREAM_ERROR' as AIErrorType, retryable: true },
+  'aborted': { type: 'STREAM_INTERRUPTED' as AIErrorType, retryable: true },
+  
+  // Validation errors
+  'validation': { type: 'VALIDATION_ERROR' as AIErrorType, retryable: false },
+  'invalid': { type: 'INVALID_REQUEST' as AIErrorType, retryable: false },
+};
+
+/**
+ * Classify error based on message and response
+ */
+export function classifyError(error: Error | any, response?: Response): AIError {
+  const message = error.message?.toLowerCase() || '';
+  const status = response?.status;
+  
+  // Find matching error classification
+  const classification = Object.entries(errorClassification).find(([key]) =>
+    message.includes(key)
+  );
+  
+  const baseClassification = classification?.[1] || {
+    type: 'UNKNOWN_ERROR' as AIErrorType,
+    retryable: false,
+  };
+  
+  // Override based on HTTP status codes
+  let finalClassification = { ...baseClassification };
+  
+  if (status) {
+    switch (status) {
+      case 401:
+        finalClassification = { type: 'GOOGLE_AUTH_ERROR', retryable: false };
+        break;
+      case 403:
+        finalClassification = { type: 'GOOGLE_QUOTA_EXCEEDED', retryable: true };
+        break;
+      case 429:
+        finalClassification = { type: 'GOOGLE_RATE_LIMIT', retryable: true };
+        break;
+      case 400:
+        if (message.includes('content')) {
+          finalClassification = { type: 'GOOGLE_CONTENT_FILTER', retryable: false };
+        }
+        break;
+      case 404:
+        finalClassification = { type: 'GOOGLE_MODEL_UNAVAILABLE', retryable: true };
+        break;
+      case 500:
+      case 502:
+      case 503:
+        finalClassification = { type: 'GOOGLE_API_UNAVAILABLE', retryable: true };
+        break;
+    }
+  }
+  
+  // Create enhanced error object
+  const enhancedError: AIError = Object.assign(error, {
+    type: finalClassification.type,
+    code: status?.toString(),
+    retryable: finalClassification.retryable,
+    // Only include retryAfter if it exists on finalClassification and is not undefined
+    ...(typeof (finalClassification as any).retryAfter !== 'undefined'
+      ? { retryAfter: (finalClassification as any).retryAfter }
+      : {}),
+    metadata: {
+      timestamp: Date.now(),
+      originalMessage: error.message,
+      status,
+    },
+  });
+  
+  return enhancedError;
+}
+
+/**
+ * Recovery strategy configuration
  */
 export interface ErrorRecoveryConfig {
   maxRetries: number;
-  baseDelay: number;
-  maxDelay: number;
+  retryDelay: number;
   backoffMultiplier: number;
   enableModelFallback: boolean;
   enableContextReduction: boolean;
   fallbackModels: string[];
 }
 
-/**
- * Default Recovery Configuration
- */
 export const DEFAULT_RECOVERY_CONFIG: ErrorRecoveryConfig = {
   maxRetries: 3,
-  baseDelay: 1000,
-  maxDelay: 30000,
+  retryDelay: 1000,
   backoffMultiplier: 2,
   enableModelFallback: true,
   enableContextReduction: true,
   fallbackModels: [
-    GROQ_MODELS.LLAMA_3_1_8B.id,
-    GROQ_MODELS.LLAMA_3_3_70B.id,
-    GROQ_MODELS.LLAMA_3_1_70B.id,
+    GOOGLE_MODELS.GEMINI_1_5_FLASH.id,
+    GOOGLE_MODELS.GEMINI_1_5_FLASH_8B.id,
+    GOOGLE_MODELS.GEMINI_1_0_PRO.id,
   ],
 };
 
 /**
- * Error Classification Helper
+ * Recovery action types
  */
-export function classifyError(error: any): AIError {
-  const timestamp = Date.now();
-  const context = {
-    timestamp,
-    userAgent:
-      typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
-  };
-
-  // Groq Rate Limit Errors
-  if (groqErrorHandling.isRateLimitError(error)) {
-    return {
-      type: 'GROQ_RATE_LIMIT',
-      severity: 'medium',
-      message: `Rate limit exceeded: ${error.message || 'Too many requests'}`,
-      userMessage:
-        'Too many requests. Please wait a moment before trying again.',
-      code: error.status || 429,
-      retryable: true,
-      recoveryActions: ['wait_and_retry', 'manual_retry'],
-      retryAfter: extractRetryAfter(error) || 60,
-      context,
-    };
-  }
-
-  // Groq Authentication Errors
-  if (groqErrorHandling.isAuthError(error)) {
-    return {
-      type: 'GROQ_AUTH_ERROR',
-      severity: 'critical',
-      message: `Authentication failed: ${error.message || 'Invalid API key'}`,
-      userMessage: 'Authentication error. Please contact support.',
-      code: error.status || 401,
-      retryable: false,
-      recoveryActions: ['contact_support', 'refresh_page'],
-      context,
-    };
-  }
-
-  // Network Errors
-  if (isNetworkError(error)) {
-    const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
-    return {
-      type: isOffline ? 'NETWORK_OFFLINE' : 'NETWORK_ERROR',
-      severity: isOffline ? 'high' : 'medium',
-      message: `Network error: ${error.message || 'Connection failed'}`,
-      userMessage: isOffline
-        ? 'You appear to be offline. Please check your internet connection.'
-        : 'Network connection error. Please try again.',
-      retryable: true,
-      recoveryActions: isOffline
-        ? ['manual_retry']
-        : ['retry_with_backoff', 'manual_retry'],
-      context,
-    };
-  }
-
-  // Timeout Errors
-  if (isTimeoutError(error)) {
-    return {
-      type: 'NETWORK_TIMEOUT',
-      severity: 'medium',
-      message: `Request timeout: ${error.message || 'Operation timed out'}`,
-      userMessage: 'Request timed out. The AI service might be busy.',
-      retryable: true,
-      recoveryActions: ['retry_with_backoff', 'fallback_model', 'manual_retry'],
-      context,
-    };
-  }
-
-  // Model Unavailable Errors
-  if (isModelUnavailableError(error)) {
-    return {
-      type: 'GROQ_MODEL_UNAVAILABLE',
-      severity: 'medium',
-      message: `Model unavailable: ${error.message || 'Selected model is not available'}`,
-      userMessage:
-        'The selected AI model is temporarily unavailable. Trying an alternative.',
-      retryable: true,
-      recoveryActions: ['fallback_model', 'retry', 'manual_retry'],
-      context,
-    };
-  }
-
-  // Context Length Exceeded
-  if (isContextLengthError(error)) {
-    return {
-      type: 'GROQ_CONTEXT_LENGTH_EXCEEDED',
-      severity: 'medium',
-      message: `Context length exceeded: ${error.message || 'Message too long'}`,
-      userMessage: 'Your message is too long. Please try a shorter message.',
-      retryable: true,
-      recoveryActions: ['reduce_context', 'manual_retry'],
-      context,
-    };
-  }
-
-  // Quota Exceeded Errors
-  if (isQuotaExceededError(error)) {
-    return {
-      type: 'GROQ_QUOTA_EXCEEDED',
-      severity: 'high',
-      message: `Quota exceeded: ${error.message || 'API quota exceeded'}`,
-      userMessage: 'API usage limit reached. Please try again later.',
-      retryable: false,
-      recoveryActions: ['contact_support', 'manual_retry'],
-      retryAfter: 3600, // 1 hour
-      context,
-    };
-  }
-
-  // Stream Errors
-  if (isStreamError(error)) {
-    return {
-      type: error.message.includes('interrupted')
-        ? 'STREAM_INTERRUPTED'
-        : 'STREAM_ERROR',
-      severity: 'medium',
-      message: `Stream error: ${error.message || 'Streaming failed'}`,
-      userMessage: 'Response streaming was interrupted. Please try again.',
-      retryable: true,
-      recoveryActions: ['retry', 'manual_retry'],
-      context,
-    };
-  }
-
-  // Validation Errors
-  if (isValidationError(error)) {
-    return {
-      type: 'VALIDATION_ERROR',
-      severity: 'low',
-      message: `Validation error: ${error.message || 'Invalid request'}`,
-      userMessage: 'Invalid request format. Please check your input.',
-      retryable: false,
-      recoveryActions: ['manual_retry'],
-      context,
-    };
-  }
-
-  // Generic API Unavailable
-  if (error.status >= 500 && error.status < 600) {
-    return {
-      type: 'GROQ_API_UNAVAILABLE',
-      severity: 'high',
-      message: `API unavailable: ${error.message || 'Service temporarily unavailable'}`,
-      userMessage:
-        'AI service is temporarily unavailable. Please try again in a moment.',
-      retryable: true,
-      recoveryActions: ['retry_with_backoff', 'fallback_model', 'manual_retry'],
-      context,
-    };
-  }
-
-  // Unknown Error
-  return {
-    type: 'UNKNOWN_ERROR',
-    severity: 'medium',
-    message: `Unknown error: ${error.message || 'An unexpected error occurred'}`,
-    userMessage: 'Something went wrong. Please try again.',
-    retryable: true,
-    recoveryActions: ['retry', 'manual_retry', 'refresh_page'],
-    context,
-  };
-}
+export type RecoveryAction =
+  | 'RETRY'
+  | 'SWITCH_MODEL'
+  | 'REDUCE_CONTEXT'
+  | 'WAIT_AND_RETRY'
+  | 'USER_ACTION_REQUIRED'
+  | 'PERMANENT_FAILURE';
 
 /**
- * Error Detection Helpers
+ * Get recommended recovery action for error
  */
-function isNetworkError(error: any): boolean {
-  return (
-    error.name === 'NetworkError' ||
-    error.code === 'NETWORK_ERROR' ||
-    error.message?.includes('fetch') ||
-    error.message?.includes('network') ||
-    error.type === 'network'
-  );
-}
-
-function isTimeoutError(error: any): boolean {
-  return (
-    error.name === 'TimeoutError' ||
-    error.code === 'TIMEOUT' ||
-    error.message?.includes('timeout') ||
-    error.message?.includes('timed out')
-  );
-}
-
-function isModelUnavailableError(error: any): boolean {
-  return (
-    error.status === 503 ||
-    error.code === 'model_unavailable' ||
-    (error.message?.includes('model') && error.message?.includes('unavailable'))
-  );
-}
-
-function isContextLengthError(error: any): boolean {
-  return (
-    error.code === 'context_length_exceeded' ||
-    error.message?.includes('context length') ||
-    error.message?.includes('too long') ||
-    error.message?.includes('token limit')
-  );
-}
-
-function isQuotaExceededError(error: any): boolean {
-  return (
-    error.code === 'quota_exceeded' ||
-    error.message?.includes('quota') ||
-    error.message?.includes('limit reached')
-  );
-}
-
-function isStreamError(error: any): boolean {
-  return (
-    error.name === 'StreamError' ||
-    error.message?.includes('stream') ||
-    error.message?.includes('streaming')
-  );
-}
-
-function isValidationError(error: any): boolean {
-  return (
-    error.status === 400 ||
-    error.code === 'validation_error' ||
-    error.message?.includes('validation') ||
-    error.message?.includes('invalid')
-  );
-}
-
-function extractRetryAfter(error: any): number | undefined {
-  return error.retryAfter || error.headers?.['retry-after'] || undefined;
-}
-
-/**
- * Recovery Strategy Implementation
- */
-export class AIErrorRecovery {
-  private config: ErrorRecoveryConfig;
-  private retryAttempts = new Map<string, number>();
-  private lastErrors = new Map<string, AIError>();
-
-  constructor(config: ErrorRecoveryConfig = DEFAULT_RECOVERY_CONFIG) {
-    this.config = config;
-  }
-
-  /**
-   * Calculate retry delay with exponential backoff
-   */
-  calculateRetryDelay(attempt: number): number {
-    const delay =
-      this.config.baseDelay *
-      Math.pow(this.config.backoffMultiplier, attempt - 1);
-    return Math.min(delay, this.config.maxDelay);
-  }
-
-  /**
-   * Check if error should be retried
-   */
-  shouldRetry(error: AIError, requestId?: string): boolean {
-    if (!error.retryable) return false;
-
-    const attempts = this.getRetryAttempts(requestId);
-    return attempts < this.config.maxRetries;
-  }
-
-  /**
-   * Get fallback model for failed request
-   */
-  getFallbackModel(currentModel: string): string | null {
-    if (!this.config.enableModelFallback) return null;
-
-    const fallbackModels = this.config.fallbackModels.filter(
-      (model) => model !== currentModel
-    );
-
-    // Return fastest available model as fallback
-    const fastestModels = groqModelHelpers.getFastestModels();
-    for (const fallback of fallbackModels) {
-      if (fastestModels.some((model) => model.id === fallback)) {
-        return fallback;
-      }
-    }
-
-    return fallbackModels[0] || null;
-  }
-
-  /**
-   * Reduce context length for context overflow errors
-   */
-  reduceContext(messages: any[], targetReduction = 0.3): any[] {
-    if (!this.config.enableContextReduction) return messages;
-
-    const keepCount = Math.floor(messages.length * (1 - targetReduction));
-
-    // Always keep the system message (if any) and recent messages
-    const systemMessages = messages.filter((msg) => msg.role === 'system');
-    const otherMessages = messages.filter((msg) => msg.role !== 'system');
-    const recentMessages = otherMessages.slice(-keepCount);
-
-    return [...systemMessages, ...recentMessages];
-  }
-
-  /**
-   * Track retry attempt
-   */
-  incrementRetryAttempts(requestId: string = 'default'): number {
-    const current = this.getRetryAttempts(requestId);
-    const newCount = current + 1;
-    this.retryAttempts.set(requestId, newCount);
-    return newCount;
-  }
-
-  /**
-   * Get current retry attempts
-   */
-  getRetryAttempts(requestId: string = 'default'): number {
-    return this.retryAttempts.get(requestId) || 0;
-  }
-
-  /**
-   * Reset retry attempts
-   */
-  resetRetryAttempts(requestId: string = 'default'): void {
-    this.retryAttempts.delete(requestId);
-  }
-
-  /**
-   * Store last error for context
-   */
-  setLastError(error: AIError, requestId: string = 'default'): void {
-    this.lastErrors.set(requestId, error);
-  }
-
-  /**
-   * Get last error
-   */
-  getLastError(requestId: string = 'default'): AIError | null {
-    return this.lastErrors.get(requestId) || null;
-  }
-
-  /**
-   * Clear error history
-   */
-  clearErrorHistory(requestId?: string): void {
-    if (requestId) {
-      this.retryAttempts.delete(requestId);
-      this.lastErrors.delete(requestId);
-    } else {
-      this.retryAttempts.clear();
-      this.lastErrors.clear();
-    }
-  }
-}
-
-/**
- * Error Tracking and Monitoring
- */
-export interface ErrorTracker {
-  trackError: (error: AIError) => void;
-  trackRecovery: (
-    error: AIError,
-    action: RecoveryAction,
-    success: boolean
-  ) => void;
-  getErrorStats: () => ErrorStats;
-}
-
-export interface ErrorStats {
-  totalErrors: number;
-  errorsByType: Record<AIErrorType, number>;
-  errorsBySeverity: Record<ErrorSeverity, number>;
-  successfulRecoveries: number;
-  failedRecoveries: number;
-  averageRetryCount: number;
-}
-
-/**
- * Console Error Tracker (Development)
- */
-export class ConsoleErrorTracker implements ErrorTracker {
-  private stats: ErrorStats = {
-    totalErrors: 0,
-    errorsByType: {} as Record<AIErrorType, number>,
-    errorsBySeverity: {} as Record<ErrorSeverity, number>,
-    successfulRecoveries: 0,
-    failedRecoveries: 0,
-    averageRetryCount: 0,
-  };
-
-  trackError(error: AIError): void {
-    this.stats.totalErrors++;
-    this.stats.errorsByType[error.type] =
-      (this.stats.errorsByType[error.type] || 0) + 1;
-    this.stats.errorsBySeverity[error.severity] =
-      (this.stats.errorsBySeverity[error.severity] || 0) + 1;
-
-    console.error('🚨 AI Chat Error:', {
-      type: error.type,
-      severity: error.severity,
-      message: error.message,
-      userMessage: error.userMessage,
-      retryable: error.retryable,
-      context: error.context,
-    });
-  }
-
-  trackRecovery(
-    error: AIError,
-    action: RecoveryAction,
-    success: boolean
-  ): void {
-    if (success) {
-      this.stats.successfulRecoveries++;
-      console.log('✅ Error Recovery Success:', { error: error.type, action });
-    } else {
-      this.stats.failedRecoveries++;
-      console.warn('❌ Error Recovery Failed:', { error: error.type, action });
-    }
-  }
-
-  getErrorStats(): ErrorStats {
-    return { ...this.stats };
-  }
-}
-
-/**
- * Default error tracker instance
- */
-export const defaultErrorTracker = new ConsoleErrorTracker();
-
-/**
- * Main Error Handler Class
- */
-export class AIErrorHandler {
-  public recovery: AIErrorRecovery;
-  private tracker: ErrorTracker;
-
-  constructor(
-    config: ErrorRecoveryConfig = DEFAULT_RECOVERY_CONFIG,
-    tracker: ErrorTracker = defaultErrorTracker
-  ) {
-    this.recovery = new AIErrorRecovery(config);
-    this.tracker = tracker;
-  }
-
-  /**
-   * Handle an error and return recovery strategy
-   */
-  handleError(
-    error: any,
-    requestId?: string
-  ): {
-    aiError: AIError;
-    canRetry: boolean;
-    retryDelay?: number;
-    fallbackModel?: string;
-    reducedContext?: any[];
-    recommendedAction: RecoveryAction;
-  } {
-    const aiError = classifyError(error);
-    this.tracker.trackError(aiError);
-    this.recovery.setLastError(aiError, requestId);
-
-    const canRetry = this.recovery.shouldRetry(aiError, requestId);
-    const retryAttempt = this.recovery.getRetryAttempts(requestId) + 1;
-    const retryDelay = canRetry
-      ? this.calculateRetryDelay(aiError, retryAttempt)
-      : undefined;
-
-    // Determine primary recovery action
-    const recommendedAction = this.getRecommendedAction(aiError, canRetry);
-
-    return {
-      aiError,
-      canRetry,
-      retryDelay,
-      fallbackModel:
-        this.recovery.getFallbackModel('current-model') || undefined,
-      recommendedAction,
-    };
-  }
-
-  /**
-   * Calculate appropriate retry delay
-   */
-  private calculateRetryDelay(error: AIError, attempt: number): number {
-    if (error.retryAfter) {
-      return error.retryAfter * 1000; // Convert to milliseconds
-    }
-    return this.recovery.calculateRetryDelay(attempt);
-  }
-
-  /**
-   * Get recommended recovery action
-   */
-  private getRecommendedAction(
-    error: AIError,
-    canRetry: boolean
-  ): RecoveryAction {
-    if (!canRetry) {
-      return error.recoveryActions[0] || 'manual_retry';
-    }
-
-    // Prioritize actions based on error type
+export function getRecoveryAction(
+  error: AIError,
+  retryCount: number,
+  config: ErrorRecoveryConfig = DEFAULT_RECOVERY_CONFIG
+): RecoveryAction {
+  // Non-retryable errors
+  if (!error.retryable) {
     switch (error.type) {
-      case 'GROQ_RATE_LIMIT':
-        return 'wait_and_retry';
-      case 'GROQ_MODEL_UNAVAILABLE':
-        return 'fallback_model';
-      case 'GROQ_CONTEXT_LENGTH_EXCEEDED':
-        return 'reduce_context';
-      case 'NETWORK_ERROR':
-      case 'NETWORK_TIMEOUT':
-        return 'retry_with_backoff';
+      case 'GOOGLE_CONTENT_FILTER':
+      case 'VALIDATION_ERROR':
+      case 'INVALID_REQUEST':
+        return 'USER_ACTION_REQUIRED';
+      case 'GOOGLE_AUTH_ERROR':
+        return 'PERMANENT_FAILURE';
+      case 'GOOGLE_CONTEXT_LENGTH_EXCEEDED':
+        return config.enableContextReduction ? 'REDUCE_CONTEXT' : 'USER_ACTION_REQUIRED';
       default:
-        return 'retry';
+        return 'PERMANENT_FAILURE';
     }
   }
-
-  /**
-   * Record successful recovery
-   */
-  recordRecovery(
-    error: AIError,
-    action: RecoveryAction,
-    success: boolean
-  ): void {
-    this.tracker.trackRecovery(error, action, success);
+  
+  // Retryable errors - check retry count
+  if (retryCount >= config.maxRetries) {
+    return config.enableModelFallback ? 'SWITCH_MODEL' : 'PERMANENT_FAILURE';
   }
-
-  /**
-   * Get error statistics
-   */
-  getStats(): ErrorStats {
-    return this.tracker.getErrorStats();
+  
+  // Rate limit errors - wait
+  if (error.type === 'GOOGLE_RATE_LIMIT' && error.retryAfter) {
+    return 'WAIT_AND_RETRY';
   }
-
-  /**
-   * Reset recovery state
-   */
-  reset(requestId?: string): void {
-    this.recovery.clearErrorHistory(requestId);
+  
+  // Model unavailable - try fallback
+  if (error.type === 'GOOGLE_MODEL_UNAVAILABLE' && config.enableModelFallback) {
+    return 'SWITCH_MODEL';
   }
+  
+  // Default retry
+  return 'RETRY';
 }
 
 /**
- * Default error handler instance
+ * Default error handler with automatic recovery
  */
-export const defaultErrorHandler = new AIErrorHandler();
+export function defaultErrorHandler(
+  error: Error | any,
+  response?: Response,
+  config: ErrorRecoveryConfig = DEFAULT_RECOVERY_CONFIG
+) {
+  const classifiedError = classifyError(error, response);
+  const recoveryAction = getRecoveryAction(classifiedError, 0, config);
+  
+  console.error('AI Chat Error:', {
+    type: classifiedError.type,
+    message: classifiedError.message,
+    retryable: classifiedError.retryable,
+    recoveryAction,
+    metadata: classifiedError.metadata,
+  });
+  
+  return {
+    error: classifiedError,
+    recoveryAction,
+    shouldRetry: classifiedError.retryable && recoveryAction === 'RETRY',
+    retryDelay: calculateRetryDelay(classifiedError, 0, config),
+  };
+}
 
-// All exports are already declared above
+/**
+ * Calculate retry delay with exponential backoff
+ */
+export function calculateRetryDelay(
+  error: AIError,
+  retryCount: number,
+  config: ErrorRecoveryConfig
+): number {
+  // Use error-specific retry delay if available
+  if (error.retryAfter) {
+    return error.retryAfter * 1000;
+  }
+  
+  // Exponential backoff
+  return Math.min(
+    config.retryDelay * Math.pow(config.backoffMultiplier, retryCount),
+    30000 // Max 30 seconds
+  );
+}
+
+/**
+ * Model fallback utilities
+ */
+export const modelFallback = {
+  /**
+   * Get next fallback model
+   */
+  getNextModel: (currentModel: string, config: ErrorRecoveryConfig): string | null => {
+    const fallbackModels = config.fallbackModels;
+    const currentIndex = fallbackModels.indexOf(currentModel);
+    
+    if (currentIndex === -1) {
+      // Current model not in fallback list, use first fallback
+      return fallbackModels[0] || null;
+    }
+    
+    // Get next model in fallback chain
+    return fallbackModels[currentIndex + 1] || null;
+  },
+  
+  /**
+   * Get fastest available model
+   */
+  getFastestModel: (): string => {
+    const fastModels = googleModelHelpers.getFastestModels();
+    return fastModels[0]?.id || GOOGLE_MODELS.GEMINI_1_5_FLASH_8B.id;
+  },
+  
+  /**
+   * Get most reliable model
+   */
+  getMostReliableModel: (): string => {
+    return GOOGLE_MODELS.GEMINI_1_5_FLASH.id;
+  },
+};
+
+/**
+ * Context reduction utilities
+ */
+export const contextReduction = {
+  /**
+   * Reduce message context by percentage
+   */
+  reduceMessages: (messages: any[], percentage: number = 0.5): any[] => {
+    if (messages.length <= 2) return messages; // Keep system message and at least one user message
+    
+    const keepCount = Math.max(2, Math.floor(messages.length * (1 - percentage)));
+    return [messages[0], ...messages.slice(-keepCount + 1)]; // Keep system message + recent messages
+  },
+  
+  /**
+   * Truncate long messages
+   */
+  truncateMessages: (messages: any[], maxLength: number = 4000): any[] => {
+    return messages.map((message) => ({
+      ...message,
+      content: message.content.length > maxLength 
+        ? message.content.substring(0, maxLength) + '...'
+        : message.content,
+    }));
+  },
+};
+
+/**
+ * Error monitoring and analytics
+ */
+export const errorMonitoring = {
+  /**
+   * Track error occurrence
+   */
+  trackError: (error: AIError, context?: any) => {
+    // In production, send to analytics service
+    console.warn('AI Error Tracked:', {
+      type: error.type,
+      message: error.message,
+      retryable: error.retryable,
+      timestamp: error.metadata?.timestamp,
+      context,
+    });
+  },
+  
+  /**
+   * Track recovery success
+   */
+  trackRecovery: (error: AIError, action: RecoveryAction, success: boolean) => {
+    console.log('Recovery Attempt:', {
+      errorType: error.type,
+      action,
+      success,
+      timestamp: Date.now(),
+    });
+  },
+};

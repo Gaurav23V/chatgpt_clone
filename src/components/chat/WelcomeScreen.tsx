@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { Mic, Plus, Send, Settings } from 'lucide-react';
+import { Mic, Send, Settings } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import ModelSelector from './ModelSelector';
+import FileUploadButton, { ChatAttachment } from './FileUploadButton';
 
 interface WelcomeScreenProps {
-  onSubmit: (message: string) => void;
+  onSubmit: (message: string, attachments: ChatAttachment[]) => void;
   isLoading?: boolean;
   disabled?: boolean;
 }
@@ -19,6 +20,7 @@ export function WelcomeScreen({
   disabled = false,
 }: WelcomeScreenProps) {
   const [input, setInput] = useState('');
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [isComposing, setIsComposing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -36,8 +38,9 @@ export function WelcomeScreen({
     e.preventDefault();
     if (!input.trim() || isLoading || disabled || isComposing) return;
 
-    onSubmit(input.trim());
+    onSubmit(input.trim(), attachments);
     setInput('');
+    setAttachments([]);
   };
 
   // Handle Enter key press
@@ -59,7 +62,7 @@ export function WelcomeScreen({
   // Handle suggestion click
   const handleSuggestionClick = (suggestion: string) => {
     if (isLoading || disabled) return;
-    onSubmit(suggestion);
+    onSubmit(suggestion, []);
   };
 
   // Suggestion categories with v0's exact content
@@ -163,16 +166,13 @@ export function WelcomeScreen({
             />
 
             <div className='absolute top-1/2 right-2 flex -translate-y-1/2 items-center space-x-2'>
-              {/* File upload button - prepared for future functionality */}
-              <Button
-                type='button'
-                size='icon'
-                variant='ghost'
-                className='hover-lift h-8 w-8 rounded-lg text-gray-400 transition-all duration-200 hover:bg-[#404040] hover:text-white'
+              {/* File upload */}
+              <FileUploadButton
+                onFileUploaded={(file) =>
+                  setAttachments((prev) => [...prev, file])
+                }
                 disabled={disabled || isLoading}
-              >
-                <Plus className='h-4 w-4' />
-              </Button>
+              />
 
               {/* Settings button */}
               <Button
@@ -214,6 +214,38 @@ export function WelcomeScreen({
             </div>
           </div>
         </form>
+
+        {/* Attachments preview */}
+        {attachments.length > 0 && (
+          <div className='mb-3 mt-2 flex flex-wrap gap-2'>
+            {attachments.map((att, idx) => (
+              <div
+                key={idx}
+                className='relative flex items-center rounded-md border border-[#444] px-2 py-1 text-xs text-gray-200'
+              >
+                {att.mimeType.startsWith('image') ? (
+                  <img
+                    src={att.url}
+                    alt={att.name}
+                    className='mr-2 h-8 w-8 rounded object-cover'
+                  />
+                ) : (
+                  <span className='mr-2'>📄</span>
+                )}
+                <span className='max-w-[120px] truncate'>{att.name}</span>
+                <button
+                  type='button'
+                  className='ml-2 text-gray-400 hover:text-red-400'
+                  onClick={() =>
+                    setAttachments((prev) => prev.filter((_, i) => i !== idx))
+                  }
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Character count and disclaimer */}
         <div className='mt-2 flex items-center justify-between'>

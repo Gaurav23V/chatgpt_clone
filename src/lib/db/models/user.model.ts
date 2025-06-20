@@ -15,7 +15,7 @@
  */
 
 import type { Document, Model, Types } from 'mongoose';
-import { model, Schema } from 'mongoose';
+import { model, models, Schema } from 'mongoose';
 
 import type { IUser } from '@/types/database';
 
@@ -538,7 +538,9 @@ interface IUserModel extends Model<IUserDocument> {
 
 // Create and export the User model
 // The model is constrained by IUserDocument and IUserModel
-const UserModel = model<IUserDocument, IUserModel>('User', userSchema);
+const UserModel = (models.User || 
+  model<IUserDocument, IUserModel>('User', userSchema)
+) as Model<IUserDocument, IUserModel>;
 
 export default UserModel;
 

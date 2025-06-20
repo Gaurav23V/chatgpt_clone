@@ -8,7 +8,7 @@
  * - Provider-specific configurations
  */
 
-import { GROQ_MODELS } from './groq-config';
+import { GOOGLE_MODELS } from './google-config';
 
 /**
  * Unified model interface for all providers
@@ -16,7 +16,7 @@ import { GROQ_MODELS } from './groq-config';
 export interface AIModel {
   id: string;
   name: string;
-  provider: 'groq' | 'openai' | 'anthropic';
+  provider: 'google' | 'openai' | 'anthropic';
   description: string;
   contextWindow: number;
   maxOutputTokens: number;
@@ -25,45 +25,59 @@ export interface AIModel {
     input: number; // per 1M tokens
     output: number; // per 1M tokens
   };
-  category: 'fast' | 'balanced' | 'creative' | 'reasoning' | 'audio' | 'vision';
+  category: 'fast' | 'balanced' | 'creative' | 'thinking' | 'vision' | 'experimental';
   recommended?: boolean;
   speed?: 'fastest' | 'fast' | 'medium' | 'slow';
   quality?: 'basic' | 'good' | 'excellent' | 'best';
   specialFeatures?: string[];
+  capabilities?: {
+    imageInput: boolean;
+    documentInput: boolean;
+    audioInput: boolean;
+    fileInput: boolean;
+  };
 }
 
 /**
- * Convert Groq model configs to unified format
+ * Convert Google Generative AI model configs to unified format
  */
-function groqToUnified(groqModel: any, key: string): AIModel {
+function googleToUnified(googleModel: any, key: string): AIModel {
   return {
-    id: groqModel.id,
-    name: groqModel.name,
-    provider: 'groq',
-    description: groqModel.description,
-    contextWindow: groqModel.contextWindow || 0,
-    maxOutputTokens: groqModel.maxOutputTokens || 0,
-    supportedFeatures: [...groqModel.supportedFeatures],
-    pricing: groqModel.pricing || { input: 0, output: 0 },
+    id: googleModel.id,
+    name: googleModel.name,
+    provider: 'google',
+    description: googleModel.description,
+    contextWindow: googleModel.contextWindow || 0,
+    maxOutputTokens: googleModel.maxOutputTokens || 0,
+    supportedFeatures: [...googleModel.supportedFeatures],
+    pricing: googleModel.pricing || { input: 0, output: 0 },
     category:
-      groqModel.type === 'audio'
-        ? 'audio'
-        : groqModel.special === 'reasoning'
-          ? 'reasoning'
-          : groqModel.speed === 'fastest'
-            ? 'fast'
-            : groqModel.recommended
-              ? 'balanced'
-              : 'fast',
-    recommended: groqModel.recommended,
-    speed: groqModel.speed as AIModel['speed'],
+      googleModel.special === 'thinking'
+        ? 'thinking'
+        : googleModel.supportedFeatures.includes('vision')
+          ? 'vision'
+          : googleModel.supportedFeatures.includes('image-generation')
+            ? 'experimental'
+            : googleModel.speed === 'fastest'
+              ? 'fast'
+              : googleModel.recommended
+                ? 'balanced'
+                : 'creative',
+    recommended: googleModel.recommended,
+    speed: googleModel.speed as AIModel['speed'],
     quality:
-      groqModel.contextWindow >= 100000
+      googleModel.contextWindow >= 1000000
         ? 'excellent'
-        : groqModel.recommended
+        : googleModel.recommended
           ? 'good'
           : 'basic',
-    specialFeatures: groqModel.special ? [groqModel.special] : undefined,
+    specialFeatures: googleModel.special ? [googleModel.special] : undefined,
+    capabilities: googleModel.capabilities || {
+      imageInput: false,
+      documentInput: false,
+      audioInput: false,
+      fileInput: false,
+    },
   };
 }
 
@@ -71,337 +85,247 @@ function groqToUnified(groqModel: any, key: string): AIModel {
  * All available AI models from all providers
  */
 export const ALL_MODELS: AIModel[] = [
-  // Groq Models
-  ...Object.entries(GROQ_MODELS).map(([key, model]) =>
-    groqToUnified(model, key)
+  // Google Generative AI Models
+  ...Object.entries(GOOGLE_MODELS).map(([key, model]) =>
+    googleToUnified(model, key)
   ),
 ];
 
 /**
- * Categorized models for easy selection
- */
-export const MODELS_BY_CATEGORY = {
-  // Fast models optimized for speed
-  fast: ALL_MODELS.filter(
-    (model) => model.category === 'fast' || model.speed === 'fastest'
-  ),
-
-  // Balanced models for general use
-  balanced: ALL_MODELS.filter(
-    (model) => model.category === 'balanced' || model.recommended
-  ),
-
-  // Creative models for content generation
-  creative: ALL_MODELS.filter(
-    (model) => model.category === 'creative' || model.contextWindow >= 32000
-  ),
-
-  // Reasoning models for complex problem solving
-  reasoning: ALL_MODELS.filter(
-    (model) =>
-      model.category === 'reasoning' ||
-      model.specialFeatures?.includes('reasoning')
-  ),
-
-  // Audio processing models
-  audio: ALL_MODELS.filter((model) => model.category === 'audio'),
-
-  // Vision models (when available)
-  vision: ALL_MODELS.filter(
-    (model) =>
-      model.category === 'vision' || model.supportedFeatures.includes('vision')
-  ),
-} as const;
-
-/**
- * Recommended models for different use cases
- */
-export const RECOMMENDED_MODELS = {
-  // Best overall performance/cost ratio
-  default: ALL_MODELS.find((m) => m.id === 'llama-3.1-8b-instant')!,
-
-  // Fastest response times
-  realtime: ALL_MODELS.find((m) => m.id === 'llama-3.1-8b-instant')!,
-
-  // Best for complex reasoning
-  reasoning: ALL_MODELS.find((m) => m.id === 'qwen-qwq-32b')!,
-
-  // Best for creative writing
-  creative: ALL_MODELS.find((m) => m.id === 'llama-3.3-70b-versatile')!,
-
-  // Most cost-effective
-  budget: ALL_MODELS.find((m) => m.id === 'llama-3.1-8b-instant')!,
-
-  // Highest quality
-  premium: ALL_MODELS.find((m) => m.id === 'llama-3.3-70b-versatile')!,
-
-  // Audio transcription
-  transcription: ALL_MODELS.find((m) => m.id === 'whisper-large-v3')!,
-} as const;
-
-/**
- * Model selection utilities
+ * Model selection helpers
  */
 export const modelHelpers = {
   /**
    * Get models by provider
    */
-  getByProvider: (provider: AIModel['provider']) => {
+  getModelsByProvider: (provider: 'google' | 'openai' | 'anthropic') => {
     return ALL_MODELS.filter((model) => model.provider === provider);
+  },
+
+  /**
+   * Get models by category
+   */
+  getModelsByCategory: (category: AIModel['category']) => {
+    return ALL_MODELS.filter((model) => model.category === category);
   },
 
   /**
    * Get models by feature
    */
-  getByFeature: (feature: string) => {
+  getModelsByFeature: (feature: string) => {
     return ALL_MODELS.filter((model) =>
       model.supportedFeatures.includes(feature)
     );
   },
 
   /**
-   * Get models by context window size
+   * Get fastest models
    */
-  getByContextWindow: (minTokens: number) => {
-    return ALL_MODELS.filter((model) => model.contextWindow >= minTokens).sort(
-      (a, b) => b.contextWindow - a.contextWindow
-    );
-  },
-
-  /**
-   * Get models by pricing (cheapest first)
-   */
-  getByCost: (sortBy: 'input' | 'output' = 'input') => {
-    return ALL_MODELS.filter((model) => model.pricing.input > 0).sort(
-      (a, b) => a.pricing[sortBy] - b.pricing[sortBy]
-    );
-  },
-
-  /**
-   * Get models by speed
-   */
-  getBySpeed: (speed: AIModel['speed']) => {
-    return ALL_MODELS.filter((model) => model.speed === speed);
-  },
-
-  /**
-   * Get models supporting function calling
-   */
-  getFunctionCallingModels: () => {
+  getFastestModels: () => {
     return ALL_MODELS.filter(
-      (model) =>
-        model.supportedFeatures.includes('function-calling') ||
-        model.supportedFeatures.includes('tool-calling')
+      (model) => model.speed === 'fastest' || model.speed === 'fast'
     );
   },
 
   /**
-   * Get models supporting JSON mode
+   * Get models with vision capabilities
    */
-  getJSONModeModels: () => {
-    return ALL_MODELS.filter((model) =>
-      model.supportedFeatures.includes('json-mode')
+  getVisionModels: () => {
+    return ALL_MODELS.filter(
+      (model) => model.capabilities?.imageInput === true
     );
   },
 
   /**
-   * Find best model for specific requirements
+   * Get thinking/reasoning models
    */
-  findBestModel: (requirements: {
-    maxCost?: number; // per 1M tokens
-    minContextWindow?: number;
-    features?: string[];
-    category?: AIModel['category'];
-    provider?: AIModel['provider'];
-  }) => {
-    let candidates = ALL_MODELS;
+  getThinkingModels: () => {
+    return ALL_MODELS.filter(
+      (model) => model.category === 'thinking' || model.specialFeatures?.includes('thinking')
+    );
+  },
 
-    if (requirements.provider) {
-      candidates = candidates.filter(
-        (m) => m.provider === requirements.provider
-      );
-    }
+  /**
+   * Get recommended models
+   */
+  getRecommendedModels: () => {
+    return ALL_MODELS.filter((model) => model.recommended);
+  },
 
-    if (requirements.maxCost) {
-      candidates = candidates.filter(
-        (m) => m.pricing.input <= requirements.maxCost!
-      );
-    }
-
-    if (requirements.minContextWindow) {
-      candidates = candidates.filter(
-        (m) => m.contextWindow >= requirements.minContextWindow!
-      );
-    }
-
-    if (requirements.features) {
-      candidates = candidates.filter((m) =>
-        requirements.features!.every((f) => m.supportedFeatures.includes(f))
-      );
-    }
-
-    if (requirements.category) {
-      candidates = candidates.filter(
-        (m) => m.category === requirements.category
-      );
-    }
-
-    // Sort by quality and cost effectiveness
-    return candidates.sort((a, b) => {
-      const aScore =
-        (a.quality === 'excellent' ? 3 : a.quality === 'good' ? 2 : 1) /
-        a.pricing.input;
-      const bScore =
-        (b.quality === 'excellent' ? 3 : b.quality === 'good' ? 2 : 1) /
-        b.pricing.input;
-      return bScore - aScore;
-    });
+  /**
+   * Get cost-effective models
+   */
+  getCostEffectiveModels: () => {
+    return ALL_MODELS.sort((a, b) => a.pricing.input - b.pricing.input);
   },
 
   /**
    * Get model by ID
    */
-  getById: (id: string) => {
+  getModelById: (id: string) => {
     return ALL_MODELS.find((model) => model.id === id);
   },
 
   /**
-   * Get model display info for UI
+   * Get models suitable for different use cases
    */
-  getDisplayInfo: (model: AIModel) => ({
-    name: model.name,
-    provider: model.provider.toUpperCase(),
-    category: model.category.charAt(0).toUpperCase() + model.category.slice(1),
-    contextSize:
-      model.contextWindow > 1000
-        ? `${Math.round(model.contextWindow / 1000)}K`
-        : `${model.contextWindow}`,
-    pricing:
-      model.pricing.input > 0
-        ? `$${model.pricing.input.toFixed(2)}/1M`
-        : 'Free',
-    speed: model.speed || 'medium',
-    quality: model.quality || 'good',
-    badge: model.recommended
-      ? 'Recommended'
-      : model.speed === 'fastest'
-        ? 'Fastest'
-        : model.specialFeatures?.includes('reasoning')
-          ? 'Reasoning'
-          : undefined,
-  }),
+  getModelsForUseCase: (useCase: 'chat' | 'vision' | 'reasoning' | 'creative' | 'fast') => {
+    switch (useCase) {
+      case 'chat':
+        return ALL_MODELS.filter(model => 
+          model.supportedFeatures.includes('chat') && 
+          model.category === 'balanced'
+        );
+      case 'vision':
+        return ALL_MODELS.filter(model => 
+          model.capabilities?.imageInput === true
+        );
+      case 'reasoning':
+        return ALL_MODELS.filter(model => 
+          model.category === 'thinking' || 
+          model.specialFeatures?.includes('thinking')
+        );
+      case 'creative':
+        return ALL_MODELS.filter(model => 
+          model.category === 'creative' || 
+          model.supportedFeatures.includes('image-generation')
+        );
+      case 'fast':
+        return ALL_MODELS.filter(model => 
+          model.speed === 'fastest' || 
+          model.category === 'fast'
+        );
+      default:
+        return ALL_MODELS;
+    }
+  },
 };
 
 /**
- * UI-friendly model groups for selection interfaces
+ * Model categories for UI display
+ */
+export const MODEL_CATEGORIES = {
+  FAST: {
+    id: 'fast',
+    name: 'Fast',
+    description: 'Optimized for speed and real-time applications',
+    icon: '⚡',
+  },
+  BALANCED: {
+    id: 'balanced',
+    name: 'Balanced',
+    description: 'Good balance of speed, quality, and cost',
+    icon: '⚖️',
+  },
+  CREATIVE: {
+    id: 'creative',
+    name: 'Creative',
+    description: 'Best for creative writing and content generation',
+    icon: '🎨',
+  },
+  THINKING: {
+    id: 'thinking',
+    name: 'Thinking',
+    description: 'Advanced reasoning and complex problem solving',
+    icon: '🧠',
+  },
+  VISION: {
+    id: 'vision',
+    name: 'Vision',
+    description: 'Image analysis and multimodal capabilities',
+    icon: '👁️',
+  },
+  EXPERIMENTAL: {
+    id: 'experimental',
+    name: 'Experimental',
+    description: 'Latest features like image generation',
+    icon: '🧪',
+  },
+} as const;
+
+/**
+ * Default model recommendations for different scenarios
+ */
+export const DEFAULT_MODELS = {
+  // General chat - balanced performance
+  GENERAL: 'gemini-1.5-flash-latest',
+  
+  // Fast responses - lowest latency
+  FAST: 'gemini-1.5-flash-8b-latest',
+  
+  // Complex reasoning - best capability
+  REASONING: 'gemini-2.5-flash-preview-04-17',
+  
+  // Creative tasks - high quality output
+  CREATIVE: 'gemini-1.5-pro-latest',
+  
+  // Vision tasks - image analysis
+  VISION: 'gemini-1.5-pro-latest',
+  
+  // Experimental features
+  EXPERIMENTAL: 'gemini-2.0-flash-exp',
+} as const;
+
+/**
+ * Default model for new conversations
+ */
+export const defaultModel = {
+  id: DEFAULT_MODELS.GENERAL,
+  name: 'Gemini 1.5 Flash',
+  description: 'Fast and capable model for general chat',
+};
+
+/**
+ * UI Model Groups for the ModelSelector component
+ * Organizes models by category for display in the UI
  */
 export const UI_MODEL_GROUPS = [
   {
-    title: 'Recommended',
-    description: 'Best models for most use cases',
-    models: ALL_MODELS.filter((m) => m.recommended),
+    title: 'Fast',
+    models: modelHelpers.getModelsByCategory('fast').map(model => ({
+      id: model.id,
+      name: model.name,
+      description: model.description,
+    })),
   },
   {
-    title: 'Fastest',
-    description: 'Optimized for real-time applications',
-    models: MODELS_BY_CATEGORY.fast,
+    title: 'Balanced',
+    models: modelHelpers.getModelsByCategory('balanced').map(model => ({
+      id: model.id,
+      name: model.name,
+      description: model.description,
+    })),
   },
   {
-    title: 'Most Capable',
-    description: 'Highest quality responses',
-    models: ALL_MODELS.filter((m) => m.quality === 'excellent'),
+    title: 'Thinking',
+    models: modelHelpers.getModelsByCategory('thinking').map(model => ({
+      id: model.id,
+      name: model.name,
+      description: model.description,
+    })),
   },
   {
-    title: 'Reasoning',
-    description: 'Advanced problem-solving capabilities',
-    models: MODELS_BY_CATEGORY.reasoning,
+    title: 'Vision',
+    models: modelHelpers.getModelsByCategory('vision').map(model => ({
+      id: model.id,
+      name: model.name,
+      description: model.description,
+    })),
   },
   {
-    title: 'Audio',
-    description: 'Speech recognition and processing',
-    models: MODELS_BY_CATEGORY.audio,
+    title: 'Creative',
+    models: modelHelpers.getModelsByCategory('creative').map(model => ({
+      id: model.id,
+      name: model.name,
+      description: model.description,
+    })),
   },
   {
-    title: 'Budget-Friendly',
-    description: 'Cost-effective options',
-    models: modelHelpers.getByCost('input').slice(0, 3),
+    title: 'Experimental',
+    models: modelHelpers.getModelsByCategory('experimental').map(model => ({
+      id: model.id,
+      name: model.name,
+      description: model.description,
+    })),
   },
-] as const;
-
-/**
- * Model comparison utilities
- */
-export const modelComparison = {
-  /**
-   * Compare two models
-   */
-  compare: (model1: AIModel, model2: AIModel) => ({
-    contextWindow: {
-      winner: model1.contextWindow > model2.contextWindow ? model1 : model2,
-      difference: Math.abs(model1.contextWindow - model2.contextWindow),
-    },
-    cost: {
-      winner: model1.pricing.input < model2.pricing.input ? model1 : model2,
-      difference: Math.abs(model1.pricing.input - model2.pricing.input),
-    },
-    features: {
-      model1Only: model1.supportedFeatures.filter(
-        (f) => !model2.supportedFeatures.includes(f)
-      ),
-      model2Only: model2.supportedFeatures.filter(
-        (f) => !model1.supportedFeatures.includes(f)
-      ),
-      common: model1.supportedFeatures.filter((f) =>
-        model2.supportedFeatures.includes(f)
-      ),
-    },
-  }),
-
-  /**
-   * Get model alternatives
-   */
-  getAlternatives: (modelId: string, count = 3) => {
-    const model = modelHelpers.getById(modelId);
-    if (!model) return [];
-
-    return ALL_MODELS.filter(
-      (m) => m.id !== modelId && m.category === model.category
-    )
-      .sort((a, b) => {
-        // Sort by similarity (context window and pricing)
-        const aDiff =
-          Math.abs(a.contextWindow - model.contextWindow) +
-          Math.abs(a.pricing.input - model.pricing.input) * 10000;
-        const bDiff =
-          Math.abs(b.contextWindow - model.contextWindow) +
-          Math.abs(b.pricing.input - model.pricing.input) * 10000;
-        return aDiff - bDiff;
-      })
-      .slice(0, count);
-  },
-};
-
-/**
- * Default exports for common usage
- */
-export const defaultModel = RECOMMENDED_MODELS.default;
-export const fastestModel = RECOMMENDED_MODELS.realtime;
-export const bestModel = RECOMMENDED_MODELS.premium;
-
-/**
- * Export types
- */
-export type ModelCategory = keyof typeof MODELS_BY_CATEGORY;
-export type ModelProvider = AIModel['provider'];
-export type ModelSpeed = AIModel['speed'];
-export type ModelQuality = AIModel['quality'];
-
-/**
- * Context window size constants for easy reference
- */
-export const CONTEXT_SIZES = {
-  SMALL: 8192, // 8K tokens
-  MEDIUM: 32768, // 32K tokens
-  LARGE: 131072, // 128K tokens
-  EXTRA_LARGE: 200000, // 200K+ tokens
-} as const;
+].filter(group => group.models.length > 0); // Only include groups that have models

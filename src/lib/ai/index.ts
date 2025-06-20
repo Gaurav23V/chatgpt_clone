@@ -3,7 +3,7 @@
  *
  * Main export barrel for AI-related functionality including:
  * - Model configurations and providers
- * - Groq-specific utilities and configurations
+ * - Google Generative AI-specific utilities and configurations
  * - Stream handling and processing utilities
  * - OpenAI fallback configurations
  * - Type definitions and interfaces
@@ -22,11 +22,19 @@ export {
   RATE_LIMITS,
 } from './config';
 
-// Groq-specific exports (all available exports)
-export * from './groq-config';
+// Google Generative AI-specific exports (all available exports)
+export * from './google-config';
 
-// Model metadata and utilities (all available exports)
-export * from './models';
+// Model definitions and utilities
+export {
+  ALL_MODELS,
+  modelHelpers,
+  MODEL_CATEGORIES,
+  DEFAULT_MODELS,
+} from './models';
 
-// Stream handling utilities (all available exports)
+// Stream handling utilities
 export * from './stream-handler';
+
+// Error handling
+export * from './error-handler';

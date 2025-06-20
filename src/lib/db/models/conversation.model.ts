@@ -16,7 +16,7 @@
  */
 
 import type { Document, Model, Query, Types } from 'mongoose';
-import { model, Schema } from 'mongoose';
+import { model, models, Schema } from 'mongoose';
 
 import type { IConversation, IUser } from '@/types/database';
 
@@ -34,6 +34,14 @@ export const ConversationStatusEnum = [
   'deleted',
 ] as const;
 export const AIModelEnum = [
+  // Google Generative AI
+  'gemini-2.5-flash-preview-04-17',
+  'gemini-2.0-flash-exp',
+  'gemini-1.5-pro-latest',
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-flash-8b-latest',
+  'gemini-1.0-pro-latest',
+  
   // OpenAI
   'gpt-3.5-turbo',
   'gpt-4',
@@ -710,10 +718,9 @@ conversationSchema.set('toJSON', { virtuals: true });
 // MODEL EXPORT
 // ========================================
 
-const ConversationModel = model<IConversationDocument, IConversationModel>(
-  'Conversation',
-  conversationSchema
-);
+// Check if model already exists to prevent OverwriteModelError in development
+const ConversationModel = models.Conversation as IConversationModel || 
+  model<IConversationDocument, IConversationModel>('Conversation', conversationSchema);
 
 export default ConversationModel;
 
