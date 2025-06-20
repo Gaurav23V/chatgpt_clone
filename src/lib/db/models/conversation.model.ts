@@ -39,6 +39,10 @@ export const AIModelEnum = [
   'gpt-4-turbo',
   'gpt-4o',
   'gpt-4o-mini',
+  // Groq / LLaMA / other providers
+  'llama-3.1-8b-instant',
+  'llama-3-70b',
+  'mixtral-8x7b',
 ] as const;
 
 export type ConversationStatus = (typeof ConversationStatusEnum)[number];

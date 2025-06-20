@@ -59,6 +59,8 @@ export function ChatArea({
     headers: {
       'X-Conversation-ID': conversationId || '',
     },
+    // Provide any pre-existing messages so they appear immediately after navigation
+    initialMessages: formattedInitialMessages,
     onResponse: async (response) => {
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
@@ -155,7 +157,7 @@ export function ChatArea({
           <WelcomeScreen onSubmit={sendMessage} />
         ) : (
           // Show chat messages
-          <div className='h-full overflow-y-auto px-4 py-6'>
+          <div className='h-full overflow-y-auto px-4 py-6 scroll-smooth'>
             <div className='mx-auto max-w-3xl space-y-6'>
               {messages.map((message, _index) => (
                 <MessageBubble
@@ -172,6 +174,8 @@ export function ChatArea({
                   onDownload={handleDownload}
                 />
               ))}
+              {/* Scroll anchor */}
+              <div ref={messagesEndRef} className="h-1" />
             </div>
           </div>
         )}

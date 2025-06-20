@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -22,47 +22,62 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-// Mock conversation data - replace with actual data from your backend
-const mockConversations: any[] = [
-  {
-    id: '1',
-    title: 'Getting started with Next.js',
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-  },
-  {
-    id: '2',
-    title: 'Building a chat application',
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-  },
-  {
-    id: '3',
-    title: 'Understanding React hooks',
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
-  },
-  {
-    id: '4',
-    title: 'TypeScript best practices',
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7), // 1 week ago
-  },
-  {
-    id: '5',
-    title: 'CSS Grid vs Flexbox',
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14), // 2 weeks ago
-  },
-];
+interface ConversationItem {
+  id: string;
+  title: string;
+  lastMessageAt: string | Date;
+  updatedAt?: string | Date; // fallback for older schema
+}
+
+// Helper to safely parse ISO dates
+const toDate = (value: string | Date | undefined): Date => {
+  if (!value) return new Date(0);
+  return value instanceof Date ? value : new Date(value);
+};
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  const [_conversations, setConversations] = useState(mockConversations);
+  const [_conversations, setConversations] = useState<ConversationItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch conversations on mount
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        setIsLoading(true);
+        const res = await fetch('/api/conversations?limit=100');
+        if (!res.ok) {
+          throw new Error(`Failed to fetch conversations (${res.status})`);
+        }
+        const json = await res.json();
+        const docs = json.data?.conversations || [];
+        const items: ConversationItem[] = docs.map((doc: any) => ({
+          id: doc._id ?? doc.id ?? '',
+          title: doc.title || 'Untitled',
+          lastMessageAt: doc.lastMessageAt || doc.updatedAt || new Date(),
+          updatedAt: doc.updatedAt,
+        }));
+        setConversations(items);
+      } catch (err) {
+        console.error('Failed to load conversations:', err);
+        setError('Failed to load conversations');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchConversations();
+  }, []);
 
   // Filter conversations based on search term
-  const filteredConversations = mockConversations.filter((conversation) =>
+  const filteredConversations = _conversations.filter((conversation) =>
     conversation.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Group conversations by time period
-  const groupConversationsByTime = (conversations: any[]) => {
+  const groupConversationsByTime = (conversations: ConversationItem[]) => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
@@ -70,17 +85,26 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const lastMonth = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     return {
-      today: conversations.filter((conv) => conv.updatedAt >= today),
+      today: conversations.filter((conv) => toDate(conv.lastMessageAt ?? conv.updatedAt) >= today),
       yesterday: conversations.filter(
-        (conv) => conv.updatedAt >= yesterday && conv.updatedAt < today
+        (conv) => {
+          const d = toDate(conv.lastMessageAt ?? conv.updatedAt);
+          return d >= yesterday && d < today;
+        }
       ),
       lastWeek: conversations.filter(
-        (conv) => conv.updatedAt >= lastWeek && conv.updatedAt < yesterday
+        (conv) => {
+          const d = toDate(conv.lastMessageAt ?? conv.updatedAt);
+          return d >= lastWeek && d < yesterday;
+        }
       ),
       lastMonth: conversations.filter(
-        (conv) => conv.updatedAt >= lastMonth && conv.updatedAt < lastWeek
+        (conv) => {
+          const d = toDate(conv.lastMessageAt ?? conv.updatedAt);
+          return d >= lastMonth && d < lastWeek;
+        }
       ),
-      older: conversations.filter((conv) => conv.updatedAt < lastMonth),
+      older: conversations.filter((conv) => toDate(conv.lastMessageAt ?? conv.updatedAt) < lastMonth),
     };
   };
 
@@ -93,7 +117,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   };
 
   // Render conversation group
-  const renderConversationGroup = (title: string, conversations: any[]) => {
+  const renderConversationGroup = (title: string, conversations: ConversationItem[]) => {
     if (conversations.length === 0) return null;
 
     return (

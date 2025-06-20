@@ -16,23 +16,17 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-import { openai } from '@ai-sdk/openai';
+import { createGroq } from '@ai-sdk/groq';
 import { streamText } from 'ai';
+import { auth } from '@clerk/nextjs/server';
 import { z } from 'zod';
 
-import { aiConfig, CHAT_CONFIG } from '@/lib/ai/config';
-// AI Provider imports
-import { groq, GROQ_MODELS, groqErrorHandling } from '@/lib/ai/groq-config';
-// Authentication
-// TODO: Uncomment when Clerk is fully configured
-// import { auth } from '@clerk/nextjs/server';
-// Database utilities
-import {
-  MongoErrorType,
-  parseMongoError,
-  safeDbOperation,
-  withPerformanceMonitoring,
-} from '@/lib/db/utils';
+import { GROQ_MODELS, groqErrorHandling } from '@/lib/ai/groq-config';
+import ConversationModel from '@/lib/db/models/conversation.model';
+import MessageModel from '@/lib/db/models/message.model';
+import { connectToDatabase } from '@/lib/db/connection';
+import { Types } from 'mongoose';
+import UserModel from '@/lib/db/models/user.model';
 
 // Constants
 const MAX_DURATION = 30; // seconds
@@ -62,53 +56,165 @@ const ChatRequestSchema = z.object({
 type ChatRequest = z.infer<typeof ChatRequestSchema>;
 
 /**
- * Helper function to get the appropriate model based on model name
- */
-function getModelProvider(modelName: string) {
-  // Determine if it's a Groq model
-  const groqModel = Object.values(GROQ_MODELS).find(
-    (model) => model.id === modelName
-  );
-  if (groqModel) {
-    return groq(modelName);
-  }
-
-  // Fall back to OpenAI for GPT models
-  if (modelName.startsWith('gpt-')) {
-    return openai(modelName);
-  }
-
-  // Default to Groq's fastest model
-  return groq(GROQ_MODELS.LLAMA_3_1_8B.id);
-}
-
-/**
  * Rate limiting helper (simplified implementation)
  * In production, use Redis or a proper rate limiting service
  */
+const userRequestCounts = new Map<string, { count: number; resetTime: number }>();
+
 async function checkRateLimit(userId: string): Promise<boolean> {
-  // TODO: Implement proper rate limiting with Redis
-  // For now, return false (no rate limiting)
+  const now = Date.now();
+  const resetInterval = 60 * 1000; // 1 minute
+  
+  const userLimits = userRequestCounts.get(userId);
+  
+  if (!userLimits || now > userLimits.resetTime) {
+    // Reset or initialize rate limit
+    userRequestCounts.set(userId, {
+      count: 1,
+      resetTime: now + resetInterval,
+    });
+    return false;
+  }
+  
+  if (userLimits.count >= RATE_LIMIT_REQUESTS_PER_MINUTE) {
+    return true; // Rate limited
+  }
+  
+  userLimits.count++;
   return false;
 }
 
 /**
- * Validate user permissions for model access
+ * Validate Groq model selection
  */
-async function validateModelAccess(
-  userId: string,
-  model: string
-): Promise<boolean> {
-  // TODO: Implement proper role-based model access
-  // For now, allow all models
-  return true;
+function validateGroqModel(model: string): string {
+  const groqModel = Object.values(GROQ_MODELS).find(
+    (m) => m.id === model
+  );
+  
+  if (groqModel) {
+    return model;
+  }
+  
+  // Default to fastest model if invalid model provided
+  return GROQ_MODELS.LLAMA_3_1_8B.id;
 }
 
 /**
- * Generate conversation ID for new conversations
+ * Generate conversation ID for new conversations using MongoDB ObjectId
  */
 function generateConversationId(): string {
-  return `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return new Types.ObjectId().toString();
+}
+
+/**
+ * Save conversation and messages to database
+ */
+async function saveConversationAndMessages({
+  conversationId,
+  userId,
+  userMessage,
+  assistantResponse,
+  model,
+  usage,
+  isNewConversation,
+}: {
+  conversationId: string;
+  userId: string;
+  userMessage: any;
+  assistantResponse: string;
+  model: string;
+  usage: any;
+  isNewConversation: boolean;
+}) {
+  // Ensure database connection
+  await connectToDatabase();
+  
+  // Resolve MongoDB ObjectId for the Clerk user (required by schema)
+  // If the user document does not exist yet, create a lightweight record.
+  const existingUser = await UserModel.findOne({ clerkId: userId }).select('_id');
+  let mongoUserId: Types.ObjectId;
+
+  if (existingUser) {
+    mongoUserId = existingUser._id as Types.ObjectId;
+  } else {
+    const newUser = await UserModel.create({
+      clerkId: userId,
+      email: 'unknown@example.com', // placeholder – can be updated later
+    });
+    mongoUserId = newUser._id as Types.ObjectId;
+  }
+
+  // Create or find conversation
+  let conversation;
+  
+  if (isNewConversation) {
+    // Create new conversation
+    conversation = new ConversationModel({
+      _id: new Types.ObjectId(conversationId),
+      clerkId: userId,
+      userId: mongoUserId,
+      title: userMessage.content.slice(0, 50) + (userMessage.content.length > 50 ? '...' : ''),
+      messageCount: 2, // User message + assistant response
+      lastMessageAt: new Date(),
+      totalTokens: usage?.totalTokens || 0,
+      settings: {
+        aiModel: model,
+      },
+      status: 'active',
+    });
+    
+    await conversation.save();
+    console.log(`Created new conversation: ${conversationId}`);
+  } else {
+    // Update existing conversation
+    conversation = await ConversationModel.incrementMessageCount(
+      conversationId,
+      usage?.totalTokens || 0
+    );
+    
+    if (!conversation) {
+      throw new Error(`Conversation ${conversationId} not found`);
+    }
+    
+    console.log(`Updated conversation: ${conversationId}`);
+  }
+
+  // Save user message
+  const userMessageDoc = new MessageModel({
+    conversationId: new Types.ObjectId(conversationId),
+    userId: mongoUserId,
+    clerkId: userId,
+    role: 'user',
+    content: userMessage.content,
+    status: 'completed',
+  });
+  
+  await userMessageDoc.save();
+
+  // Save assistant message
+  const assistantMessageDoc = new MessageModel({
+    conversationId: new Types.ObjectId(conversationId),
+    userId: mongoUserId,
+    clerkId: userId,
+    role: 'assistant',
+    content: assistantResponse,
+    status: 'completed',
+    aiMetadata: {
+      model,
+      temperature: 0.7, // Should come from request
+      maxTokens: 2048, // Should come from request
+      tokenCount: usage?.completionTokens || 0,
+      finishReason: 'stop',
+      responseTime: 0, // Could be calculated
+    },
+  });
+  
+  await assistantMessageDoc.save();
+  
+  console.log(`Saved messages for conversation: ${conversationId}`);
+  
+  return { conversation, userMessage: userMessageDoc, assistantMessage: assistantMessageDoc };
 }
 
 /**
@@ -119,21 +225,47 @@ export async function POST(request: NextRequest) {
 
   try {
     // Authentication check
-    // TODO: Uncomment when Clerk is fully configured
-    // const { userId } = auth();
-    // if (!userId) {
-    //   return NextResponse.json(
-    //     { error: 'Authentication required' },
-    //     { status: 401 }
-    //   );
-    // }
-    const userId = 'mock-user-id'; // Temporary for development
+    const { userId } = await auth();
+    if (!userId) {
+      console.warn('Unauthorized chat request attempt');
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    console.log(`Chat request from user: ${userId}`);
+
+    // Validate Groq API key
+    if (!process.env.GROQ_API_KEY) {
+      console.error('GROQ_API_KEY environment variable is not set');
+      return NextResponse.json(
+        { 
+          error: 'Service configuration error',
+          message: 'AI service is not properly configured'
+        },
+        { status: 500 }
+      );
+    }
 
     // Parse and validate request body
-    const body = await request.json().catch(() => ({}));
+    let body: any;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return NextResponse.json(
+        { 
+          error: 'Invalid JSON in request body',
+          message: 'Request body must be valid JSON'
+        },
+        { status: 400 }
+      );
+    }
 
     const validationResult = ChatRequestSchema.safeParse(body);
     if (!validationResult.success) {
+      console.warn('Invalid request format:', validationResult.error.issues);
       return NextResponse.json(
         {
           error: 'Invalid request format',
@@ -146,12 +278,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { messages, model, conversationId, temperature, maxTokens, stream } =
+    const { messages, model, conversationId, temperature = 0.7, maxTokens = 2048 } =
       validationResult.data;
+
+    // Also check for conversation ID in headers (sent by frontend)
+    const headerConversationId = request.headers.get('X-Conversation-ID');
+    const finalConversationIdFromRequest = conversationId || headerConversationId;
 
     // Rate limiting check
     const isRateLimited = await checkRateLimit(userId);
     if (isRateLimited) {
+      console.warn(`Rate limit exceeded for user: ${userId}`);
       return NextResponse.json(
         {
           error: 'Rate limit exceeded',
@@ -161,220 +298,88 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Model access validation
-    const selectedModel = model || GROQ_MODELS.LLAMA_3_1_8B.id;
-    const hasModelAccess = await validateModelAccess(userId, selectedModel);
-    if (!hasModelAccess) {
-      return NextResponse.json(
-        {
-          error: 'Model access denied',
-          message: 'You do not have access to this model',
-        },
-        { status: 403 }
-      );
-    }
+    // Validate and set model
+    const selectedModel = validateGroqModel(model || GROQ_MODELS.LLAMA_3_1_8B.id);
+    console.log(`Using model: ${selectedModel} for user: ${userId}`);
 
     // Generate conversation ID for new conversations
-    const finalConversationId = conversationId || generateConversationId();
-    const isNewConversation = !conversationId;
+    const finalConversationId = finalConversationIdFromRequest || generateConversationId();
+    const isNewConversation = !finalConversationIdFromRequest;
 
-    // Database operations for conversation management
-    const conversationOperation = await safeDbOperation(async () => {
-      return await withPerformanceMonitoring(
-        async () => {
-          // TODO: In production, implement actual database operations:
-          // if (conversationId) {
-          //   const existingConversation = await Conversation.findOne({
-          //     _id: conversationId,
-          //     userId,
-          //   });
-          //   if (!existingConversation) {
-          //     throw new Error('Conversation not found');
-          //   }
-          //   return existingConversation;
-          // } else {
-          //   return await Conversation.create({
-          //     _id: finalConversationId,
-          //     userId,
-          //     title: messages[0]?.content?.substring(0, 50) || 'New Chat',
-          //     model: selectedModel,
-          //     createdAt: new Date(),
-          //   });
-          // }
+    // Initialize Groq client
+    const groq = createGroq({
+      apiKey: process.env.GROQ_API_KEY!,
+    });
 
-          // Mock implementation
-          await new Promise((resolve) => setTimeout(resolve, 50));
-          return {
-            id: finalConversationId,
-            userId,
-            title: messages[0]?.content?.substring(0, 50) || 'New Chat',
-            model: selectedModel,
-            isNew: isNewConversation,
-          };
-        },
-        { query: 'manageConversation', collection: 'conversations' }
-      );
-    }, 'Conversation management');
-
-    if (!conversationOperation.success) {
-      console.error(
-        'Conversation operation failed:',
-        conversationOperation.error
-      );
-      return NextResponse.json(
-        {
-          error: 'Database error',
-          message: conversationOperation.error.userMessage,
-          code: conversationOperation.error.type,
-        },
-        {
-          status:
-            conversationOperation.error.type === MongoErrorType.CONNECTION_ERROR
-              ? 503
-              : 500,
-        }
-      );
-    }
-
-    const conversation = conversationOperation.data;
-
-    // Prepare messages with system prompt
+    // Add system message if this is the first message
     const systemMessage = {
       role: 'system' as const,
-      content: CHAT_CONFIG.SYSTEM_MESSAGE,
+      content: `You are a helpful AI assistant powered by Groq's ultra-fast inference. You provide clear, accurate, and helpful responses while being conversational and engaging. You can process complex requests quickly and efficiently.
+
+Key guidelines:
+- Be helpful, accurate, and conversational
+- Use markdown formatting for better readability
+- Break down complex topics into digestible parts
+- Ask clarifying questions when needed
+- Admit when you don't know something`,
     };
 
-    const allMessages = [systemMessage, ...messages];
+    // Prepare messages with system message for new conversations
+    const processedMessages = isNewConversation 
+      ? [systemMessage, ...messages]
+      : messages;
 
-    // Get model provider
-    const modelProvider = getModelProvider(selectedModel);
-
-    // Configure streaming parameters
-    const streamConfig = {
-      model: modelProvider,
-      messages: allMessages,
-      temperature: temperature ?? CHAT_CONFIG.MODEL_PARAMS.default.temperature,
-      maxTokens: maxTokens ?? CHAT_CONFIG.MODEL_PARAMS.default.maxTokens,
-      stream,
-      maxSteps: 5, // Allow multi-step reasoning and tool usage
-
-      // Advanced streaming callbacks
-      onChunk: ({ chunk }: { chunk: any }) => {
-        // Log chunk information for debugging
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Streaming chunk:', chunk.type);
-        }
-      },
-
-      onStepFinish: ({
-        text,
-        toolCalls,
-        toolResults,
-        finishReason,
-        usage,
-      }: any) => {
-        console.log('Step finished:', {
-          conversationId: conversation.id,
-          textLength: text?.length || 0,
-          toolCallsCount: toolCalls?.length || 0,
-          toolResultsCount: toolResults?.length || 0,
-          finishReason,
-          tokens: usage?.totalTokens,
-        });
-      },
-
-      onFinish: async ({ text, finishReason, usage, response }: any) => {
-        const responseTime = Date.now() - startTime;
-
-        console.log('Chat completion finished:', {
-          conversationId: conversation.id,
-          model: selectedModel,
-          textLength: text?.length || 0,
-          finishReason,
-          tokens: usage?.totalTokens || 0,
-          responseTime,
-          isNewConversation: conversation.isNew,
-        });
-
-        // TODO: Save messages to database in production
-        // await saveMessages([
-        //   {
-        //     conversationId: conversation.id,
-        //     role: 'user',
-        //     content: messages[messages.length - 1].content,
-        //     userId,
-        //     timestamp: new Date(),
-        //   },
-        //   {
-        //     conversationId: conversation.id,
-        //     role: 'assistant',
-        //     content: text,
-        //     userId,
-        //     timestamp: new Date(),
-        //     metadata: {
-        //       model: selectedModel,
-        //       temperature,
-        //       maxTokens,
-        //       tokenUsage: usage,
-        //       finishReason,
-        //       responseTime,
-        //     },
-        //   },
-        // ]);
-      },
-
-      onError: ({ error }: { error: any }) => {
-        console.error('Streaming error:', {
-          conversationId: conversation.id,
-          error: error.message,
-          stack: error.stack,
-        });
-      },
-    };
+    console.log(`Processing ${processedMessages.length} messages for conversation: ${finalConversationId}`);
 
     // Create streaming response using Vercel AI SDK
-    const result = streamText(streamConfig);
-
-    // Convert to streaming response with proper headers
-    const response = result.toDataStreamResponse({
-      getErrorMessage: (error: any) => {
-        console.error('Stream error:', error);
-
-        // Handle Groq-specific errors
-        if (groqErrorHandling.isRateLimitError(error)) {
-          return 'Rate limit exceeded. Please try again in a moment.';
+    const result = await streamText({
+      model: groq(selectedModel),
+      messages: processedMessages,
+      temperature,
+      maxTokens,
+      // Add streaming configuration
+      onFinish: async (completion) => {
+        const responseTime = Date.now() - startTime;
+        console.log(`Chat completion finished in ${responseTime}ms:`, {
+          conversationId: finalConversationId,
+          model: selectedModel,
+          userId,
+          messageCount: processedMessages.length,
+          finishReason: completion.finishReason,
+          usage: completion.usage,
+        });
+        
+        try {
+          // Save conversation and messages to database
+          await saveConversationAndMessages({
+            conversationId: finalConversationId,
+            userId,
+            userMessage: messages[messages.length - 1], // Last user message
+            assistantResponse: completion.text,
+            model: selectedModel,
+            usage: completion.usage,
+            isNewConversation,
+          });
+        } catch (dbError) {
+          console.error('Failed to save to database:', dbError);
+          // Don't fail the API response if database save fails
         }
-
-        if (groqErrorHandling.isAuthError(error)) {
-          return 'Authentication failed. Please check your API key.';
-        }
-
-        // Generic error message for security
-        return 'An error occurred while processing your request.';
       },
     });
 
-    // Add custom headers for frontend integration
-    response.headers.set('X-Conversation-ID', conversation.id);
-    response.headers.set('X-Model-Used', selectedModel);
-    response.headers.set('X-Response-Time', String(Date.now() - startTime));
-
-    if (conversation.isNew) {
-      response.headers.set('X-Is-New-Conversation', 'true');
-    }
-
-    // Set CORS headers if needed
+    // Add conversation ID to response headers - using DataStreamResponse for useChat compatibility
+    const response = result.toDataStreamResponse();
+    response.headers.set('X-Conversation-ID', finalConversationId);
+    
+    // CORS headers
     response.headers.set('Access-Control-Allow-Origin', '*');
     response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    response.headers.set(
-      'Access-Control-Allow-Headers',
-      'Content-Type, Authorization'
-    );
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Conversation-ID');
 
     return response;
+
   } catch (error) {
     const responseTime = Date.now() - startTime;
-
     console.error('Chat API error:', {
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
@@ -383,34 +388,34 @@ export async function POST(request: NextRequest) {
 
     // Handle specific error types
     if (error instanceof Error) {
-      // Handle Groq-specific errors
-      if (groqErrorHandling.isRateLimitError(error)) {
+      // Groq API errors
+      if (error.message.includes('API key')) {
         return NextResponse.json(
-          {
-            error: 'Rate limit exceeded',
-            message: 'Too many requests. Please try again later.',
-            retryAfter: 60,
-          },
-          { status: 429 }
-        );
-      }
-
-      if (groqErrorHandling.isAuthError(error)) {
-        return NextResponse.json(
-          {
+          { 
             error: 'Authentication failed',
-            message: 'Invalid API credentials',
+            message: 'Invalid API key configuration'
           },
           { status: 401 }
         );
       }
-
-      // Handle validation errors
-      if (error.message.includes('validation')) {
+      
+      // Rate limiting errors
+      if (error.message.includes('rate limit') || error.message.includes('429')) {
         return NextResponse.json(
-          {
-            error: 'Validation error',
-            message: error.message,
+          { 
+            error: 'Rate limit exceeded',
+            message: 'Too many requests. Please try again later.'
+          },
+          { status: 429 }
+        );
+      }
+      
+      // Content filtering errors
+      if (error.message.includes('content_filter')) {
+        return NextResponse.json(
+          { 
+            error: 'Content not allowed',
+            message: 'Your message was filtered due to content policy violations.'
           },
           { status: 400 }
         );
@@ -419,9 +424,9 @@ export async function POST(request: NextRequest) {
 
     // Generic error response
     return NextResponse.json(
-      {
+      { 
         error: 'Internal server error',
-        message: 'An unexpected error occurred. Please try again.',
+        message: 'An unexpected error occurred. Please try again.'
       },
       { status: 500 }
     );
@@ -437,12 +442,15 @@ export async function OPTIONS() {
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Conversation-ID',
+      'Access-Control-Max-Age': '86400',
     },
   });
 }
 
 /**
- * Export maxDuration for Vercel deployment
+ * Use Node.js runtime for MongoDB/Mongoose compatibility
+ * Edge Runtime doesn't support Mongoose operations properly
  */
-export const maxDuration = 30;
+// export const runtime = 'edge'; // Commented out - using Node.js runtime for MongoDB
+export const maxDuration = MAX_DURATION;

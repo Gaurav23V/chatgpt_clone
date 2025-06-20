@@ -52,11 +52,12 @@ const MONGODB_CONFIG: ConnectOptions = {
   maxPoolSize: 10, // Maximum connections in pool
   minPoolSize: process.env.NODE_ENV === 'production' ? 2 : 1, // Minimum connections in pool
   maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
-  serverSelectionTimeoutMS: 5000, // How long to try selecting a server
+  serverSelectionTimeoutMS: 30000, // Increased timeout for MongoDB Atlas
   socketTimeoutMS: 45000, // How long a send or receive on a socket can take
+  connectTimeoutMS: 30000, // How long to wait for initial connection
 
-  // Buffering Settings
-  bufferCommands: false, // Disable mongoose buffering
+  // Buffering Settings - Allow buffering in development for better UX
+  bufferCommands: process.env.NODE_ENV === 'development', // Enable buffering in dev
 
   // Connection Management
   heartbeatFrequencyMS: 10000, // How often to check connection health
@@ -67,7 +68,6 @@ const MONGODB_CONFIG: ConnectOptions = {
   ...(process.env.NODE_ENV === 'development' && {
     // Development-specific settings
     autoIndex: true, // Build indexes automatically
-    debug: true, // Enable mongoose debug mode
   }),
 
   ...(process.env.NODE_ENV === 'production' && {
@@ -123,6 +123,11 @@ export async function connectToDatabase(): Promise<Connection> {
   // Return existing connection promise if in progress
   if (!cached.promise) {
     console.log('🔌 Establishing new MongoDB connection...');
+
+    // Enable Mongoose debug mode in development (queries logged to console)
+    if (process.env.NODE_ENV === 'development') {
+      mongoose.set('debug', true);
+    }
 
     // Create new connection promise
     cached.promise = mongoose
@@ -202,10 +207,12 @@ function setupConnectionEventListeners(connection: Connection): void {
     cached.promise = null;
   });
 
-  // Process termination handlers
-  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-  process.on('SIGUSR2', () => gracefulShutdown('SIGUSR2')); // Nodemon restart
+  // Process termination handlers (only in Node.js runtime)
+  if (typeof process !== 'undefined' && process.on) {
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGUSR2', () => gracefulShutdown('SIGUSR2')); // Nodemon restart
+  }
 }
 
 /**
@@ -222,10 +229,16 @@ async function gracefulShutdown(signal: string): Promise<void> {
       await cached.conn.close();
       console.log('✅ MongoDB connection closed gracefully');
     }
-    process.exit(0);
+    // Only call process.exit in Node.js runtime
+    if (typeof process !== 'undefined' && process.exit) {
+      process.exit(0);
+    }
   } catch (error) {
     console.error('❌ Error during graceful shutdown:', error);
-    process.exit(1);
+    // Only call process.exit in Node.js runtime
+    if (typeof process !== 'undefined' && process.exit) {
+      process.exit(1);
+    }
   }
 }
 
