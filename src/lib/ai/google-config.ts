@@ -52,6 +52,8 @@ if (!GOOGLE_GENERATIVE_AI_API_KEY && process.env.NODE_ENV === 'production') {
  */
 export const google = createGoogleGenerativeAI({
   apiKey: GOOGLE_GENERATIVE_AI_API_KEY || 'dummy-key-for-build',
+  // Use the correct base URL for better compatibility
+  baseURL: 'https://generativelanguage.googleapis.com/v1beta',
   // Custom headers for tracking and analytics
   headers: {
     'User-Agent': 'ChatGPT-Clone/1.0',
@@ -63,39 +65,39 @@ export const google = createGoogleGenerativeAI({
  * Based on latest Google Generative AI model offerings as of 2025
  */
 export const GOOGLE_MODELS = {
-  // Gemini 2.5 Models - Latest and most capable
-  GEMINI_2_5_PRO_PREVIEW: {
-    id: 'gemini-2.5-pro-preview-05-06',
-    name: 'Gemini 2.5 Pro (Preview)',
-    description:
-      'Most capable Gemini model with advanced reasoning and multimodal capabilities',
-    contextWindow: 2097152, // 2M tokens
-    maxOutputTokens: 8192,
-    supportedFeatures: [
-      'chat',
-      'function-calling',
-      'json-mode',
-      'vision',
-      'thinking',
-    ] as const,
-    pricing: {
-      input: 1.25, // per 1M tokens
-      output: 5.0, // per 1M tokens
-    },
-    recommended: true,
-    type: 'chat' as const,
-    speed: 'medium' as const,
-    special: 'thinking' as const,
-    capabilities: {
-      imageInput: true,
-      documentInput: true,
-      audioInput: false,
-      fileInput: true,
-    },
-  },
+  // Note: Gemini 2.5 Pro Preview requires paid billing account
+  // GEMINI_2_5_PRO_PREVIEW: {
+  //   id: 'models/gemini-2.5-pro-preview-05-06',
+  //   name: 'Gemini 2.5 Pro (Preview)',
+  //   description:
+  //     'Most capable Gemini model with advanced reasoning and multimodal capabilities (Requires paid billing)',
+  //   contextWindow: 2097152, // 2M tokens
+  //   maxOutputTokens: 8192,
+  //   supportedFeatures: [
+  //     'chat',
+  //     'function-calling',
+  //     'json-mode',
+  //     'vision',
+  //     'reasoning',
+  //   ] as const,
+  //   pricing: {
+  //     input: 1.25, // per 1M tokens
+  //     output: 5.0, // per 1M tokens
+  //   },
+  //   recommended: true,
+  //   type: 'chat' as const,
+  //   speed: 'medium' as const,
+  //   special: 'reasoning' as const,
+  //   capabilities: {
+  //     imageInput: true,
+  //     documentInput: true,
+  //     audioInput: false,
+  //     fileInput: true,
+  //   },
+  // },
 
   GEMINI_2_5_FLASH_PREVIEW: {
-    id: 'gemini-2.5-flash-preview-04-17',
+    id: 'models/gemini-2.5-flash-preview-04-17',
     name: 'Gemini 2.5 Flash (Preview)',
     description: 'Fast and efficient model with thinking capabilities',
     contextWindow: 1048576, // 1M tokens
@@ -124,7 +126,7 @@ export const GOOGLE_MODELS = {
 
   // Gemini 2.0 Models
   GEMINI_2_0_FLASH_EXP: {
-    id: 'gemini-2.0-flash-exp',
+    id: 'models/gemini-2.0-flash-exp',
     name: 'Gemini 2.0 Flash (Experimental)',
     description:
       'Latest experimental model with image generation and advanced capabilities',
@@ -154,7 +156,7 @@ export const GOOGLE_MODELS = {
 
   // Gemini 1.5 Models - Stable and reliable
   GEMINI_1_5_PRO: {
-    id: 'gemini-1.5-pro-latest',
+    id: 'models/gemini-1.5-pro-latest',
     name: 'Gemini 1.5 Pro',
     description: 'Highly capable model for complex reasoning and analysis',
     contextWindow: 2097152, // 2M tokens
@@ -180,7 +182,7 @@ export const GOOGLE_MODELS = {
   },
 
   GEMINI_1_5_FLASH: {
-    id: 'gemini-1.5-flash-latest',
+    id: 'models/gemini-1.5-flash-latest',
     name: 'Gemini 1.5 Flash',
     description: 'Fast and efficient model for most chat applications',
     contextWindow: 1048576, // 1M tokens
@@ -207,7 +209,7 @@ export const GOOGLE_MODELS = {
   },
 
   GEMINI_1_5_FLASH_8B: {
-    id: 'gemini-1.5-flash-8b-latest',
+    id: 'models/gemini-1.5-flash-8b-latest',
     name: 'Gemini 1.5 Flash 8B',
     description: 'Lightweight and fast model for real-time applications',
     contextWindow: 1048576, // 1M tokens
@@ -229,7 +231,7 @@ export const GOOGLE_MODELS = {
 
   // Base Gemini Models
   GEMINI_1_0_PRO: {
-    id: 'gemini-1.0-pro',
+    id: 'models/gemini-1.0-pro',
     name: 'Gemini 1.0 Pro',
     description: 'Stable base model for general applications',
     contextWindow: 32768,
@@ -310,6 +312,14 @@ export const GOOGLE_CHAT_CONFIG = {
     maxTokens: 8192,
     topP: 0.8,
     stream: true,
+  },
+
+  // Thinking parameters for models that support thinkingConfig
+  THINKING_PARAMS: {
+    temperature: 0.1,
+    maxTokens: 8192,
+    topP: 0.8,
+    stream: true,
     // Google-specific thinking configuration
     thinkingConfig: {
       thinkingBudget: 2048,
@@ -375,8 +385,16 @@ export const googleModelHelpers = {
    */
   getThinkingModels: () => {
     return Object.values(GOOGLE_MODELS).filter(
-      (model: any) =>
-        model.special === 'thinking' || model.special === 'reasoning'
+      (model: any) => model.special === 'thinking'
+    );
+  },
+
+  /**
+   * Get reasoning models (advanced but no thinkingConfig)
+   */
+  getReasoningModels: () => {
+    return Object.values(GOOGLE_MODELS).filter(
+      (model: any) => model.special === 'reasoning'
     );
   },
 

@@ -91,10 +91,13 @@ async function checkRateLimit(userId: string): Promise<boolean> {
  * Validate Google Generative AI model selection
  */
 function validateGoogleModel(model: string): string {
-  const googleModel = Object.values(GOOGLE_MODELS).find((m) => m.id === model);
+  // Normalize model ID to include models/ prefix if not present
+  const normalizedModel = model.startsWith('models/') ? model : `models/${model}`;
+  
+  const googleModel = Object.values(GOOGLE_MODELS).find((m) => m.id === normalizedModel);
 
   if (googleModel) {
-    return model;
+    return normalizedModel;
   }
 
   // Default to fastest model if invalid model provided
@@ -365,6 +368,12 @@ export async function POST(request: NextRequest) {
       (m) => m.id === selectedModel
     );
 
+    console.log('Model configuration:', {
+      selectedModel,
+      modelType: (modelConfig as any)?.special,
+      hasThinkingConfig: (modelConfig as any)?.special === 'thinking',
+    });
+
     // Determine if this is a new conversation
     const isNewConversation = !conversationId;
     const finalConversationId = conversationId || generateConversationId();
@@ -403,53 +412,77 @@ export async function POST(request: NextRequest) {
     // Create Google Generative AI client
     const google = createGoogleGenerativeAI({
       apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || '',
+      baseURL: 'https://generativelanguage.googleapis.com/v1beta',
     });
+
+    // Ensure model ID is in correct format (remove models/ prefix if present)
+    const modelIdForAI = selectedModel.startsWith('models/') 
+      ? selectedModel.slice(7) 
+      : selectedModel;
+
+    console.log('Using model ID for AI SDK:', modelIdForAI);
 
     // Create streaming response using Vercel AI SDK
-    const result = await streamText({
-      model: google(selectedModel),
-      messages: processedMessages,
-      temperature,
-      maxTokens,
-      // Add streaming configuration
-      onFinish: async (completion) => {
-        const responseTime = Date.now() - startTime;
-        console.log(`Chat completion finished in ${responseTime}ms:`, {
-          conversationId: finalConversationId,
-          model: selectedModel,
-          userId,
-          messageCount: processedMessages.length,
-          finishReason: completion.finishReason,
-          usage: completion.usage,
-        });
-
-        try {
-          // Save messages and update conversation (conversation already exists for new ones)
-          await saveMessagesAndUpdateConversation({
+    let result;
+    try {
+      result = await streamText({
+        model: google(modelIdForAI, {
+          safetySettings: [
+            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+          ],
+        }),
+        messages: processedMessages,
+        temperature,
+        maxTokens,
+        // Add streaming configuration
+        onFinish: async (completion) => {
+          const responseTime = Date.now() - startTime;
+          console.log(`Chat completion finished in ${responseTime}ms:`, {
             conversationId: finalConversationId,
-            userId,
-            userMessage: messages[messages.length - 1], // Last user message
-            assistantResponse: completion.text,
             model: selectedModel,
+            userId,
+            messageCount: processedMessages.length,
+            finishReason: completion.finishReason,
             usage: completion.usage,
-            isNewConversation,
           });
-        } catch (dbError) {
-          console.error('Failed to save messages to database:', dbError);
-          // Don't fail the API response if database save fails
-        }
-      },
-      // Add provider-specific options for Google Generative AI
-      ...((modelConfig as any)?.special === 'thinking' && {
-        providerOptions: {
-          google: {
-            thinkingConfig: {
-              thinkingBudget: 2048,
+
+          try {
+            // Save messages and update conversation (conversation already exists for new ones)
+            await saveMessagesAndUpdateConversation({
+              conversationId: finalConversationId,
+              userId,
+              userMessage: messages[messages.length - 1], // Last user message
+              assistantResponse: completion.text,
+              model: selectedModel,
+              usage: completion.usage,
+              isNewConversation,
+            });
+          } catch (dbError) {
+            console.error('Failed to save messages to database:', dbError);
+            // Don't fail the API response if database save fails
+          }
+        },
+        onError: (error) => {
+          console.error('StreamText onError:', error);
+        },
+        // Add provider-specific options for Google Generative AI thinking models only
+        ...((modelConfig as any)?.special === 'thinking' && {
+          providerOptions: {
+            google: {
+              thinkingConfig: {
+                thinkingBudget: 2048,
+              },
             },
           },
-        },
-      }),
-    });
+        }),
+      });
+    } catch (streamError) {
+      console.error('StreamText creation error:', streamError);
+      throw streamError;
+    }
 
     // Add conversation ID to response headers - using DataStreamResponse for useChat compatibility
     const response = result.toDataStreamResponse();
