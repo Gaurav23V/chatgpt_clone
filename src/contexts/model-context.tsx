@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
@@ -17,7 +17,9 @@ const ModelContext = createContext<ModelContextState | undefined>(undefined);
 const STORAGE_KEY = 'chatgpt-clone-selected-model';
 
 export function ModelProvider({ children }: { children: React.ReactNode }) {
-  const [selectedModel, setSelectedModelState] = useState<string>(defaultModel.id);
+  const [selectedModel, setSelectedModelState] = useState<string>(
+    defaultModel.id
+  );
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -55,4 +57,4 @@ export function useModel() {
     throw new Error('useModel must be used within a ModelProvider');
   }
   return ctx;
-} 
+}

@@ -2,7 +2,9 @@
 
 ## Overview
 
-The `/api/chat` endpoint is a fully functional chat API built with the **Vercel AI SDK v4** and **Groq** provider for ultra-fast AI inference. This endpoint powers the real-time chat functionality in our ChatGPT clone.
+The `/api/chat` endpoint is a fully functional chat API built with the **Vercel AI SDK v4** and
+**Groq** provider for ultra-fast AI inference. This endpoint powers the real-time chat functionality
+in our ChatGPT clone.
 
 ## Features
 
@@ -14,17 +16,20 @@ The `/api/chat` endpoint is a fully functional chat API built with the **Vercel 
 ✅ **Error Handling** - Detailed error messages and proper HTTP status codes  
 ✅ **CORS Support** - Cross-origin request handling  
 ✅ **Logging** - Comprehensive request/response logging  
-✅ **Edge Runtime** - Optimized for serverless deployment  
+✅ **Edge Runtime** - Optimized for serverless deployment
 
 ## Endpoint Details
 
 ### URL
+
 ```
 POST /api/chat
 ```
 
 ### Authentication
-All requests require valid Clerk authentication. The endpoint will return `401 Unauthorized` for unauthenticated requests.
+
+All requests require valid Clerk authentication. The endpoint will return `401 Unauthorized` for
+unauthenticated requests.
 
 ### Request Format
 
@@ -47,20 +52,23 @@ All requests require valid Clerk authentication. The endpoint will return `401 U
 
 ### Response Format
 
-The endpoint returns a streaming text response using Server-Sent Events (SSE). Each chunk contains part of the AI's response.
+The endpoint returns a streaming text response using Server-Sent Events (SSE). Each chunk contains
+part of the AI's response.
 
 #### Headers
+
 - `X-Conversation-ID`: The conversation identifier (generated for new conversations)
 - `Content-Type`: `text/plain; charset=utf-8`
 - `Cache-Control`: `no-cache, no-transform`
 
 #### Streaming Response
+
 ```
 data: Hello! I'd be happy to help you with that question.
 
 data:  Let me break this down for you:
 
-data: 
+data:
 
 1. **REST APIs** are...
 
@@ -72,10 +80,12 @@ data: [DONE]
 The endpoint supports multiple Groq models optimized for different use cases:
 
 ### Fast Models (Recommended for Chat)
+
 - `llama-3.1-8b-instant` - Ultra-fast responses, great for chat
 - `llama-3.3-70b-versatile` - Balanced performance and quality
 
 ### Specialized Models
+
 - `qwen-qwq-32b` - Advanced reasoning capabilities
 - `mixtral-8x7b-32768` - Large context window
 - `gemma2-9b-it` - Instruction-tuned for conversations
@@ -89,11 +99,13 @@ The endpoint supports multiple Groq models optimized for different use cases:
 ## Validation Rules
 
 ### Messages Array
+
 - Minimum 1 message, maximum 50 messages
 - Each message content: 1-8000 characters
 - Valid roles: `user`, `assistant`, `system`
 
 ### Model Parameters
+
 - `temperature`: 0.0 - 2.0 (controls randomness)
 - `maxTokens`: 1 - 8192 (response length limit)
 
@@ -101,13 +113,13 @@ The endpoint supports multiple Groq models optimized for different use cases:
 
 ### HTTP Status Codes
 
-| Code | Description | Common Causes |
-|------|-------------|---------------|
-| 200 | Success | Request processed successfully |
-| 400 | Bad Request | Invalid JSON, validation errors |
-| 401 | Unauthorized | Missing or invalid authentication |
-| 429 | Too Many Requests | Rate limit exceeded |
-| 500 | Internal Server Error | Server-side errors, API issues |
+| Code | Description           | Common Causes                     |
+| ---- | --------------------- | --------------------------------- |
+| 200  | Success               | Request processed successfully    |
+| 400  | Bad Request           | Invalid JSON, validation errors   |
+| 401  | Unauthorized          | Missing or invalid authentication |
+| 429  | Too Many Requests     | Rate limit exceeded               |
+| 500  | Internal Server Error | Server-side errors, API issues    |
 
 ### Error Response Format
 
@@ -122,6 +134,7 @@ The endpoint supports multiple Groq models optimized for different use cases:
 ### Common Error Examples
 
 **Authentication Required**
+
 ```json
 {
   "error": "Authentication required"
@@ -129,6 +142,7 @@ The endpoint supports multiple Groq models optimized for different use cases:
 ```
 
 **Invalid Request Format**
+
 ```json
 {
   "error": "Invalid request format",
@@ -142,6 +156,7 @@ The endpoint supports multiple Groq models optimized for different use cases:
 ```
 
 **Rate Limit Exceeded**
+
 ```json
 {
   "error": "Rate limit exceeded",
@@ -200,11 +215,11 @@ const sendChatMessage = async (message: string) => {
       messages: [
         {
           role: 'user',
-          content: message
-        }
+          content: message,
+        },
       ],
-      model: 'llama-3.1-8b-instant'
-    })
+      model: 'llama-3.1-8b-instant',
+    }),
   });
 
   if (!response.ok) {
@@ -220,7 +235,7 @@ const sendChatMessage = async (message: string) => {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      
+
       const chunk = decoder.decode(value);
       console.log('Received:', chunk);
     }
@@ -250,7 +265,7 @@ function ChatComponent() {
           <strong>{message.role}:</strong> {message.content}
         </div>
       ))}
-      
+
       <form onSubmit={handleSubmit}>
         <input
           value={input}
@@ -283,11 +298,13 @@ NODE_ENV=development
 ## Performance Characteristics
 
 ### Response Times (typical)
+
 - **llama-3.1-8b-instant**: 50-200ms first token
 - **llama-3.3-70b-versatile**: 100-500ms first token
 - **Streaming**: ~10-50 tokens per second
 
 ### Throughput
+
 - Supports concurrent requests
 - Edge Runtime for minimal cold starts
 - Optimized for serverless deployment
@@ -312,11 +329,13 @@ The endpoint provides comprehensive logging for:
 ## Deployment Notes
 
 ### Vercel Deployment
+
 - Uses Edge Runtime for optimal performance
 - Automatic scaling based on traffic
 - Built-in monitoring and analytics
 
 ### Environment Setup
+
 1. Set required environment variables
 2. Configure Clerk authentication
 3. Obtain Groq API key from console.groq.com
@@ -351,20 +370,24 @@ Planned improvements:
 ### Common Issues
 
 **"Authentication required" error**
+
 - Ensure Clerk is properly configured
 - Check that the user is signed in
 - Verify session token is valid
 
 **"Service configuration error"**
+
 - Verify `GROQ_API_KEY` is set in environment
 - Check API key is valid and has sufficient credits
 
 **Slow responses**
+
 - Try using `llama-3.1-8b-instant` model
 - Reduce `maxTokens` parameter
 - Check Groq service status
 
 **Rate limiting issues**
+
 - Implement request queuing in frontend
 - Consider upgrading to paid Groq plan
 - Add user feedback for rate limiting
@@ -372,6 +395,7 @@ Planned improvements:
 ## Support
 
 For issues or questions:
+
 1. Check the troubleshooting section above
 2. Review Groq documentation: https://console.groq.com/docs
 3. Check Vercel AI SDK docs: https://sdk.vercel.ai/docs
@@ -381,4 +405,4 @@ For issues or questions:
 
 **Last Updated**: January 2025  
 **API Version**: 1.0  
-**Compatible with**: Vercel AI SDK v4.x, Groq API v1.x 
+**Compatible with**: Vercel AI SDK v4.x, Groq API v1.x

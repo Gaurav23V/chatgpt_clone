@@ -5,8 +5,8 @@ import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { UI_MODEL_GROUPS } from '@/lib/ai/models';
 import { useModel } from '@/contexts/model-context';
+import { UI_MODEL_GROUPS } from '@/lib/ai/models';
 
 /**
  * ModelSelector Component
@@ -41,12 +41,12 @@ export default function ModelSelector() {
 
       {open && (
         <div
-          className='animate-in fade-in-0 zoom-in-95 absolute z-50 bottom-full mb-2 max-h-80 w-56 overflow-y-auto rounded-lg border border-[#333] bg-[#1e1e1e] shadow-xl'
+          className='animate-in fade-in-0 zoom-in-95 absolute bottom-full z-50 mb-2 max-h-80 w-56 overflow-y-auto rounded-lg border border-[#333] bg-[#1e1e1e] shadow-xl'
           role='listbox'
         >
           {UI_MODEL_GROUPS.map((group) => (
             <div key={group.title} className='px-3 py-2'>
-              <p className='mb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400'>
+              <p className='mb-1 text-[10px] font-semibold tracking-wider text-gray-400 uppercase'>
                 {group.title}
               </p>
               {group.models.map((model) => {
@@ -64,7 +64,9 @@ export default function ModelSelector() {
                     }`}
                   >
                     <span className='text-xs text-gray-200'>{model.name}</span>
-                    <span className='text-[10px] text-gray-400'>{model.description}</span>
+                    <span className='text-[10px] text-gray-400'>
+                      {model.description}
+                    </span>
                   </button>
                 );
               })}
@@ -74,4 +76,4 @@ export default function ModelSelector() {
       )}
     </div>
   );
-} 
+}

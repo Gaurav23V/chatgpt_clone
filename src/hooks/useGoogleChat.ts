@@ -71,7 +71,9 @@ export interface UseGoogleChatReturn {
 /**
  * Enhanced useChat hook with Google Generative AI optimizations
  */
-export function useGoogleChat(config: GoogleChatConfig = {}): UseGoogleChatReturn {
+export function useGoogleChat(
+  config: GoogleChatConfig = {}
+): UseGoogleChatReturn {
   const {
     api = '/api/chat',
     initialMessages = [],
@@ -275,8 +277,10 @@ export function useGoogleChat(config: GoogleChatConfig = {}): UseGoogleChatRetur
   }
 
   function handleRetry() {
-    const delay = googleErrorHandling.retryDelay * Math.pow(googleErrorHandling.backoffMultiplier, googleState.retryCount);
-    
+    const delay =
+      googleErrorHandling.retryDelay *
+      Math.pow(googleErrorHandling.backoffMultiplier, googleState.retryCount);
+
     retryTimeoutRef.current = setTimeout(() => {
       retry();
     }, delay);
@@ -306,4 +310,4 @@ export function useGoogleChat(config: GoogleChatConfig = {}): UseGoogleChatRetur
     retry,
     clearConversation,
   };
-} 
+}

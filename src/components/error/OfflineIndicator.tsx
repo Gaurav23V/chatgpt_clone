@@ -60,7 +60,8 @@ function isSlowConnection(): boolean {
   if (!isBrowser()) return false;
 
   // Type assertion for experimental navigator properties
-  const connection = (navigator as any).connection ||
+  const connection =
+    (navigator as any).connection ||
     (navigator as any).mozConnection ||
     (navigator as any).webkitConnection;
   if (connection) {

@@ -18,11 +18,11 @@ import {
   type AIError,
   classifyError,
   DEFAULT_RECOVERY_CONFIG,
-  defaultErrorHandler,
+  defaultErrorHandlerInstance,
   type ErrorRecoveryConfig,
   type RecoveryAction,
 } from '@/components/error';
-import { groqErrorHandling, groqModelHelpers } from '@/lib/ai/groq-config';
+import { googleErrorHandling, googleModelHelpers } from '@/lib/ai/google-config';
 
 /**
  * Enhanced Groq Chat Configuration
@@ -275,54 +275,50 @@ export function useEnhancedGroqChat(
   // Handle error with recovery strategies
   const handleErrorWithRecovery = useCallback(
     async (aiError: AIError) => {
-      const errorResult = defaultErrorHandler.handleError(
+      const errorResult = defaultErrorHandlerInstance.handleError(
         aiError,
         requestIdRef.current
       );
-      const { canRetry, retryDelay, fallbackModel, recommendedAction } =
-        errorResult;
+      const { canRetry, retryDelay } = errorResult;
 
       setEnhancedState((prev) => ({
         ...prev,
         isRecovering: true,
       }));
 
-      // Execute recovery action based on recommendation
-      let recoverySuccess = false;
+              // Execute recovery action based on error type
+        let recoverySuccess = false;
 
-      try {
-        switch (recommendedAction) {
-          case 'fallback_model':
-            if (enableModelFallback && fallbackModel) {
-              recoverySuccess = await attemptModelFallback(fallbackModel);
-            }
-            break;
+        try {
+          switch (aiError.type) {
+            case 'GOOGLE_MODEL_UNAVAILABLE':
+              if (enableModelFallback) {
+                const fallbackModel = googleModelHelpers.getFastestModels()[0]?.id;
+                if (fallbackModel) {
+                  recoverySuccess = await attemptModelFallback(fallbackModel);
+                }
+              }
+              break;
 
-          case 'reduce_context':
-            if (enableContextReduction) {
-              recoverySuccess = await attemptContextReduction();
-            }
-            break;
+            case 'GOOGLE_CONTEXT_LENGTH_EXCEEDED':
+              if (enableContextReduction) {
+                recoverySuccess = await attemptContextReduction();
+              }
+              break;
 
-          case 'retry_with_backoff':
-          case 'wait_and_retry':
-            if (enableAutoRetry && canRetry) {
-              recoverySuccess = await attemptAutoRetry(retryDelay || 1000);
-            }
-            break;
+            case 'GOOGLE_RATE_LIMIT':
+            case 'GOOGLE_API_UNAVAILABLE':
+              if (enableAutoRetry && canRetry) {
+                recoverySuccess = await attemptAutoRetry(retryDelay || 1000);
+              }
+              break;
 
-          default:
-            // No automatic recovery for this action
-            break;
-        }
+            default:
+              // No automatic recovery for this action
+              break;
+          }
 
-        // Record recovery outcome
-        defaultErrorHandler.recordRecovery(
-          aiError,
-          recommendedAction,
-          recoverySuccess
-        );
-        onRecoveryAction(recommendedAction, recoverySuccess);
+          onRecoveryAction('RETRY', recoverySuccess);
       } catch (recoveryError) {
         console.error('Recovery failed:', recoveryError);
         recoverySuccess = false;
@@ -372,10 +368,10 @@ export function useEnhancedGroqChat(
   const attemptContextReduction = useCallback(async (): Promise<boolean> => {
     try {
       const currentMessages = messages;
-      const reducedMessages = defaultErrorHandler.recovery.reduceContext(
-        currentMessages,
-        0.3
-      );
+      // Simple context reduction - keep first and last few messages
+      const reducedMessages = currentMessages.length > 4 
+        ? [currentMessages[0], ...currentMessages.slice(-3)]
+        : currentMessages;
 
       setMessages(reducedMessages);
       setEnhancedState((prev) => ({
@@ -505,10 +501,9 @@ export function useEnhancedGroqChat(
   const reduceContext = useCallback(
     (percentage = 0.3) => {
       const currentMessages = messages;
-      const reducedMessages = defaultErrorHandler.recovery.reduceContext(
-        currentMessages,
-        percentage
-      );
+      // Simple context reduction
+      const keepCount = Math.max(2, Math.floor(currentMessages.length * (1 - percentage)));
+      const reducedMessages = currentMessages.slice(-keepCount);
       setMessages(reducedMessages);
 
       setEnhancedState((prev) => ({
@@ -538,8 +533,6 @@ export function useEnhancedGroqChat(
         averageResponseTime: 0,
       },
     }));
-
-    defaultErrorHandler.reset(requestIdRef.current);
   }, [setMessages, setInput]);
 
   // Reset error state
@@ -550,8 +543,6 @@ export function useEnhancedGroqChat(
       errorHistory: [],
       retryCount: 0,
     }));
-
-    defaultErrorHandler.reset(requestIdRef.current);
   }, []);
 
   // Get appropriate error UI
@@ -559,7 +550,7 @@ export function useEnhancedGroqChat(
     if (!enhancedState.lastError) return null;
 
     switch (enhancedState.lastError.type) {
-      case 'GROQ_RATE_LIMIT':
+              case 'GOOGLE_RATE_LIMIT':
         return {
           component: 'RateLimitWarning',
           props: { error: enhancedState.lastError, onRetry: retry },
@@ -581,12 +572,12 @@ export function useEnhancedGroqChat(
   // Get recommended action
   const getRecommendedAction = useCallback((): RecoveryAction | null => {
     if (!enhancedState.lastError) return null;
-
-    const errorResult = defaultErrorHandler.handleError(
-      enhancedState.lastError,
-      requestIdRef.current
-    );
-    return errorResult.recommendedAction;
+    
+    // Simple recommendation based on error type
+    if (enhancedState.lastError.retryable) {
+      return 'RETRY';
+    }
+    return 'USER_ACTION_REQUIRED';
   }, [enhancedState.lastError]);
 
   // Cleanup on unmount

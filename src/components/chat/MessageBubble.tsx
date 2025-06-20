@@ -281,24 +281,36 @@ export function MessageBubble({
   const formatContent = (text: string) => {
     // Always process markdown formatting for better UX
     let formatted = text;
-    
+
     // Bold text: **text** -> <strong>text</strong>
     formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    
+
     // Italic text: *text* -> <em>text</em> (but not if it's part of **)
     formatted = formatted.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
-    
+
     // Code: `code` -> <code>code</code>
-    formatted = formatted.replace(/`([^`]+)`/g, '<code class="bg-gray-700 px-1 py-0.5 rounded text-sm">$1</code>');
-    
+    formatted = formatted.replace(
+      /`([^`]+)`/g,
+      '<code class="bg-gray-700 px-1 py-0.5 rounded text-sm">$1</code>'
+    );
+
     // Line breaks
     formatted = formatted.replace(/\n/g, '<br>');
-    
+
     // Headers: ### Header -> <h3>Header</h3>
-    formatted = formatted.replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>');
-    formatted = formatted.replace(/^## (.*$)/gm, '<h2 class="text-xl font-semibold mt-4 mb-2">$1</h2>');
-    formatted = formatted.replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold mt-4 mb-2">$1</h1>');
-    
+    formatted = formatted.replace(
+      /^### (.*$)/gm,
+      '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>'
+    );
+    formatted = formatted.replace(
+      /^## (.*$)/gm,
+      '<h2 class="text-xl font-semibold mt-4 mb-2">$1</h2>'
+    );
+    formatted = formatted.replace(
+      /^# (.*$)/gm,
+      '<h1 class="text-2xl font-bold mt-4 mb-2">$1</h1>'
+    );
+
     return formatted;
   };
 
@@ -312,9 +324,9 @@ export function MessageBubble({
         ref={messageRef}
       >
         <div className='message-user'>
-          <div 
+          <div
             dangerouslySetInnerHTML={{ __html: formattedContent }}
-            className="message-content text-sm"
+            className='message-content text-sm'
           />
         </div>
       </div>
@@ -334,9 +346,9 @@ export function MessageBubble({
         <div className='message-assistant'>
           <div className='space-y-4 text-sm text-white'>
             {/* Main content with markdown support */}
-            <div 
+            <div
               dangerouslySetInnerHTML={{ __html: formattedContent }}
-              className="message-content text-sm"
+              className='message-content text-sm'
             />
 
             {/* Streaming indicators and status */}

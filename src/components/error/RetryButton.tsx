@@ -64,12 +64,12 @@ function getRetryDelay(error: AIError, attempt: number): number {
 
   // Use different base delays based on error type
   switch (error.type) {
-    case 'GROQ_RATE_LIMIT':
+    case 'GOOGLE_RATE_LIMIT':
       return calculateRetryDelay(attempt, 5000, 60000); // Longer delays for rate limits
     case 'NETWORK_ERROR':
     case 'NETWORK_TIMEOUT':
       return calculateRetryDelay(attempt, 2000, 15000); // Medium delays for network
-    case 'GROQ_API_UNAVAILABLE':
+    case 'GOOGLE_API_UNAVAILABLE':
       return calculateRetryDelay(attempt, 3000, 30000); // Longer for API issues
     default:
       return calculateRetryDelay(attempt, 1000, 10000); // Default delays
@@ -120,10 +120,7 @@ export function RetryButton({
   const canAutoRetry =
     autoRetry &&
     error.retryable &&
-    state.retryCount < maxAutoRetries &&
-    ['retry', 'retry_with_backoff', 'wait_and_retry'].some((action) =>
-      error.recoveryActions.includes(action as RecoveryAction)
-    );
+    state.retryCount < maxAutoRetries;
 
   // Handle retry logic
   const handleRetry = useCallback(async () => {

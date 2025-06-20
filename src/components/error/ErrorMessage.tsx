@@ -97,7 +97,7 @@ export function ErrorMessage({
   variant = 'card',
   size = 'md',
 }: ErrorMessageProps) {
-  const colors = getErrorColors(error.severity);
+  const colors = getErrorColors(error.severity || 'medium');
   const iconSize =
     size === 'sm' ? 'h-4 w-4' : size === 'lg' ? 'h-6 w-6' : 'h-5 w-5';
   const textSize =
@@ -110,7 +110,7 @@ export function ErrorMessage({
       <div
         className={`flex items-center space-x-2 ${textSize} ${colors.text} ${className}`}
       >
-        {showIcon && getErrorIcon(error.severity, iconSize)}
+                  {showIcon && getErrorIcon(error.severity || 'medium', iconSize)}
         <span>{error.userMessage}</span>
         {showCode && error.code && (
           <span className={`font-mono text-xs ${colors.accent}`}>
@@ -131,7 +131,7 @@ export function ErrorMessage({
         <div className='flex items-start space-x-3'>
           {showIcon && (
             <div className='mt-0.5 flex-shrink-0'>
-              {getErrorIcon(error.severity, iconSize)}
+              {getErrorIcon(error.severity || 'medium', iconSize)}
             </div>
           )}
           <div className='min-w-0 flex-1'>
@@ -156,7 +156,7 @@ export function ErrorMessage({
       <div className='flex items-start space-x-3'>
         {showIcon && (
           <div className='mt-0.5 flex-shrink-0'>
-            {getErrorIcon(error.severity, iconSize)}
+            {getErrorIcon(error.severity || 'medium', iconSize)}
           </div>
         )}
         <div className='min-w-0 flex-1'>
@@ -186,10 +186,10 @@ export function ErrorMessage({
                 <div>
                   <strong>Message:</strong> {error.message}
                 </div>
-                {error.context?.timestamp && (
+                {error.metadata?.timestamp && (
                   <div>
                     <strong>Time:</strong>{' '}
-                    {new Date(error.context.timestamp).toLocaleString()}
+                    {new Date(error.metadata.timestamp).toLocaleString()}
                   </div>
                 )}
               </div>
@@ -214,12 +214,12 @@ export function QuickErrorMessage({
   className?: string;
 }) {
   const mockError: AIError = {
+    name: 'MockError',
     type: 'UNKNOWN_ERROR',
     severity,
     message,
     userMessage: message,
     retryable: false,
-    recoveryActions: [],
   };
 
   return (

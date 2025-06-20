@@ -9,7 +9,11 @@
 
 import { createOpenAI } from '@ai-sdk/openai';
 
-import { DEFAULT_GOOGLE_MODEL, google, GOOGLE_CHAT_CONFIG } from './google-config';
+import {
+  DEFAULT_GOOGLE_MODEL,
+  google,
+  GOOGLE_CHAT_CONFIG,
+} from './google-config';
 
 // Environment validation
 const GOOGLE_GENERATIVE_AI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;

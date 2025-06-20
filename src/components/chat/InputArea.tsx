@@ -5,8 +5,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Mic, Send, Settings } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+
+import type { ChatAttachment } from './FileUploadButton';
+import FileUploadButton from './FileUploadButton';
 import ModelSelector from './ModelSelector';
-import FileUploadButton, { ChatAttachment } from './FileUploadButton';
 
 interface InputAreaProps {
   onSubmit: (message: string, attachments: ChatAttachment[]) => void;
@@ -137,7 +139,7 @@ export function InputArea({
 
         {/* Attachments preview */}
         {attachments.length > 0 && (
-          <div className='mb-3 mt-2 flex flex-wrap gap-2'>
+          <div className='mt-2 mb-3 flex flex-wrap gap-2'>
             {attachments.map((att, idx) => (
               <div
                 key={idx}

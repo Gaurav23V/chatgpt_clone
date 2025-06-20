@@ -538,9 +538,11 @@ interface IUserModel extends Model<IUserDocument> {
 
 // Create and export the User model
 // The model is constrained by IUserDocument and IUserModel
-const UserModel = (models.User || 
-  model<IUserDocument, IUserModel>('User', userSchema)
-) as Model<IUserDocument, IUserModel>;
+const UserModel = (models.User ||
+  model<IUserDocument, IUserModel>('User', userSchema)) as Model<
+  IUserDocument,
+  IUserModel
+>;
 
 export default UserModel;
 

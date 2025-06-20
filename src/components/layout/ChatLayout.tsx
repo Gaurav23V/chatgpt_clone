@@ -6,12 +6,11 @@ import { usePathname } from 'next/navigation';
 
 import { useAuth, useUser } from '@clerk/nextjs';
 
+import { ModelProvider } from '@/contexts/model-context';
 import { useCurrentConversation } from '@/contexts/user-context';
 
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
-
-import { ModelProvider } from '@/contexts/model-context';
 
 interface ChatLayoutProps {
   children: React.ReactNode;

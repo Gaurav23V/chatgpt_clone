@@ -488,12 +488,14 @@ button:active {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
   padding: 2px 6px;
-  font-family: ui-monospace, 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', 'Courier New', monospace;
+  font-family:
+    ui-monospace, 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono',
+    'Courier New', monospace;
   font-size: 0.875em;
 }
 
-.message-content h1, 
-.message-content h2, 
+.message-content h1,
+.message-content h2,
 .message-content h3 {
   margin-top: 1rem;
   margin-bottom: 0.5rem;

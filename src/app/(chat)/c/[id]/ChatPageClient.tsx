@@ -1,6 +1,6 @@
 /**
  * Chat Page Client Component
- * 
+ *
  * Client-side component that loads messages for an existing conversation
  * and displays the chat interface.
  */
@@ -44,7 +44,9 @@ export function ChatPageClient({ conversationId }: ChatPageClientProps) {
 
         console.log(`Loading messages for conversation: ${conversationId}`);
 
-        const response = await fetch(`/api/conversations/${conversationId}/messages`);
+        const response = await fetch(
+          `/api/conversations/${conversationId}/messages`
+        );
 
         if (response.status === 404) {
           // Conversation doesn't exist
@@ -59,7 +61,9 @@ export function ChatPageClient({ conversationId }: ChatPageClientProps) {
         const data = await response.json();
         const loadedMessages = data.data?.messages || [];
 
-        console.log(`Loaded ${loadedMessages.length} messages for conversation: ${conversationId}`);
+        console.log(
+          `Loaded ${loadedMessages.length} messages for conversation: ${conversationId}`
+        );
 
         // Transform messages and ensure Date objects
         const formattedMessages = loadedMessages.map((msg: any) => ({
@@ -70,10 +74,11 @@ export function ChatPageClient({ conversationId }: ChatPageClientProps) {
         }));
 
         setMessages(formattedMessages);
-
       } catch (err) {
         console.error('Error loading messages:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load messages');
+        setError(
+          err instanceof Error ? err.message : 'Failed to load messages'
+        );
       } finally {
         setIsLoading(false);
       }
@@ -112,9 +117,6 @@ export function ChatPageClient({ conversationId }: ChatPageClientProps) {
   }
 
   return (
-    <ChatArea
-      conversationId={conversationId}
-      initialMessages={messages}
-    />
+    <ChatArea conversationId={conversationId} initialMessages={messages} />
   );
-} 
+}

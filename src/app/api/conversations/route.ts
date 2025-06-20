@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     if (!serviceResult.success) {
       return NextResponse.json(
-        { error: serviceResult.error, message: serviceResult.message },
+        { error: serviceResult.error?.code || 'UNKNOWN_ERROR', message: serviceResult.error?.message || 'An error occurred' },
         { status: 400 }
       );
     }
@@ -60,4 +60,4 @@ export async function GET(request: NextRequest) {
 }
 
 // We use Node.js runtime as we rely on Mongoose.
-// export const runtime = 'edge'; 
+// export const runtime = 'edge';

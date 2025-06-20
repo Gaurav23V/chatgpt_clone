@@ -28,9 +28,9 @@ export * from './google-config';
 // Model definitions and utilities
 export {
   ALL_MODELS,
-  modelHelpers,
-  MODEL_CATEGORIES,
   DEFAULT_MODELS,
+  MODEL_CATEGORIES,
+  modelHelpers,
 } from './models';
 
 // Stream handling utilities

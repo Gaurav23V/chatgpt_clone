@@ -1,6 +1,6 @@
 /**
  * Conversation Messages API Route
- * 
+ *
  * GET /api/conversations/[id]/messages - Fetch messages for a conversation
  */
 
@@ -8,11 +8,11 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { auth } from '@clerk/nextjs/server';
-
-import MessageModel from '@/lib/db/models/message.model';
-import ConversationModel from '@/lib/db/models/conversation.model';
-import { connectToDatabase } from '@/lib/db/connection';
 import { Types } from 'mongoose';
+
+import { connectToDatabase } from '@/lib/db/connection';
+import ConversationModel from '@/lib/db/models/conversation.model';
+import MessageModel from '@/lib/db/models/message.model';
 
 /**
  * GET /api/conversations/[id]/messages
@@ -25,7 +25,7 @@ export async function GET(
   try {
     // Ensure database connection first
     await connectToDatabase();
-    
+
     // Authentication check
     const { userId } = await auth();
     if (!userId) {
@@ -37,7 +37,9 @@ export async function GET(
 
     const { id: conversationId } = await params;
 
-    console.log(`Fetching messages for conversation: ${conversationId} by user: ${userId}`);
+    console.log(
+      `Fetching messages for conversation: ${conversationId} by user: ${userId}`
+    );
 
     // Validate conversation ID format
     if (!Types.ObjectId.isValid(conversationId)) {
@@ -79,7 +81,9 @@ export async function GET(
       metadata: msg.aiMetadata,
     }));
 
-    console.log(`Found ${formattedMessages.length} messages for conversation: ${conversationId}`);
+    console.log(
+      `Found ${formattedMessages.length} messages for conversation: ${conversationId}`
+    );
 
     return NextResponse.json({
       success: true,
@@ -95,14 +99,13 @@ export async function GET(
         },
       },
     });
-
   } catch (error) {
     console.error('Error fetching conversation messages:', error);
-    
+
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fetch messages',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -112,4 +115,4 @@ export async function GET(
 /**
  * Use Node.js runtime for MongoDB/Mongoose compatibility
  */
-// export const runtime = 'edge'; // Commented out - using Node.js runtime for MongoDB 
+// export const runtime = 'edge'; // Commented out - using Node.js runtime for MongoDB

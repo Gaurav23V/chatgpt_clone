@@ -257,8 +257,10 @@ interface IMessageModel extends Model<IMessageDocument> {
   // Future static methods can be defined here
 }
 
-const MessageModel = (models.Message || 
-  model<IMessageDocument, IMessageModel>('Message', messageSchema)
-) as Model<IMessageDocument, IMessageModel>;
+const MessageModel = (models.Message ||
+  model<IMessageDocument, IMessageModel>('Message', messageSchema)) as Model<
+  IMessageDocument,
+  IMessageModel
+>;
 
 export default MessageModel;

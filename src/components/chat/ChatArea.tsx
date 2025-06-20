@@ -2,15 +2,14 @@
 
 import { useEffect, useRef } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { useModel } from '@/contexts/model-context';
 import { useGoogleChat } from '@/hooks/useGoogleChat';
 
-import { useModel } from '@/contexts/model-context';
-
-import { Button } from '@/components/ui/button';
+import type { ChatAttachment } from './FileUploadButton';
 import { InputArea } from './InputArea';
 import { MessageBubble } from './MessageBubble';
 import { WelcomeScreen } from './WelcomeScreen';
-import type { ChatAttachment } from './FileUploadButton';
 
 interface ChatAreaProps {
   conversationId?: string;
@@ -40,13 +39,7 @@ export function ChatArea({
 
   const { selectedModel } = useModel();
 
-  const {
-    messages,
-    append,
-    reload,
-    isLoading,
-    error,
-  } = useGoogleChat({
+  const { messages, append, reload, isLoading, error } = useGoogleChat({
     api: '/api/chat',
     initialMessages: formattedInitialMessages,
     model: selectedModel,
@@ -77,7 +70,10 @@ export function ChatArea({
   }, [messages]);
 
   // Handle sending a message with optional attachments
-  const sendMessage = async (content: string, attachments: ChatAttachment[] = []) => {
+  const sendMessage = async (
+    content: string,
+    attachments: ChatAttachment[] = []
+  ) => {
     console.log('Sending message:', content);
     try {
       await append({
@@ -149,7 +145,7 @@ export function ChatArea({
           <WelcomeScreen onSubmit={sendMessage} />
         ) : (
           // Show chat messages
-          <div className='h-full overflow-y-auto px-4 py-6 scroll-smooth'>
+          <div className='h-full overflow-y-auto scroll-smooth px-4 py-6'>
             <div className='mx-auto max-w-3xl space-y-6'>
               {messages.map((message, _index) => (
                 <MessageBubble
@@ -167,7 +163,7 @@ export function ChatArea({
                 />
               ))}
               {/* Scroll anchor */}
-              <div ref={messagesEndRef} className="h-1" />
+              <div ref={messagesEndRef} className='h-1' />
             </div>
           </div>
         )}

@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import { UserButton } from '@clerk/nextjs';
 import {
@@ -71,7 +70,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   // Fetch on initial mount and whenever the route changes (e.g., after creating a chat)
   useEffect(() => {
     fetchConversations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   // Filter conversations based on search term
@@ -88,26 +86,24 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const lastMonth = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     return {
-      today: conversations.filter((conv) => toDate(conv.lastMessageAt ?? conv.updatedAt) >= today),
-      yesterday: conversations.filter(
-        (conv) => {
-          const d = toDate(conv.lastMessageAt ?? conv.updatedAt);
-          return d >= yesterday && d < today;
-        }
+      today: conversations.filter(
+        (conv) => toDate(conv.lastMessageAt ?? conv.updatedAt) >= today
       ),
-      lastWeek: conversations.filter(
-        (conv) => {
-          const d = toDate(conv.lastMessageAt ?? conv.updatedAt);
-          return d >= lastWeek && d < yesterday;
-        }
+      yesterday: conversations.filter((conv) => {
+        const d = toDate(conv.lastMessageAt ?? conv.updatedAt);
+        return d >= yesterday && d < today;
+      }),
+      lastWeek: conversations.filter((conv) => {
+        const d = toDate(conv.lastMessageAt ?? conv.updatedAt);
+        return d >= lastWeek && d < yesterday;
+      }),
+      lastMonth: conversations.filter((conv) => {
+        const d = toDate(conv.lastMessageAt ?? conv.updatedAt);
+        return d >= lastMonth && d < lastWeek;
+      }),
+      older: conversations.filter(
+        (conv) => toDate(conv.lastMessageAt ?? conv.updatedAt) < lastMonth
       ),
-      lastMonth: conversations.filter(
-        (conv) => {
-          const d = toDate(conv.lastMessageAt ?? conv.updatedAt);
-          return d >= lastMonth && d < lastWeek;
-        }
-      ),
-      older: conversations.filter((conv) => toDate(conv.lastMessageAt ?? conv.updatedAt) < lastMonth),
     };
   };
 
@@ -120,7 +116,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   };
 
   // Render conversation group
-  const renderConversationGroup = (title: string, conversations: ConversationItem[]) => {
+  const renderConversationGroup = (
+    title: string,
+    conversations: ConversationItem[]
+  ) => {
     if (conversations.length === 0) return null;
 
     return (

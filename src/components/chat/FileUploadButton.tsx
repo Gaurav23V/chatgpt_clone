@@ -27,7 +27,10 @@ export default function FileUploadButton({
   disabled = false,
 }: FileUploadButtonProps) {
   const { selectedModel } = useModel();
-  const model = useMemo(() => modelHelpers.getModelById(selectedModel), [selectedModel]);
+  const model = useMemo(
+    () => modelHelpers.getModelById(selectedModel),
+    [selectedModel]
+  );
 
   // Determine allowed file types based on model capabilities
   const accept = useMemo(() => {
@@ -61,8 +64,10 @@ export default function FileUploadButton({
   return (
     <>
       {/* Hidden Uploadcare widget */}
-      { /* @ts-expect-error upstream types not compatible with React 19 */ }
-      <UploadcareWidget as any
+      {/* @ts-expect-error upstream types not compatible with React 19 */}
+      <UploadcareWidget
+        as
+        any
         publicKey={uploadcareOptions.publicKey}
         ref={widgetApi as any}
         tabs='file url camera'
@@ -93,4 +98,4 @@ export default function FileUploadButton({
       </Button>
     </>
   );
-} 
+}

@@ -17,15 +17,15 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { streamText } from 'ai';
 import { auth } from '@clerk/nextjs/server';
+import { streamText } from 'ai';
+import { Types } from 'mongoose';
 import { z } from 'zod';
 
 import { GOOGLE_MODELS, googleErrorHandling } from '@/lib/ai/google-config';
+import { connectToDatabase } from '@/lib/db/connection';
 import ConversationModel from '@/lib/db/models/conversation.model';
 import MessageModel from '@/lib/db/models/message.model';
-import { connectToDatabase } from '@/lib/db/connection';
-import { Types } from 'mongoose';
 import UserModel from '@/lib/db/models/user.model';
 
 // Constants
@@ -59,14 +59,17 @@ type ChatRequest = z.infer<typeof ChatRequestSchema>;
  * Rate limiting helper (simplified implementation)
  * In production, use Redis or a proper rate limiting service
  */
-const userRequestCounts = new Map<string, { count: number; resetTime: number }>();
+const userRequestCounts = new Map<
+  string,
+  { count: number; resetTime: number }
+>();
 
 async function checkRateLimit(userId: string): Promise<boolean> {
   const now = Date.now();
   const resetInterval = 60 * 1000; // 1 minute
-  
+
   const userLimits = userRequestCounts.get(userId);
-  
+
   if (!userLimits || now > userLimits.resetTime) {
     // Reset or initialize rate limit
     userRequestCounts.set(userId, {
@@ -75,11 +78,11 @@ async function checkRateLimit(userId: string): Promise<boolean> {
     });
     return false;
   }
-  
+
   if (userLimits.count >= RATE_LIMIT_REQUESTS_PER_MINUTE) {
     return true; // Rate limited
   }
-  
+
   userLimits.count++;
   return false;
 }
@@ -88,14 +91,12 @@ async function checkRateLimit(userId: string): Promise<boolean> {
  * Validate Google Generative AI model selection
  */
 function validateGoogleModel(model: string): string {
-  const googleModel = Object.values(GOOGLE_MODELS).find(
-    (m) => m.id === model
-  );
-  
+  const googleModel = Object.values(GOOGLE_MODELS).find((m) => m.id === model);
+
   if (googleModel) {
     return model;
   }
-  
+
   // Default to fastest model if invalid model provided
   return GOOGLE_MODELS.GEMINI_1_5_FLASH_8B.id;
 }
@@ -124,9 +125,11 @@ async function createNewConversation({
 }) {
   // Ensure database connection
   await connectToDatabase();
-  
+
   // Resolve MongoDB ObjectId for the Clerk user (required by schema)
-  const existingUser = await UserModel.findOne({ clerkId: userId }).select('_id');
+  const existingUser = await UserModel.findOne({ clerkId: userId }).select(
+    '_id'
+  );
   let mongoUserId: Types.ObjectId;
 
   if (existingUser) {
@@ -144,7 +147,9 @@ async function createNewConversation({
     _id: new Types.ObjectId(conversationId),
     clerkId: userId,
     userId: mongoUserId,
-    title: userMessage.content.slice(0, 50) + (userMessage.content.length > 50 ? '...' : ''),
+    title:
+      userMessage.content.slice(0, 50) +
+      (userMessage.content.length > 50 ? '...' : ''),
     messageCount: 1, // Just user message initially
     lastMessageAt: new Date(),
     totalTokens: 0, // Will be updated later
@@ -153,9 +158,9 @@ async function createNewConversation({
     },
     status: 'active',
   });
-  
+
   await conversation.save();
-  
+
   // Save user message immediately
   const userMessageDoc = new MessageModel({
     conversationId: new Types.ObjectId(conversationId),
@@ -165,9 +170,9 @@ async function createNewConversation({
     content: userMessage.content,
     status: 'completed',
   });
-  
+
   await userMessageDoc.save();
-  
+
   console.log(`Created conversation and saved user message: ${conversationId}`);
 }
 
@@ -193,9 +198,11 @@ async function saveMessagesAndUpdateConversation({
 }) {
   // Ensure database connection
   await connectToDatabase();
-  
+
   // Resolve MongoDB ObjectId for the Clerk user (required by schema)
-  const existingUser = await UserModel.findOne({ clerkId: userId }).select('_id');
+  const existingUser = await UserModel.findOne({ clerkId: userId }).select(
+    '_id'
+  );
   let mongoUserId: Types.ObjectId;
 
   if (existingUser) {
@@ -210,7 +217,7 @@ async function saveMessagesAndUpdateConversation({
 
   // Update conversation with final stats
   let conversation;
-  
+
   if (isNewConversation) {
     // Update the existing conversation (created earlier) with final message count and tokens
     conversation = await ConversationModel.findByIdAndUpdate(
@@ -222,11 +229,11 @@ async function saveMessagesAndUpdateConversation({
       },
       { new: true }
     );
-    
+
     if (!conversation) {
       throw new Error(`Conversation ${conversationId} not found for update`);
     }
-    
+
     console.log(`Updated new conversation with final stats: ${conversationId}`);
   } else {
     // Update existing conversation
@@ -234,11 +241,11 @@ async function saveMessagesAndUpdateConversation({
       conversationId,
       usage?.totalTokens || 0
     );
-    
+
     if (!conversation) {
       throw new Error(`Conversation ${conversationId} not found`);
     }
-    
+
     console.log(`Updated existing conversation: ${conversationId}`);
   }
 
@@ -252,7 +259,7 @@ async function saveMessagesAndUpdateConversation({
       content: userMessage.content,
       status: 'completed',
     });
-    
+
     await userMessageDoc.save();
   }
 
@@ -269,9 +276,9 @@ async function saveMessagesAndUpdateConversation({
       usage,
     },
   });
-  
+
   await assistantMessageDoc.save();
-  
+
   console.log(`Saved assistant message for conversation: ${conversationId}`);
 }
 
@@ -284,7 +291,8 @@ export async function OPTIONS() {
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Conversation-ID',
+      'Access-Control-Allow-Headers':
+        'Content-Type, Authorization, X-Conversation-ID',
     },
   });
 }
@@ -294,7 +302,7 @@ export async function OPTIONS() {
  */
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  
+
   try {
     console.log('Chat API request received');
 
@@ -302,10 +310,7 @@ export async function POST(request: NextRequest) {
     const { userId } = await auth();
     if (!userId) {
       console.log('Unauthorized request - no user ID');
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check rate limiting
@@ -315,7 +320,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Rate limit exceeded',
-          message: 'Too many requests. Please wait before sending another message.',
+          message:
+            'Too many requests. Please wait before sending another message.',
         },
         { status: 429 }
       );
@@ -355,8 +361,10 @@ export async function POST(request: NextRequest) {
 
     // Validate and normalize the model
     const selectedModel = validateGoogleModel(model);
-    const modelConfig = Object.values(GOOGLE_MODELS).find(m => m.id === selectedModel);
-    
+    const modelConfig = Object.values(GOOGLE_MODELS).find(
+      (m) => m.id === selectedModel
+    );
+
     // Determine if this is a new conversation
     const isNewConversation = !conversationId;
     const finalConversationId = conversationId || generateConversationId();
@@ -414,7 +422,7 @@ export async function POST(request: NextRequest) {
           finishReason: completion.finishReason,
           usage: completion.usage,
         });
-        
+
         try {
           // Save messages and update conversation (conversation already exists for new ones)
           await saveMessagesAndUpdateConversation({
@@ -446,14 +454,16 @@ export async function POST(request: NextRequest) {
     // Add conversation ID to response headers - using DataStreamResponse for useChat compatibility
     const response = result.toDataStreamResponse();
     response.headers.set('X-Conversation-ID', finalConversationId);
-    
+
     // CORS headers
     response.headers.set('Access-Control-Allow-Origin', '*');
     response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Conversation-ID');
+    response.headers.set(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization, X-Conversation-ID'
+    );
 
     return response;
-
   } catch (error: any) {
     console.error('Chat API error:', error);
 
@@ -472,7 +482,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Rate Limit Error',
-          message: 'Google Generative AI rate limit exceeded. Please try again later.',
+          message:
+            'Google Generative AI rate limit exceeded. Please try again later.',
         },
         { status: 429 }
       );
@@ -482,7 +493,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Content Error',
-          message: 'Content was filtered by Google Generative AI safety systems.',
+          message:
+            'Content was filtered by Google Generative AI safety systems.',
         },
         { status: 400 }
       );
@@ -504,4 +516,4 @@ export async function POST(request: NextRequest) {
  * Edge Runtime doesn't support Mongoose operations properly
  */
 // export const runtime = 'edge'; // Commented out - using Node.js runtime for MongoDB
-export const maxDuration = MAX_DURATION;
+export const maxDuration = 30;

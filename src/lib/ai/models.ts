@@ -25,7 +25,13 @@ export interface AIModel {
     input: number; // per 1M tokens
     output: number; // per 1M tokens
   };
-  category: 'fast' | 'balanced' | 'creative' | 'thinking' | 'vision' | 'experimental';
+  category:
+    | 'fast'
+    | 'balanced'
+    | 'creative'
+    | 'thinking'
+    | 'vision'
+    | 'experimental';
   recommended?: boolean;
   speed?: 'fastest' | 'fast' | 'medium' | 'slow';
   quality?: 'basic' | 'good' | 'excellent' | 'best';
@@ -141,7 +147,9 @@ export const modelHelpers = {
    */
   getThinkingModels: () => {
     return ALL_MODELS.filter(
-      (model) => model.category === 'thinking' || model.specialFeatures?.includes('thinking')
+      (model) =>
+        model.category === 'thinking' ||
+        model.specialFeatures?.includes('thinking')
     );
   },
 
@@ -169,31 +177,35 @@ export const modelHelpers = {
   /**
    * Get models suitable for different use cases
    */
-  getModelsForUseCase: (useCase: 'chat' | 'vision' | 'reasoning' | 'creative' | 'fast') => {
+  getModelsForUseCase: (
+    useCase: 'chat' | 'vision' | 'reasoning' | 'creative' | 'fast'
+  ) => {
     switch (useCase) {
       case 'chat':
-        return ALL_MODELS.filter(model => 
-          model.supportedFeatures.includes('chat') && 
-          model.category === 'balanced'
+        return ALL_MODELS.filter(
+          (model) =>
+            model.supportedFeatures.includes('chat') &&
+            model.category === 'balanced'
         );
       case 'vision':
-        return ALL_MODELS.filter(model => 
-          model.capabilities?.imageInput === true
+        return ALL_MODELS.filter(
+          (model) => model.capabilities?.imageInput === true
         );
       case 'reasoning':
-        return ALL_MODELS.filter(model => 
-          model.category === 'thinking' || 
-          model.specialFeatures?.includes('thinking')
+        return ALL_MODELS.filter(
+          (model) =>
+            model.category === 'thinking' ||
+            model.specialFeatures?.includes('thinking')
         );
       case 'creative':
-        return ALL_MODELS.filter(model => 
-          model.category === 'creative' || 
-          model.supportedFeatures.includes('image-generation')
+        return ALL_MODELS.filter(
+          (model) =>
+            model.category === 'creative' ||
+            model.supportedFeatures.includes('image-generation')
         );
       case 'fast':
-        return ALL_MODELS.filter(model => 
-          model.speed === 'fastest' || 
-          model.category === 'fast'
+        return ALL_MODELS.filter(
+          (model) => model.speed === 'fastest' || model.category === 'fast'
         );
       default:
         return ALL_MODELS;
@@ -249,19 +261,19 @@ export const MODEL_CATEGORIES = {
 export const DEFAULT_MODELS = {
   // General chat - balanced performance
   GENERAL: 'gemini-1.5-flash-latest',
-  
+
   // Fast responses - lowest latency
   FAST: 'gemini-1.5-flash-8b-latest',
-  
+
   // Complex reasoning - best capability
   REASONING: 'gemini-2.5-flash-preview-04-17',
-  
+
   // Creative tasks - high quality output
   CREATIVE: 'gemini-1.5-pro-latest',
-  
+
   // Vision tasks - image analysis
   VISION: 'gemini-1.5-pro-latest',
-  
+
   // Experimental features
   EXPERIMENTAL: 'gemini-2.0-flash-exp',
 } as const;
@@ -282,7 +294,7 @@ export const defaultModel = {
 export const UI_MODEL_GROUPS = [
   {
     title: 'Fast',
-    models: modelHelpers.getModelsByCategory('fast').map(model => ({
+    models: modelHelpers.getModelsByCategory('fast').map((model) => ({
       id: model.id,
       name: model.name,
       description: model.description,
@@ -290,7 +302,7 @@ export const UI_MODEL_GROUPS = [
   },
   {
     title: 'Balanced',
-    models: modelHelpers.getModelsByCategory('balanced').map(model => ({
+    models: modelHelpers.getModelsByCategory('balanced').map((model) => ({
       id: model.id,
       name: model.name,
       description: model.description,
@@ -298,7 +310,7 @@ export const UI_MODEL_GROUPS = [
   },
   {
     title: 'Thinking',
-    models: modelHelpers.getModelsByCategory('thinking').map(model => ({
+    models: modelHelpers.getModelsByCategory('thinking').map((model) => ({
       id: model.id,
       name: model.name,
       description: model.description,
@@ -306,7 +318,7 @@ export const UI_MODEL_GROUPS = [
   },
   {
     title: 'Vision',
-    models: modelHelpers.getModelsByCategory('vision').map(model => ({
+    models: modelHelpers.getModelsByCategory('vision').map((model) => ({
       id: model.id,
       name: model.name,
       description: model.description,
@@ -314,7 +326,7 @@ export const UI_MODEL_GROUPS = [
   },
   {
     title: 'Creative',
-    models: modelHelpers.getModelsByCategory('creative').map(model => ({
+    models: modelHelpers.getModelsByCategory('creative').map((model) => ({
       id: model.id,
       name: model.name,
       description: model.description,
@@ -322,10 +334,10 @@ export const UI_MODEL_GROUPS = [
   },
   {
     title: 'Experimental',
-    models: modelHelpers.getModelsByCategory('experimental').map(model => ({
+    models: modelHelpers.getModelsByCategory('experimental').map((model) => ({
       id: model.id,
       name: model.name,
       description: model.description,
     })),
   },
-].filter(group => group.models.length > 0); // Only include groups that have models
+].filter((group) => group.models.length > 0); // Only include groups that have models

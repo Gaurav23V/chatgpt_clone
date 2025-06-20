@@ -20,8 +20,12 @@ import {
 import type { ReactNode } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { AIErrorHandler, defaultErrorHandler } from '@/lib/ai/error-handler';
-import type { AIError, RecoveryAction } from '@/lib/ai/error-handler';
+import type {
+  AIError,
+  AIErrorHandler,
+  RecoveryAction,
+} from '@/lib/ai/error-handler';
+import { defaultErrorHandlerInstance } from '@/lib/ai/error-handler';
 
 /**
  * Chat Error Boundary Props
@@ -71,7 +75,7 @@ class ChatErrorBoundaryClass extends Component<
       errorId: '',
     };
 
-    this.errorHandler = defaultErrorHandler;
+    this.errorHandler = defaultErrorHandlerInstance;
   }
 
   /**
@@ -219,16 +223,13 @@ class ChatErrorBoundaryClass extends Component<
             {this.getErrorTitle(aiError)}
           </h3>
 
-          <p className='mb-6 text-sm text-gray-300'>{aiError.userMessage}</p>
+          <p className='mb-6 text-sm text-gray-300'>{aiError.message}</p>
 
           {/* Error Details (Development) */}
           {showErrorDetails && (
             <div className='mb-6 rounded-lg bg-gray-800 p-3 text-left text-xs'>
               <p className='mb-1'>
                 <strong>Type:</strong> {aiError.type}
-              </p>
-              <p className='mb-1'>
-                <strong>Severity:</strong> {aiError.severity}
               </p>
               <p className='mb-1'>
                 <strong>Retryable:</strong> {aiError.retryable ? 'Yes' : 'No'}
@@ -270,10 +271,10 @@ class ChatErrorBoundaryClass extends Component<
         return <WifiOff className={`${iconClass} text-orange-500`} />;
       case 'NETWORK_OFFLINE':
         return <WifiOff className={`${iconClass} text-red-500`} />;
-      case 'GROQ_RATE_LIMIT':
+      case 'GOOGLE_RATE_LIMIT':
         return <AlertCircle className={`${iconClass} text-yellow-500`} />;
-      case 'GROQ_AUTH_ERROR':
-      case 'GROQ_QUOTA_EXCEEDED':
+      case 'GOOGLE_AUTH_ERROR':
+      case 'GOOGLE_QUOTA_EXCEEDED':
         return <AlertCircle className={`${iconClass} text-red-500`} />;
       default:
         return <MessageSquare className={`${iconClass} text-gray-500`} />;
@@ -290,17 +291,17 @@ class ChatErrorBoundaryClass extends Component<
         return 'Connection Problem';
       case 'NETWORK_OFFLINE':
         return "You're Offline";
-      case 'GROQ_RATE_LIMIT':
+      case 'GOOGLE_RATE_LIMIT':
         return 'Too Many Requests';
-      case 'GROQ_AUTH_ERROR':
+      case 'GOOGLE_AUTH_ERROR':
         return 'Authentication Error';
-      case 'GROQ_API_UNAVAILABLE':
+      case 'GOOGLE_API_UNAVAILABLE':
         return 'Service Unavailable';
-      case 'GROQ_MODEL_UNAVAILABLE':
+      case 'GOOGLE_MODEL_UNAVAILABLE':
         return 'Model Unavailable';
-      case 'GROQ_CONTEXT_LENGTH_EXCEEDED':
+      case 'GOOGLE_CONTEXT_LENGTH_EXCEEDED':
         return 'Message Too Long';
-      case 'GROQ_QUOTA_EXCEEDED':
+      case 'GOOGLE_QUOTA_EXCEEDED':
         return 'Usage Limit Reached';
       case 'STREAM_ERROR':
       case 'STREAM_INTERRUPTED':
@@ -334,32 +335,28 @@ class ChatErrorBoundaryClass extends Component<
       );
     }
 
-    // Secondary actions based on recovery actions
-    if (aiError.recoveryActions.includes('refresh_page')) {
-      buttons.push(
-        <Button
-          key='refresh'
-          onClick={this.handleRefreshPage}
-          variant='outline'
-          className='border-gray-600 text-gray-300 hover:bg-gray-700'
-        >
-          Refresh Page
-        </Button>
-      );
-    }
+    // Secondary actions - always show refresh and support for errors
+    buttons.push(
+      <Button
+        key='refresh'
+        onClick={this.handleRefreshPage}
+        variant='outline'
+        className='border-gray-600 text-gray-300 hover:bg-gray-700'
+      >
+        Refresh Page
+      </Button>
+    );
 
-    if (aiError.recoveryActions.includes('contact_support')) {
-      buttons.push(
-        <Button
-          key='support'
-          onClick={this.handleContactSupport}
-          variant='outline'
-          className='border-gray-600 text-gray-300 hover:bg-gray-700'
-        >
-          Contact Support
-        </Button>
-      );
-    }
+    buttons.push(
+      <Button
+        key='support'
+        onClick={this.handleContactSupport}
+        variant='outline'
+        className='border-gray-600 text-gray-300 hover:bg-gray-700'
+      >
+        Contact Support
+      </Button>
+    );
 
     return buttons;
   }

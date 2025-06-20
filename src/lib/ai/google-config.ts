@@ -67,10 +67,17 @@ export const GOOGLE_MODELS = {
   GEMINI_2_5_PRO_PREVIEW: {
     id: 'gemini-2.5-pro-preview-05-06',
     name: 'Gemini 2.5 Pro (Preview)',
-    description: 'Most capable Gemini model with advanced reasoning and multimodal capabilities',
+    description:
+      'Most capable Gemini model with advanced reasoning and multimodal capabilities',
     contextWindow: 2097152, // 2M tokens
     maxOutputTokens: 8192,
-    supportedFeatures: ['chat', 'function-calling', 'json-mode', 'vision', 'thinking'] as const,
+    supportedFeatures: [
+      'chat',
+      'function-calling',
+      'json-mode',
+      'vision',
+      'thinking',
+    ] as const,
     pricing: {
       input: 1.25, // per 1M tokens
       output: 5.0, // per 1M tokens
@@ -93,7 +100,13 @@ export const GOOGLE_MODELS = {
     description: 'Fast and efficient model with thinking capabilities',
     contextWindow: 1048576, // 1M tokens
     maxOutputTokens: 8192,
-    supportedFeatures: ['chat', 'function-calling', 'json-mode', 'vision', 'thinking'] as const,
+    supportedFeatures: [
+      'chat',
+      'function-calling',
+      'json-mode',
+      'vision',
+      'thinking',
+    ] as const,
     pricing: {
       input: 0.075, // per 1M tokens
       output: 0.3, // per 1M tokens
@@ -113,10 +126,18 @@ export const GOOGLE_MODELS = {
   GEMINI_2_0_FLASH_EXP: {
     id: 'gemini-2.0-flash-exp',
     name: 'Gemini 2.0 Flash (Experimental)',
-    description: 'Latest experimental model with image generation and advanced capabilities',
+    description:
+      'Latest experimental model with image generation and advanced capabilities',
     contextWindow: 1048576, // 1M tokens
     maxOutputTokens: 8192,
-    supportedFeatures: ['chat', 'function-calling', 'json-mode', 'vision', 'image-generation', 'search-grounding'] as const,
+    supportedFeatures: [
+      'chat',
+      'function-calling',
+      'json-mode',
+      'vision',
+      'image-generation',
+      'search-grounding',
+    ] as const,
     pricing: {
       input: 0.075, // per 1M tokens
       output: 0.3, // per 1M tokens
@@ -138,7 +159,12 @@ export const GOOGLE_MODELS = {
     description: 'Highly capable model for complex reasoning and analysis',
     contextWindow: 2097152, // 2M tokens
     maxOutputTokens: 8192,
-    supportedFeatures: ['chat', 'function-calling', 'json-mode', 'vision'] as const,
+    supportedFeatures: [
+      'chat',
+      'function-calling',
+      'json-mode',
+      'vision',
+    ] as const,
     pricing: {
       input: 1.25, // per 1M tokens
       output: 5.0, // per 1M tokens
@@ -159,7 +185,12 @@ export const GOOGLE_MODELS = {
     description: 'Fast and efficient model for most chat applications',
     contextWindow: 1048576, // 1M tokens
     maxOutputTokens: 8192,
-    supportedFeatures: ['chat', 'function-calling', 'json-mode', 'vision'] as const,
+    supportedFeatures: [
+      'chat',
+      'function-calling',
+      'json-mode',
+      'vision',
+    ] as const,
     pricing: {
       input: 0.075, // per 1M tokens
       output: 0.3, // per 1M tokens
@@ -305,7 +336,8 @@ export const googleModelHelpers = {
    */
   getChatModels: () => {
     return Object.values(GOOGLE_MODELS).filter(
-      (model: any) => model.type === 'chat' && model.supportedFeatures.includes('chat')
+      (model: any) =>
+        model.type === 'chat' && model.supportedFeatures.includes('chat')
     );
   },
 
@@ -343,7 +375,8 @@ export const googleModelHelpers = {
    */
   getThinkingModels: () => {
     return Object.values(GOOGLE_MODELS).filter(
-      (model: any) => model.special === 'thinking' || model.special === 'reasoning'
+      (model: any) =>
+        model.special === 'thinking' || model.special === 'reasoning'
     );
   },
 
@@ -404,17 +437,11 @@ export const googleModels = {
   creative: google(GOOGLE_MODELS.GEMINI_1_5_PRO.id),
 
   // Thinking model for complex reasoning
-  thinking: google(GOOGLE_MODELS.GEMINI_2_5_FLASH_PREVIEW.id, {
-    thinkingConfig: {
-      thinkingBudget: 2048,
-    },
-  }),
+  thinking: google(GOOGLE_MODELS.GEMINI_2_5_FLASH_PREVIEW.id),
 
   // Vision model for image analysis
   vision: google(GOOGLE_MODELS.GEMINI_1_5_PRO.id),
 
   // Experimental model with image generation
-  experimental: google(GOOGLE_MODELS.GEMINI_2_0_FLASH_EXP.id, {
-    responseModalities: ['TEXT', 'IMAGE'],
-  }),
-} as const; 
+  experimental: google(GOOGLE_MODELS.GEMINI_2_0_FLASH_EXP.id),
+} as const;

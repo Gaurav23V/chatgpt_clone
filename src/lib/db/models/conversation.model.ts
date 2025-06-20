@@ -41,7 +41,7 @@ export const AIModelEnum = [
   'gemini-1.5-flash-latest',
   'gemini-1.5-flash-8b-latest',
   'gemini-1.0-pro-latest',
-  
+
   // OpenAI
   'gpt-3.5-turbo',
   'gpt-4',
@@ -719,8 +719,12 @@ conversationSchema.set('toJSON', { virtuals: true });
 // ========================================
 
 // Check if model already exists to prevent OverwriteModelError in development
-const ConversationModel = models.Conversation as IConversationModel || 
-  model<IConversationDocument, IConversationModel>('Conversation', conversationSchema);
+const ConversationModel =
+  (models.Conversation as IConversationModel) ||
+  model<IConversationDocument, IConversationModel>(
+    'Conversation',
+    conversationSchema
+  );
 
 export default ConversationModel;
 

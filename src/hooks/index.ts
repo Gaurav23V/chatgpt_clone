@@ -59,9 +59,9 @@ export {
 
 // Export Google Generative AI hooks
 export {
-  useGoogleChat,
   type GoogleChatConfig,
   type GoogleChatState,
+  useGoogleChat,
   type UseGoogleChatReturn,
 } from './useGoogleChat';
 
@@ -162,16 +162,22 @@ export const CustomHooks = {
 // Hook descriptions and documentation
 export const HOOK_DESCRIPTIONS = {
   // Authentication hooks
-  useAuthError: 'Hook for handling authentication errors with automatic retry and recovery',
-  useAuthStateChange: 'Hook for monitoring and reacting to authentication state changes',
-  
+  useAuthError:
+    'Hook for handling authentication errors with automatic retry and recovery',
+  useAuthStateChange:
+    'Hook for monitoring and reacting to authentication state changes',
+
   // Preferences hooks
-  useUserPreferences: 'Hook for managing user preferences with API synchronization',
-  usePersistedPreferences: 'Hook for local storage persistence of user preferences',
-  
+  useUserPreferences:
+    'Hook for managing user preferences with API synchronization',
+  usePersistedPreferences:
+    'Hook for local storage persistence of user preferences',
+
   // AI Chat hooks
-  useGoogleChat: 'Basic chat hook with Google Generative AI integration and error handling',
-  useEnhancedGoogleChat: 'Advanced chat hook with comprehensive error handling and recovery',
+  useGoogleChat:
+    'Basic chat hook with Google Generative AI integration and error handling',
+  useEnhancedGoogleChat:
+    'Advanced chat hook with comprehensive error handling and recovery',
 } as const;
 
 /**
@@ -183,13 +189,13 @@ export const HOOK_CATEGORIES = {
     description: 'Hooks for managing user authentication and session state',
     hooks: ['useAuthError', 'useAuthStateChange'],
   },
-  
+
   PREFERENCES: {
     name: 'User Preferences',
     description: 'Hooks for managing user settings and preferences',
     hooks: ['useUserPreferences', 'usePersistedPreferences'],
   },
-  
+
   AI_CHAT: {
     name: 'AI Chat',
     description: 'Hooks for AI chat functionality with Google Generative AI',
@@ -208,42 +214,52 @@ export const AVAILABLE_HOOKS = [
     description: HOOK_DESCRIPTIONS.useAuthError,
     features: ['Error handling', 'Automatic retry', 'Recovery strategies'],
   },
-  
+
   {
-    name: 'useAuthStateChange', 
+    name: 'useAuthStateChange',
     category: 'AUTHENTICATION',
     description: HOOK_DESCRIPTIONS.useAuthStateChange,
     features: ['State monitoring', 'Event handling', 'Callback support'],
   },
-  
+
   // Preferences hooks
   {
     name: 'useUserPreferences',
-    category: 'PREFERENCES', 
+    category: 'PREFERENCES',
     description: HOOK_DESCRIPTIONS.useUserPreferences,
     features: ['API sync', 'Optimistic updates', 'Error handling'],
   },
-  
+
   {
     name: 'usePersistedPreferences',
     category: 'PREFERENCES',
-    description: HOOK_DESCRIPTIONS.usePersistedPreferences, 
+    description: HOOK_DESCRIPTIONS.usePersistedPreferences,
     features: ['Local storage', 'Persistence', 'Hydration'],
   },
-  
+
   // AI Chat hooks
   {
     name: 'useGoogleChat',
     category: 'AI_CHAT',
     description: HOOK_DESCRIPTIONS.useGoogleChat,
-    features: ['Google Generative AI', 'Streaming', 'Error handling', 'Retry logic'],
+    features: [
+      'Google Generative AI',
+      'Streaming',
+      'Error handling',
+      'Retry logic',
+    ],
   },
-  
+
   {
     name: 'useEnhancedGoogleChat',
-    category: 'AI_CHAT', 
+    category: 'AI_CHAT',
     description: HOOK_DESCRIPTIONS.useEnhancedGoogleChat,
-    features: ['Advanced error handling', 'Model fallback', 'Context reduction', 'Network monitoring'],
+    features: [
+      'Advanced error handling',
+      'Model fallback',
+      'Context reduction',
+      'Network monitoring',
+    ],
   },
 ] as const;
 
@@ -253,13 +269,13 @@ export const AVAILABLE_HOOKS = [
 export const RECOMMENDED_HOOKS = {
   // For basic chat functionality
   BASIC_CHAT: 'useGoogleChat',
-  
+
   // For production chat with advanced error handling
   PRODUCTION_CHAT: 'useEnhancedGoogleChat',
-  
+
   // For user authentication
   AUTH_HANDLING: 'useAuthStateChange',
-  
+
   // For user preferences
   PREFERENCES: 'useUserPreferences',
 } as const;
