@@ -73,7 +73,6 @@ const MONGODB_CONFIG: ConnectOptions = {
   ...(process.env.NODE_ENV === 'production' && {
     // Production-specific settings
     autoIndex: false, // don't build indexes automatically in production
-    debug: false, // Disable debug mode for performance
   }),
 };
 
@@ -124,9 +123,11 @@ export async function connectToDatabase(): Promise<Connection> {
   if (!cached.promise) {
     console.log('🔌 Establishing new MongoDB connection...');
 
-    // Enable Mongoose debug mode in development (queries logged to console)
+    // Configure Mongoose debug mode based on environment
     if (process.env.NODE_ENV === 'development') {
-      mongoose.set('debug', true);
+      mongoose.set('debug', true); // Enable debug mode in development
+    } else {
+      mongoose.set('debug', false); // Explicitly disable debug mode in production
     }
 
     // Create new connection promise
