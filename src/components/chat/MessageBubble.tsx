@@ -4,14 +4,17 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   AlertCircle,
+  Check,
   Copy,
   Download,
+  Pencil,
   RotateCcw,
   Share,
   ThumbsDown,
   ThumbsUp,
   Wifi,
   WifiOff,
+  X,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -21,6 +24,7 @@ interface MessageBubbleProps {
   role: 'user' | 'assistant' | 'system';
   content: any;
   isStreaming?: boolean;
+  isLoading?: boolean;
   streamingState?: {
     isConnecting?: boolean;
     isReconnecting?: boolean;
@@ -35,6 +39,8 @@ interface MessageBubbleProps {
   onShare?: (messageId: string) => void;
   onDownload?: (messageId: string) => void;
   onRetry?: (messageId: string) => void;
+  onEdit?: (messageId: string, newContent: string) => void;
+  isEdited?: boolean;
   // Streaming optimization props
   smoothStreaming?: boolean;
   preserveSelection?: boolean;
@@ -239,6 +245,7 @@ export function MessageBubble({
   role,
   content,
   isStreaming = false,
+  isLoading = false,
   streamingState,
   onCopy,
   onThumbsUp,
@@ -247,13 +254,18 @@ export function MessageBubble({
   onShare,
   onDownload,
   onRetry,
+  onEdit,
+  isEdited = false,
   smoothStreaming = true,
   preserveSelection = true,
   showTypingIndicator = true,
   showStreamingStats = false,
 }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState('');
   const messageRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-scroll to bottom when streaming
   useEffect(() => {
@@ -347,20 +359,116 @@ export function MessageBubble({
     }
   };
 
-  const formattedContent = formatContent(normalizeContent(content));
+  const normalizedContent = normalizeContent(content);
+  const formattedContent = formatContent(normalizedContent);
   const hasStreamingError = streamingState?.error;
+
+  // Handle edit mode
+  const startEdit = () => {
+    setIsEditing(true);
+    setEditContent(normalizedContent);
+    // Focus textarea after state update
+    setTimeout(() => {
+      textareaRef.current?.focus();
+      textareaRef.current?.select();
+    }, 0);
+  };
+
+  const cancelEdit = () => {
+    setIsEditing(false);
+    setEditContent('');
+  };
+
+  const saveEdit = () => {
+    if (onEdit && editContent.trim() !== normalizedContent) {
+      onEdit(id, editContent.trim());
+    }
+    setIsEditing(false);
+    setEditContent('');
+  };
+
+  // Handle keyboard shortcuts
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      saveEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelEdit();
+    }
+  };
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [editContent, isEditing]);
 
   if (role === 'user') {
     return (
       <div
         className='animate-message-appear mb-6 flex justify-end'
         ref={messageRef}
+        onMouseEnter={() => !isEditing && setShowActions(true)}
+        onMouseLeave={() => setShowActions(false)}
       >
-        <div className='message-user'>
-          <div
-            dangerouslySetInnerHTML={{ __html: formattedContent }}
-            className='message-content text-sm'
-          />
+        <div
+          className={`message-user group relative ${isLoading ? 'disabled-editing' : ''} ${isEditing ? 'editing' : ''}`}
+        >
+          {isEditing ? (
+            <div className='edit-textarea-container space-y-2'>
+              <textarea
+                ref={textareaRef}
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className='edit-textarea min-h-[60px] w-full'
+                placeholder='Edit your message...'
+              />
+              <div className='edit-actions'>
+                <Button
+                  size='sm'
+                  variant='ghost'
+                  className='edit-cancel-button h-8 px-3'
+                  onClick={cancelEdit}
+                >
+                  <X className='mr-1 h-4 w-4' />
+                  Cancel
+                </Button>
+                <Button
+                  size='sm'
+                  variant='ghost'
+                  className='edit-save-button h-8 px-3'
+                  onClick={saveEdit}
+                >
+                  <Check className='mr-1 h-4 w-4' />
+                  Save
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div
+                dangerouslySetInnerHTML={{ __html: formattedContent }}
+                className='message-content message-content-transition text-sm'
+              />
+              {isEdited && <span className='edited-indicator'>(edited)</span>}
+              {/* Edit button - show on hover */}
+              {showActions && onEdit && !isLoading && (
+                <Button
+                  size='icon'
+                  variant='ghost'
+                  className='edit-button absolute -top-2 -right-2 h-7 w-7 text-gray-400 hover:bg-[#404040] hover:text-white'
+                  onClick={startEdit}
+                  title='Edit message'
+                >
+                  <Pencil className='h-3 w-3' />
+                </Button>
+              )}
+            </>
+          )}
         </div>
       </div>
     );

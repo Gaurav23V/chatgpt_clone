@@ -18,6 +18,7 @@ interface ChatAreaProps {
     role: 'user' | 'assistant' | 'system';
     content: string;
     createdAt?: Date;
+    isEdited?: boolean;
   }>;
   onConversationCreated?: (conversationId: string) => void;
 }
@@ -39,30 +40,31 @@ export function ChatArea({
 
   const { selectedModel } = useModel();
 
-  const { messages, append, reload, isLoading, error } = useGoogleChat({
-    api: '/api/chat',
-    initialMessages: formattedInitialMessages,
-    model: selectedModel,
-    conversationId,
-    headers: {
-      'X-Conversation-ID': conversationId || '',
-    },
-    onResponse: async (response) => {
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
+  const { messages, append, reload, isLoading, error, setMessages } =
+    useGoogleChat({
+      api: '/api/chat',
+      initialMessages: formattedInitialMessages,
+      model: selectedModel,
+      conversationId,
+      headers: {
+        'X-Conversation-ID': conversationId || '',
+      },
+      onResponse: async (response) => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
 
-      const newConversationId = response.headers.get('X-Conversation-ID');
-      if (newConversationId && !conversationId && onConversationCreated) {
-        console.log('New conversation created:', newConversationId);
-        onConversationCreated(newConversationId);
-      }
-    },
-    onStreamEnd: () => {},
-    onStreamStart: () => {},
-    onError: (error) => {
-      console.error('Chat error:', error);
-    },
-  });
+        const newConversationId = response.headers.get('X-Conversation-ID');
+        if (newConversationId && !conversationId && onConversationCreated) {
+          console.log('New conversation created:', newConversationId);
+          onConversationCreated(newConversationId);
+        }
+      },
+      onStreamEnd: () => {},
+      onStreamStart: () => {},
+      onError: (error) => {
+        console.error('Chat error:', error);
+      },
+    });
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -110,6 +112,69 @@ export function ChatArea({
     } catch (error) {
       console.error('Error sending message:', error);
     }
+  };
+
+  // Handle message editing
+  const handleEditMessage = async (messageId: string, newContent: string) => {
+    // Step 1: Get current messages array
+    const currentMessages = [...messages];
+
+    // Step 2: Find the index of edited message
+    const editIndex = currentMessages.findIndex((m) => m.id === messageId);
+
+    if (editIndex === -1) {
+      console.error('Message not found for editing');
+      return;
+    }
+
+    // Step 3: CRITICAL - Keep messages from start to edited message
+    const messagesToKeep = currentMessages.slice(0, editIndex + 1);
+
+    // Step 4: Update the content of the edited message
+    messagesToKeep[editIndex] = {
+      ...messagesToKeep[editIndex],
+      content: newContent,
+      isEdited: true,
+    } as any;
+
+    // Step 5: Update state with kept messages only
+    setMessages(messagesToKeep);
+
+    // Step 6: Save to database
+    if (conversationId) {
+      try {
+        const response = await fetch(
+          `/api/conversations/${conversationId}/messages`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              messages: messagesToKeep.map((msg) => ({
+                role: msg.role,
+                content: msg.content,
+                createdAt: msg.createdAt,
+                isEdited: (msg as any).isEdited,
+              })),
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          console.error('Failed to update messages in database');
+        }
+      } catch (error) {
+        console.error('Error updating messages:', error);
+      }
+    }
+
+    // Step 7: Trigger new AI response
+    // The AI will see all messages up to and including the edited one
+    append({
+      role: 'user',
+      content: newContent,
+    });
   };
 
   // Handle copying message content
@@ -180,12 +245,17 @@ export function ChatArea({
                   role={message.role as 'user' | 'assistant' | 'system'}
                   content={message.content}
                   isStreaming={isLoading && _index === messages.length - 1}
+                  isLoading={isLoading}
+                  isEdited={(message as any).isEdited}
                   onCopy={handleCopy}
                   onThumbsUp={handleThumbsUp}
                   onThumbsDown={handleThumbsDown}
                   onRegenerate={handleRegenerate}
                   onShare={handleShare}
                   onDownload={handleDownload}
+                  onEdit={
+                    message.role === 'user' ? handleEditMessage : undefined
+                  }
                 />
               ))}
               {/* Scroll anchor */}

@@ -54,3 +54,31 @@ import { twMerge } from 'tailwind-merge';
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/**
+ * Converts multimodal message content to a string format suitable for database storage
+ * @param content - The message content (can be string, array, or other)
+ * @returns A string representation of the content
+ */
+export function convertMultimodalContentToString(content: any): string {
+  if (typeof content === 'string') {
+    return content;
+  } else if (Array.isArray(content)) {
+    // For multi-modal content, combine text and note attachments
+    const textParts = content
+      .filter((part: any) => part.type === 'text')
+      .map((part: any) => part.text);
+
+    const hasImages = content.some((part: any) => part.type === 'image');
+    const hasFiles = content.some((part: any) => part.type === 'file');
+
+    let result = textParts.join(' ');
+    if (hasImages) result += ' [Image attached]';
+    if (hasFiles) result += ' [File attached]';
+
+    return result;
+  } else {
+    // Fallback for other types
+    return String(content);
+  }
+}

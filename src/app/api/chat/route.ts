@@ -293,6 +293,9 @@ async function saveMessagesAndUpdateConversation({
     console.log(`Updated existing conversation: ${conversationId}`);
   }
 
+  // Import utility function for content conversion
+  const { convertMultimodalContentToString } = await import('@/lib/utils');
+
   // For existing conversations, save the user message (new conversations already have it)
   if (!isNewConversation) {
     const userMessageDoc = new MessageModel({
@@ -300,7 +303,7 @@ async function saveMessagesAndUpdateConversation({
       userId: mongoUserId,
       clerkId: userId,
       role: 'user',
-      content: userMessage.content,
+      content: convertMultimodalContentToString(userMessage.content),
       status: 'completed',
     });
 
