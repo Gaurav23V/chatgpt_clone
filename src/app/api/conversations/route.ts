@@ -44,7 +44,10 @@ export async function GET(request: NextRequest) {
 
     if (!serviceResult.success) {
       return NextResponse.json(
-        { error: serviceResult.error?.code || 'UNKNOWN_ERROR', message: serviceResult.error?.message || 'An error occurred' },
+        {
+          error: serviceResult.error?.code || 'UNKNOWN_ERROR',
+          message: serviceResult.error?.message || 'An error occurred',
+        },
         { status: 400 }
       );
     }

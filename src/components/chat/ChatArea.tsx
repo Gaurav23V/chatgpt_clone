@@ -74,13 +74,39 @@ export function ChatArea({
     content: string,
     attachments: ChatAttachment[] = []
   ) => {
-    console.log('Sending message:', content);
+    console.log('Sending message:', content, 'with attachments:', attachments);
+
     try {
-      await append({
-        role: 'user',
-        content,
-        attachments,
-      } as any);
+      // If there are image attachments, format the message for Google Generative AI
+      if (attachments.some((att) => att.mimeType.startsWith('image/'))) {
+        const messageContent: any[] = [
+          {
+            type: 'text',
+            text: content,
+          },
+        ];
+
+        // Add image attachments in the format expected by Google Generative AI
+        attachments.forEach((attachment) => {
+          if (attachment.mimeType.startsWith('image/')) {
+            messageContent.push({
+              type: 'image',
+              image: attachment.url,
+            });
+          }
+        });
+
+        await append({
+          role: 'user',
+          content: messageContent as any,
+        });
+      } else {
+        // For text-only messages, use the original format
+        await append({
+          role: 'user',
+          content,
+        });
+      }
     } catch (error) {
       console.error('Error sending message:', error);
     }

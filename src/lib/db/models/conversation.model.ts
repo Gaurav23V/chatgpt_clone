@@ -34,7 +34,14 @@ export const ConversationStatusEnum = [
   'deleted',
 ] as const;
 export const AIModelEnum = [
-  // Google Generative AI
+  // Google Generative AI (with models/ prefix as used by the AI SDK)
+  'models/gemini-2.5-flash-preview-04-17',
+  'models/gemini-2.0-flash-exp',
+  'models/gemini-1.5-pro-latest',
+  'models/gemini-1.5-flash-latest',
+  'models/gemini-1.5-flash-8b-latest',
+  'models/gemini-1.0-pro-latest',
+  // Also include without prefix for backward compatibility
   'gemini-2.5-flash-preview-04-17',
   'gemini-2.0-flash-exp',
   'gemini-1.5-pro-latest',

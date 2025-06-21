@@ -143,11 +143,11 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://clerk.com https://*.clerk.accounts.dev",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://clerk.com https://*.clerk.accounts.dev https://*.uploadcare.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https://res.cloudinary.com https://ucarecdn.com https://*.vercel.app https://img.clerk.com https://images.clerk.dev",
-              "connect-src 'self' https://api.openai.com https://vercel.live wss://ws.pusher.com https://clerk.com https://*.clerk.accounts.dev https://api.clerk.com",
+              "connect-src 'self' https://api.openai.com https://vercel.live wss://ws.pusher.com https://clerk.com https://*.clerk.accounts.dev https://api.clerk.com https://*.uploadcare.com https://upload.uploadcare.com https://api.uploadcare.com https://ucarecdn.com https://api.cloudinary.com",
               "frame-src 'self' https://clerk.com https://*.clerk.accounts.dev",
               "object-src 'none'",
               "base-uri 'self'",
@@ -191,7 +191,7 @@ const nextConfig: NextConfig = {
           {
             key: 'Permissions-Policy',
             value: [
-              'camera=()',
+              'camera=(self)',
               'microphone=()',
               'geolocation=()',
               'interest-cohort=()',

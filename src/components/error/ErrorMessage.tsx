@@ -110,7 +110,7 @@ export function ErrorMessage({
       <div
         className={`flex items-center space-x-2 ${textSize} ${colors.text} ${className}`}
       >
-                  {showIcon && getErrorIcon(error.severity || 'medium', iconSize)}
+        {showIcon && getErrorIcon(error.severity || 'medium', iconSize)}
         <span>{error.userMessage}</span>
         {showCode && error.code && (
           <span className={`font-mono text-xs ${colors.accent}`}>

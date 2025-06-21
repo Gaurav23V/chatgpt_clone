@@ -22,7 +22,10 @@ import {
   type ErrorRecoveryConfig,
   type RecoveryAction,
 } from '@/components/error';
-import { googleErrorHandling, googleModelHelpers } from '@/lib/ai/google-config';
+import {
+  googleErrorHandling,
+  googleModelHelpers,
+} from '@/lib/ai/google-config';
 
 /**
  * Enhanced Groq Chat Configuration
@@ -286,39 +289,40 @@ export function useEnhancedGroqChat(
         isRecovering: true,
       }));
 
-              // Execute recovery action based on error type
-        let recoverySuccess = false;
+      // Execute recovery action based on error type
+      let recoverySuccess = false;
 
-        try {
-          switch (aiError.type) {
-            case 'GOOGLE_MODEL_UNAVAILABLE':
-              if (enableModelFallback) {
-                const fallbackModel = googleModelHelpers.getFastestModels()[0]?.id;
-                if (fallbackModel) {
-                  recoverySuccess = await attemptModelFallback(fallbackModel);
-                }
+      try {
+        switch (aiError.type) {
+          case 'GOOGLE_MODEL_UNAVAILABLE':
+            if (enableModelFallback) {
+              const fallbackModel =
+                googleModelHelpers.getFastestModels()[0]?.id;
+              if (fallbackModel) {
+                recoverySuccess = await attemptModelFallback(fallbackModel);
               }
-              break;
+            }
+            break;
 
-            case 'GOOGLE_CONTEXT_LENGTH_EXCEEDED':
-              if (enableContextReduction) {
-                recoverySuccess = await attemptContextReduction();
-              }
-              break;
+          case 'GOOGLE_CONTEXT_LENGTH_EXCEEDED':
+            if (enableContextReduction) {
+              recoverySuccess = await attemptContextReduction();
+            }
+            break;
 
-            case 'GOOGLE_RATE_LIMIT':
-            case 'GOOGLE_API_UNAVAILABLE':
-              if (enableAutoRetry && canRetry) {
-                recoverySuccess = await attemptAutoRetry(retryDelay || 1000);
-              }
-              break;
+          case 'GOOGLE_RATE_LIMIT':
+          case 'GOOGLE_API_UNAVAILABLE':
+            if (enableAutoRetry && canRetry) {
+              recoverySuccess = await attemptAutoRetry(retryDelay || 1000);
+            }
+            break;
 
-            default:
-              // No automatic recovery for this action
-              break;
-          }
+          default:
+            // No automatic recovery for this action
+            break;
+        }
 
-          onRecoveryAction('RETRY', recoverySuccess);
+        onRecoveryAction('RETRY', recoverySuccess);
       } catch (recoveryError) {
         console.error('Recovery failed:', recoveryError);
         recoverySuccess = false;
@@ -369,9 +373,10 @@ export function useEnhancedGroqChat(
     try {
       const currentMessages = messages;
       // Simple context reduction - keep first and last few messages
-      const reducedMessages = currentMessages.length > 4 
-        ? [currentMessages[0], ...currentMessages.slice(-3)]
-        : currentMessages;
+      const reducedMessages =
+        currentMessages.length > 4
+          ? [currentMessages[0], ...currentMessages.slice(-3)]
+          : currentMessages;
 
       setMessages(reducedMessages);
       setEnhancedState((prev) => ({
@@ -502,7 +507,10 @@ export function useEnhancedGroqChat(
     (percentage = 0.3) => {
       const currentMessages = messages;
       // Simple context reduction
-      const keepCount = Math.max(2, Math.floor(currentMessages.length * (1 - percentage)));
+      const keepCount = Math.max(
+        2,
+        Math.floor(currentMessages.length * (1 - percentage))
+      );
       const reducedMessages = currentMessages.slice(-keepCount);
       setMessages(reducedMessages);
 
@@ -550,7 +558,7 @@ export function useEnhancedGroqChat(
     if (!enhancedState.lastError) return null;
 
     switch (enhancedState.lastError.type) {
-              case 'GOOGLE_RATE_LIMIT':
+      case 'GOOGLE_RATE_LIMIT':
         return {
           component: 'RateLimitWarning',
           props: { error: enhancedState.lastError, onRetry: retry },
@@ -572,7 +580,7 @@ export function useEnhancedGroqChat(
   // Get recommended action
   const getRecommendedAction = useCallback((): RecoveryAction | null => {
     if (!enhancedState.lastError) return null;
-    
+
     // Simple recommendation based on error type
     if (enhancedState.lastError.retryable) {
       return 'RETRY';

@@ -390,8 +390,8 @@ export const modelFallback = {
 
     if (currentIndex === -1) {
       // Current model not in fallback list, use first fallback
-    return fallbackModels[0] || null;
-  }
+      return fallbackModels[0] || null;
+    }
 
     // Get next model in fallback chain
     return fallbackModels[currentIndex + 1] || null;
@@ -479,7 +479,10 @@ export const errorMonitoring = {
  * Error Handler Interface
  */
 export interface AIErrorHandler {
-  handleError(error: Error, errorId?: string): {
+  handleError(
+    error: Error,
+    errorId?: string
+  ): {
     aiError: AIError;
     canRetry: boolean;
     retryDelay: number;
@@ -500,7 +503,10 @@ export class DefaultAIErrorHandler implements AIErrorHandler {
     this.config = config;
   }
 
-  handleError(error: Error, errorId: string = `error-${Date.now()}`): {
+  handleError(
+    error: Error,
+    errorId: string = `error-${Date.now()}`
+  ): {
     aiError: AIError;
     canRetry: boolean;
     retryDelay: number;
@@ -508,14 +514,17 @@ export class DefaultAIErrorHandler implements AIErrorHandler {
     const aiError = classifyError(error);
     const retryCount = this.retryAttempts.get(errorId) || 0;
     const recoveryAction = getRecoveryAction(aiError, retryCount, this.config);
-    
-    const canRetry = aiError.retryable && recoveryAction === 'RETRY' && retryCount < this.config.maxRetries;
+
+    const canRetry =
+      aiError.retryable &&
+      recoveryAction === 'RETRY' &&
+      retryCount < this.config.maxRetries;
     const retryDelay = calculateRetryDelay(aiError, retryCount, this.config);
 
     return {
       aiError,
       canRetry,
-      retryDelay
+      retryDelay,
     };
   }
 
@@ -523,7 +532,7 @@ export class DefaultAIErrorHandler implements AIErrorHandler {
     incrementRetryAttempts: (errorId: string): void => {
       const current = this.retryAttempts.get(errorId) || 0;
       this.retryAttempts.set(errorId, current + 1);
-    }
+    },
   };
 }
 

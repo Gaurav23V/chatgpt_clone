@@ -2,13 +2,12 @@
 
 import { useMemo, useRef } from 'react';
 
-import { Widget as UploadcareWidget } from '@uploadcare/react-widget';
+// Removed Uploadcare widget – using direct Cloudinary upload instead
 import { Paperclip } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { useModel } from '@/contexts/model-context';
 import { modelHelpers } from '@/lib/ai/models';
-import { uploadcareOptions } from '@/lib/storage/uploadcare-config';
 
 export interface ChatAttachment {
   url: string;
@@ -42,17 +41,74 @@ export default function FileUploadButton({
     return types.join(',');
   }, [model]);
 
-  const isEnabled = !disabled && accept.length > 0;
+  const envReady =
+    !!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME &&
+    !!process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+  const isEnabled = !disabled && accept.length > 0 && envReady;
 
-  const widgetApi = useRef<any>(null);
+  // Hidden file input reference
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // Upload handler – uploads directly to Cloudinary unsigned preset
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset the input so the same file can be selected twice in a row
+    e.target.value = '';
+
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+    if (!cloudName || !uploadPreset) {
+      console.error(
+        'Missing Cloudinary environment variables. Please set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET.'
+      );
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', uploadPreset);
+
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error?.message || 'Cloudinary upload failed');
+      }
+
+      const attachment: ChatAttachment = {
+        url: data.secure_url || data.url,
+        mimeType: file.type,
+        name: file.name,
+        size: file.size,
+      };
+
+      onFileUploaded(attachment);
+    } catch (error) {
+      console.error('Cloudinary upload error:', error);
+      // TODO: show toast / error UI if desired
+    }
+  };
 
   if (!isEnabled) {
+    const title = !envReady
+      ? 'File upload is not configured (missing Cloudinary vars)'
+      : 'Current model does not support file uploads';
     return (
       <Button
         type='button'
         size='icon'
         variant='ghost'
-        title='Current model does not support file uploads'
+        title={title}
         className='h-8 w-8 cursor-not-allowed rounded-lg text-gray-500 opacity-50'
         disabled
       >
@@ -63,26 +119,12 @@ export default function FileUploadButton({
 
   return (
     <>
-      {/* Hidden Uploadcare widget */}
-      {/* @ts-expect-error upstream types not compatible with React 19 */}
-      <UploadcareWidget
-        as
-        any
-        publicKey={uploadcareOptions.publicKey}
-        ref={widgetApi as any}
-        tabs='file url camera'
-        onChange={(fileInfo: any) => {
-          if (!fileInfo) return;
-          fileInfo.done((info: any) => {
-            const attachment: ChatAttachment = {
-              url: info.cdnUrl || info.cdnUrlModifiers || info.url,
-              mimeType: info.mimeType || '',
-              name: info.name,
-              size: info.size,
-            };
-            onFileUploaded(attachment);
-          });
-        }}
+      {/* Hidden native file input */}
+      <input
+        ref={inputRef}
+        type='file'
+        accept={accept}
+        onChange={handleFileChange}
         style={{ display: 'none' }}
       />
 
@@ -91,7 +133,7 @@ export default function FileUploadButton({
         type='button'
         size='icon'
         variant='ghost'
-        onClick={() => widgetApi.current?.openDialog?.()}
+        onClick={() => inputRef.current?.click()}
         className='hover-lift h-8 w-8 rounded-lg text-gray-400 transition-all duration-200 hover:bg-[#404040] hover:text-white'
       >
         <Paperclip className='h-4 w-4' />

@@ -34,13 +34,13 @@ const MAX_MESSAGE_LENGTH = 10000; // Increased for Google Generative AI
 const MAX_MESSAGES_PER_REQUEST = 50;
 const RATE_LIMIT_REQUESTS_PER_MINUTE = 30;
 
-// Request validation schema
+// Request validation schema - simplified to accept any content format
 const ChatRequestSchema = z.object({
   messages: z
     .array(
       z.object({
         role: z.enum(['user', 'assistant', 'system']),
-        content: z.string().min(1).max(MAX_MESSAGE_LENGTH),
+        content: z.any(), // Accept any content format for flexibility
         id: z.string().optional(),
       })
     )
@@ -92,9 +92,13 @@ async function checkRateLimit(userId: string): Promise<boolean> {
  */
 function validateGoogleModel(model: string): string {
   // Normalize model ID to include models/ prefix if not present
-  const normalizedModel = model.startsWith('models/') ? model : `models/${model}`;
-  
-  const googleModel = Object.values(GOOGLE_MODELS).find((m) => m.id === normalizedModel);
+  const normalizedModel = model.startsWith('models/')
+    ? model
+    : `models/${model}`;
+
+  const googleModel = Object.values(GOOGLE_MODELS).find(
+    (m) => m.id === normalizedModel
+  );
 
   if (googleModel) {
     return normalizedModel;
@@ -145,14 +149,29 @@ async function createNewConversation({
     mongoUserId = newUser._id as Types.ObjectId;
   }
 
+  // Extract title from content
+  let title = 'New conversation';
+  if (typeof userMessage.content === 'string') {
+    title =
+      userMessage.content.slice(0, 50) +
+      (userMessage.content.length > 50 ? '...' : '');
+  } else if (Array.isArray(userMessage.content)) {
+    // For multi-modal content, extract text from first text part
+    const textPart = userMessage.content.find(
+      (part: any) => part.type === 'text'
+    );
+    if (textPart && textPart.text) {
+      title =
+        textPart.text.slice(0, 50) + (textPart.text.length > 50 ? '...' : '');
+    }
+  }
+
   // Create new conversation
   const conversation = new ConversationModel({
     _id: new Types.ObjectId(conversationId),
     clerkId: userId,
     userId: mongoUserId,
-    title:
-      userMessage.content.slice(0, 50) +
-      (userMessage.content.length > 50 ? '...' : ''),
+    title,
     messageCount: 1, // Just user message initially
     lastMessageAt: new Date(),
     totalTokens: 0, // Will be updated later
@@ -164,13 +183,35 @@ async function createNewConversation({
 
   await conversation.save();
 
+  // Convert content to string for database storage
+  let contentForDb = '';
+  if (typeof userMessage.content === 'string') {
+    contentForDb = userMessage.content;
+  } else if (Array.isArray(userMessage.content)) {
+    // For multi-modal content, combine text and note attachments
+    const textParts = userMessage.content
+      .filter((part: any) => part.type === 'text')
+      .map((part: any) => part.text);
+
+    const hasImages = userMessage.content.some(
+      (part: any) => part.type === 'image'
+    );
+    const hasFiles = userMessage.content.some(
+      (part: any) => part.type === 'file'
+    );
+
+    contentForDb = textParts.join(' ');
+    if (hasImages) contentForDb += ' [Image attached]';
+    if (hasFiles) contentForDb += ' [File attached]';
+  }
+
   // Save user message immediately
   const userMessageDoc = new MessageModel({
     conversationId: new Types.ObjectId(conversationId),
     userId: mongoUserId,
     clerkId: userId,
     role: 'user',
-    content: userMessage.content,
+    content: contentForDb,
     status: 'completed',
   });
 
@@ -407,7 +448,7 @@ export async function POST(request: NextRequest) {
       content: `You are a helpful AI assistant powered by Google Generative AI. You provide clear, accurate, and helpful responses while being conversational and engaging. You can process complex requests, analyze images, and work with various file formats efficiently.`,
     };
 
-    const processedMessages = [systemMessage, ...messages];
+    const processedMessages = [systemMessage, ...messages] as any;
 
     // Create Google Generative AI client
     const google = createGoogleGenerativeAI({
@@ -416,8 +457,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Ensure model ID is in correct format (remove models/ prefix if present)
-    const modelIdForAI = selectedModel.startsWith('models/') 
-      ? selectedModel.slice(7) 
+    const modelIdForAI = selectedModel.startsWith('models/')
+      ? selectedModel.slice(7)
       : selectedModel;
 
     console.log('Using model ID for AI SDK:', modelIdForAI);
@@ -430,8 +471,14 @@ export async function POST(request: NextRequest) {
           safetySettings: [
             { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
             { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+            {
+              category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+              threshold: 'BLOCK_NONE',
+            },
+            {
+              category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+              threshold: 'BLOCK_NONE',
+            },
           ],
         }),
         messages: processedMessages,

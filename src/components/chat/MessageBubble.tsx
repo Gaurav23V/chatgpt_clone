@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 interface MessageBubbleProps {
   id: string;
   role: 'user' | 'assistant' | 'system';
-  content: string;
+  content: any;
   isStreaming?: boolean;
   streamingState?: {
     isConnecting?: boolean;
@@ -314,7 +314,40 @@ export function MessageBubble({
     return formatted;
   };
 
-  const formattedContent = formatContent(content);
+  // Normalize content: handle either string or multimodal array
+  const normalizeContent = (rawContent: any): string => {
+    if (typeof rawContent === 'string') return rawContent;
+
+    if (Array.isArray(rawContent)) {
+      return rawContent
+        .map((part: any) => {
+          if (!part) return '';
+          if (typeof part === 'string') return part;
+          // Google Generative AI multimodal parts
+          switch (part.type) {
+            case 'text':
+              return part.text || '';
+            case 'image':
+              // Placeholder; you could render <img> in future
+              return '[Image]';
+            case 'file':
+              return `[File: ${part.mimeType || 'file'}]`;
+            default:
+              return '';
+          }
+        })
+        .join('\n');
+    }
+
+    // Fallback
+    try {
+      return String(rawContent);
+    } catch {
+      return '';
+    }
+  };
+
+  const formattedContent = formatContent(normalizeContent(content));
   const hasStreamingError = streamingState?.error;
 
   if (role === 'user') {

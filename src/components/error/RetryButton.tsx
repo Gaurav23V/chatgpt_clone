@@ -118,9 +118,7 @@ export function RetryButton({
 
   // Determine if we can auto-retry
   const canAutoRetry =
-    autoRetry &&
-    error.retryable &&
-    state.retryCount < maxAutoRetries;
+    autoRetry && error.retryable && state.retryCount < maxAutoRetries;
 
   // Handle retry logic
   const handleRetry = useCallback(async () => {

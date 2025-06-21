@@ -50,22 +50,22 @@ export {
 export {
   // Types
   type AIError,
-  type AIErrorType,
-  type ErrorSeverity,
-  type ErrorRecoveryConfig,
-  type RecoveryAction,
   // Main error handler
   type AIErrorHandler,
-  DefaultAIErrorHandler,
-  defaultErrorHandlerInstance,
+  type AIErrorType,
+  calculateRetryDelay,
   // Error classification
   classifyError,
   // Configuration
   DEFAULT_RECOVERY_CONFIG,
+  DefaultAIErrorHandler,
   defaultErrorHandler,
+  defaultErrorHandlerInstance,
+  type ErrorRecoveryConfig,
+  type ErrorSeverity,
   // Recovery utilities
   getRecoveryAction,
-  calculateRetryDelay,
+  type RecoveryAction,
 } from '@/lib/ai/error-handler';
 
 // Re-export utility functions are available through individual imports
