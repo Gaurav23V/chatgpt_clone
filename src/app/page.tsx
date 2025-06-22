@@ -165,13 +165,7 @@ export default function Home() {
             <p>
               &copy; 2024 Aria. Built with Next.js, Clerk & OpenAI.
             </p>
-            <div className='mt-4 space-x-4'>
-              <SignedIn>
-                <span className='text-sm text-green-600 dark:text-green-400'>
-                  ✅ Authentication Active
-                </span>
-              </SignedIn>
-            </div>
+
           </div>
         </div>
       </footer>

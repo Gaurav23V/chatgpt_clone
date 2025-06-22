@@ -20,7 +20,7 @@ export default function NewChatPage() {
       }}
       loadingVariant='chat'
       enableErrorBoundary={true}
-      enableDevTools={true}
+      enableDevTools={false}
       pageTitle='New Chat'
       pageDescription='Start a new AI conversation'
       className='min-h-screen'

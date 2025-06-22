@@ -34,7 +34,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
       }}
       loadingVariant='chat'
       enableErrorBoundary={true}
-      enableDevTools={true}
+      enableDevTools={false}
       pageTitle={`Chat ${id}`}
       pageDescription={`Continue your conversation in chat ${id}`}
       className='h-full'
