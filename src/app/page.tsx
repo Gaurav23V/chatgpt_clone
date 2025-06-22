@@ -12,7 +12,7 @@ export default function Home() {
             {/* Logo */}
             <div className='flex items-center'>
               <h1 className='text-xl font-bold text-gray-900 dark:text-white'>
-                ChatGPT Clone
+                Aria
               </h1>
             </div>
 
@@ -54,7 +54,7 @@ export default function Home() {
           <SignedOut>
             <div className='mx-auto max-w-3xl'>
               <h1 className='text-4xl font-bold text-gray-900 sm:text-5xl dark:text-white'>
-                Welcome to <span className='text-green-600'>ChatGPT Clone</span>
+                Welcome to <span className='text-green-600'>Aria</span>
               </h1>
               <p className='mt-6 text-lg text-gray-600 dark:text-gray-300'>
                 Experience the power of AI-driven conversations. Sign up to
@@ -163,7 +163,7 @@ export default function Home() {
         <div className='mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8'>
           <div className='text-center text-gray-600 dark:text-gray-400'>
             <p>
-              &copy; 2024 ChatGPT Clone. Built with Next.js, Clerk & OpenAI.
+              &copy; 2024 Aria. Built with Next.js, Clerk & OpenAI.
             </p>
             <div className='mt-4 space-x-4'>
               <SignedIn>

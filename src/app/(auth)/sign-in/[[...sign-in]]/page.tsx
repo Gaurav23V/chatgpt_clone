@@ -20,9 +20,9 @@ import type { Metadata } from 'next';
 import { SignInWithRedirect } from './sign-in-with-redirect';
 
 export const metadata: Metadata = {
-  title: 'Sign in to ChatGPT Clone',
-  description:
-    'Sign in to your ChatGPT Clone account and start conversing with AI',
+      title: 'Sign in to Aria',
+    description:
+      'Sign in to your Aria account and start conversing with AI',
 };
 
 export default function SignInPage() {

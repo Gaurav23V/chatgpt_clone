@@ -20,7 +20,7 @@ interface ChatLayoutProps {
 }
 
 export const metadata: Metadata = {
-  title: 'Chat | ChatGPT Clone',
+      title: 'Chat | Aria',
   description: 'AI-powered chat conversations',
 };
 

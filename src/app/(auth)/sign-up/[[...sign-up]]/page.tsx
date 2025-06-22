@@ -19,8 +19,8 @@ import type { Metadata } from 'next';
 import { SignUpWithRedirect } from './sign-up-with-redirect';
 
 export const metadata: Metadata = {
-  title: 'Create your ChatGPT Clone account',
-  description: 'Sign up for ChatGPT Clone and start conversing with AI',
+      title: 'Create your Aria account',
+    description: 'Sign up for Aria and start conversing with AI',
 };
 
 export default function SignUpPage() {

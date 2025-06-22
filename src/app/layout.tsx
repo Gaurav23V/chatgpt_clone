@@ -39,7 +39,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'ChatGPT Clone',
+      title: 'Aria',
   description:
     'A ChatGPT-style conversational AI interface built with Next.js, Clerk & OpenAI.',
 };

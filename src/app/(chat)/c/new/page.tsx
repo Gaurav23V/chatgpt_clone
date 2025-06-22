@@ -32,6 +32,6 @@ export default function NewChatPage() {
 
 // SEO metadata for new chat page
 export const metadata = {
-  title: 'New Chat | ChatGPT Clone',
-  description: 'Start a new AI conversation with ChatGPT Clone',
+  title: 'New Chat | Aria',
+  description: 'Start a new AI conversation with Aria',
 };

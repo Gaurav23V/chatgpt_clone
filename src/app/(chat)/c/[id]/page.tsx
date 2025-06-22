@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: ChatPageProps) {
   // const title = chat?.title || `Chat ${id}`;
 
   return {
-    title: `Chat ${id} | ChatGPT Clone`,
+    title: `Chat ${id} | Aria`,
     description: `Continue your conversation in chat ${id}`,
     robots: {
       index: false, // Protected content should not be indexed
