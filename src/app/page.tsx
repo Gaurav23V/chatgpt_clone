@@ -21,13 +21,13 @@ export default function Home() {
               <SignedOut>
                 <Link
                   href='/sign-in'
-                  className='rounded-md px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'
+                  className='border border-gray-300 rounded-md px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:shadow-sm hover:text-gray-900 transition-all duration-200 dark:text-gray-300 dark:hover:text-white dark:border-gray-600 dark:hover:bg-gray-800'
                 >
                   Sign In
                 </Link>
                 <Link
                   href='/sign-up'
-                  className='rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700'
+                  className='rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-all duration-200'
                 >
                   Sign Up
                 </Link>
@@ -99,13 +99,13 @@ export default function Home() {
               <div className='mt-12 flex flex-col justify-center gap-4 sm:flex-row'>
                 <Link
                   href='/sign-up'
-                  className='rounded-lg bg-green-600 px-8 py-3 text-lg font-medium text-white transition-colors hover:bg-green-700'
+                  className='rounded-lg bg-green-600 px-8 py-3 text-lg font-medium text-white hover:bg-green-700 transition-all duration-200'
                 >
                   Get Started Free
                 </Link>
                 <Link
                   href='/sign-in'
-                  className='rounded-lg border border-gray-300 px-8 py-3 text-lg font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800'
+                  className='rounded-lg border border-gray-300 px-8 py-3 text-lg font-medium text-gray-700 hover:bg-gray-100 hover:shadow-md transition-all duration-200 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800'
                 >
                   Sign In
                 </Link>
