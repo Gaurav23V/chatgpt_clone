@@ -7,6 +7,8 @@ import { usePathname, useRouter } from 'next/navigation';
 
 import { UserButton } from '@clerk/nextjs';
 import {
+  ChevronLeft,
+  Menu,
   MoreHorizontal,
   PenSquare,
   Trash2,
@@ -158,6 +160,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           size='icon'
           className='h-10 w-10 text-white hover:bg-[#303030]'
           onClick={handleNewChat}
+          title="New chat"
         >
           <PenSquare className='h-5 w-5' />
         </Button>
@@ -187,8 +190,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             variant='ghost'
             className='h-11 w-11 flex-shrink-0 border border-[#444444] text-white hover:bg-[#303030]'
             onClick={onClose}
+            title="Collapse sidebar"
           >
-            <PenSquare className='h-4 w-4' />
+            <ChevronLeft className='h-4 w-4' />
           </Button>
         </div>
 
