@@ -90,10 +90,10 @@ export function ChatPageClient({ conversationId }: ChatPageClientProps) {
   // Show loading state
   if (!isLoaded || isLoading) {
     return (
-      <div className='flex h-full items-center justify-center'>
-        <div className='text-center'>
-          <div className='h-8 w-8 animate-spin rounded-full border-2 border-[#19C37D] border-t-transparent'></div>
-          <p className='mt-2 text-[#b4b4b4]'>Loading conversation...</p>
+      <div className="flex h-screen items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-8 h-8 border-2 border-gray-300 border-t-white rounded-full animate-spin" />
+          <p className="text-gray-400">Loading conversation...</p>
         </div>
       </div>
     );
