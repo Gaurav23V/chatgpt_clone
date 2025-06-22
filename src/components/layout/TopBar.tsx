@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 import { UserButton } from '@clerk/nextjs';
-import { ChevronDown, ChevronUp, Maximize2, Menu, Share } from 'lucide-react';
+import { ChevronDown, ChevronUp, Menu, Share } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { useModel } from '@/contexts/model-context';
@@ -129,13 +129,7 @@ export function TopBar({
           </Button>
         )}
 
-        <Button
-          size='icon'
-          variant='ghost'
-          className='h-8 w-8 text-white hover:bg-[#404040]'
-        >
-          <Maximize2 className='h-4 w-4' />
-        </Button>
+
 
         {user && (
           <UserButton
