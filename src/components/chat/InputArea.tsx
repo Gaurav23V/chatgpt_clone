@@ -146,24 +146,14 @@ export function InputArea({
           </div>
         )}
 
-        {/* Character count and disclaimer */}
-        <div className='mt-2 flex items-center justify-between'>
-          <div className='flex-1 text-center text-xs text-gray-400'>
-            ChatGPT can make mistakes. Check important info.{' '}
-            <a
-              href='#'
-              className='underline transition-colors hover:text-gray-300'
-            >
-              See Cookie Preferences
-            </a>
-            .
-          </div>
-          {input.length > maxLength * 0.8 && (
-            <div className='animate-in fade-in-0 slide-in-from-right-5 ml-2 text-xs text-gray-400'>
+        {/* Character count */}
+        {input.length > maxLength * 0.8 && (
+          <div className='animate-in fade-in-0 slide-in-from-right-5 mt-2 flex justify-end'>
+            <div className='text-xs text-gray-400'>
               {input.length}/{maxLength}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
