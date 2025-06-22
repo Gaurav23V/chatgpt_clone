@@ -267,7 +267,7 @@ export function ChatArea({
 
       {/* Input area - always visible */}
       {!isNewConversation && (
-        <div className='border-t border-[#404040] bg-[#212121] p-4'>
+        <div className='bg-[#212121] p-4'>
           <InputArea
             onSubmit={sendMessage}
             disabled={isLoading}
