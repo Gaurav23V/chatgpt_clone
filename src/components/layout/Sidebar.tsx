@@ -199,9 +199,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       </div>
 
       {/* Chats Section */}
-      <div className='mt-6 flex-1 px-3'>
+      <div className='mt-6 flex-1 flex flex-col px-3 min-h-0'>
         <div className='mb-2 px-2 text-xs text-gray-400'>Chats</div>
-        <div className='space-y-1'>
+        <div className='flex-1 overflow-y-auto space-y-1'>
           {renderConversationGroup('Today', groupedConversations.today)}
           {renderConversationGroup('Yesterday', groupedConversations.yesterday)}
           {renderConversationGroup('Last Week', groupedConversations.lastWeek)}
