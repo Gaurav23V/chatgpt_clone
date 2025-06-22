@@ -4,7 +4,7 @@ import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 
 export default function Home() {
   return (
-    <div className='min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800'>
+    <div className='min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800'>
       {/* Header with Authentication Status */}
       <header className='border-b border-gray-200 bg-white/80 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/80'>
         <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
@@ -48,7 +48,7 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className='mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8'>
+      <main className='flex-grow mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8'>
         <div className='text-center'>
           {/* Welcome Section for Signed Out Users */}
           <SignedOut>
@@ -159,7 +159,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className='mt-24 border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900'>
+      <footer className='mt-auto border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900'>
         <div className='mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8'>
           <div className='text-center text-gray-600 dark:text-gray-400'>
             <p>
