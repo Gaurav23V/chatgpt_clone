@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 import { UserButton } from '@clerk/nextjs';
-import { ChevronDown, ChevronUp, Menu, Share } from 'lucide-react';
+import { ChevronDown, ChevronUp, Menu } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { useModel } from '@/contexts/model-context';
@@ -105,29 +105,7 @@ export function TopBar({
       </div>
 
       <div className='flex items-center space-x-2'>
-        {!isHomePage && (
-          <>
-            <div className='rounded bg-[#2f2f2f] px-2 py-1 text-xs text-gray-400'>
-              Saved memory full
-            </div>
-            <Button
-              size='sm'
-              className='bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700'
-            >
-              ⚡ Get Plus
-            </Button>
-          </>
-        )}
 
-        {showShare && (
-          <Button
-            size='icon'
-            variant='ghost'
-            className='h-8 w-8 text-white hover:bg-[#404040]'
-          >
-            <Share className='h-4 w-4' />
-          </Button>
-        )}
 
 
 
