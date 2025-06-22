@@ -166,11 +166,6 @@ export default function Home() {
               &copy; 2024 ChatGPT Clone. Built with Next.js, Clerk & OpenAI.
             </p>
             <div className='mt-4 space-x-4'>
-              <SignedOut>
-                <span className='text-sm'>
-                  Testing: Authentication flow verification
-                </span>
-              </SignedOut>
               <SignedIn>
                 <span className='text-sm text-green-600 dark:text-green-400'>
                   ✅ Authentication Active
