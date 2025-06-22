@@ -153,7 +153,7 @@ export function WelcomeScreen({
           <ModelSelector />
         </div>
         <form onSubmit={handleSubmit}>
-          <div className='chat-input relative'>
+          <div className='relative'>
             <textarea
               ref={textareaRef}
               value={input}
