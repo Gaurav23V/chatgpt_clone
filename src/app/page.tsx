@@ -120,39 +120,21 @@ export default function Home() {
                 Welcome back!
               </h1>
               <p className='mt-6 text-lg text-gray-600 dark:text-gray-300'>
-                Ready to continue your AI conversations? Start a new chat or
-                manage your account.
+                Ready to continue your AI conversations? Start a new chat and
+                explore the power of AI assistance.
               </p>
 
-              {/* Action Buttons */}
-              <div className='mt-8 flex flex-col justify-center gap-4 sm:flex-row'>
+              {/* Action Button */}
+              <div className='mt-8 flex justify-center'>
                 <Link
                   href='/c/new'
                   className='rounded-lg bg-green-600 px-8 py-3 text-lg font-medium text-white transition-colors hover:bg-green-700'
                 >
                   Start New Chat
                 </Link>
-                <button className='rounded-lg border border-gray-300 px-8 py-3 text-lg font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800'>
-                  View Chat History
-                </button>
               </div>
 
-              {/* Auth Testing Info */}
-              <div className='mt-12 rounded-lg border border-green-200 bg-green-50 p-6 dark:border-green-800 dark:bg-green-900/20'>
-                <h3 className='mb-2 text-lg font-semibold text-green-800 dark:text-green-200'>
-                  ✅ Authentication Test Successful
-                </h3>
-                <p className='text-green-700 dark:text-green-300'>
-                  You are successfully signed in! The authentication flow is
-                  working correctly.
-                </p>
-                <div className='mt-4 space-y-1 text-left text-sm text-green-600 dark:text-green-400'>
-                  <p>• ✅ Sign-up flow completed</p>
-                  <p>• ✅ Sign-in redirection working</p>
-                  <p>• ✅ User button accessible</p>
-                  <p>• ✅ Protected routes accessible</p>
-                </div>
-              </div>
+
             </div>
           </SignedIn>
         </div>
