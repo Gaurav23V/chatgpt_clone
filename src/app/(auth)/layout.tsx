@@ -46,7 +46,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     <div className='flex min-h-screen flex-col bg-white'>
       {/* Header with ChatGPT branding */}
       <div className='p-6'>
-        <h1 className='text-2xl font-bold text-black'>ChatGPT</h1>
+                        <h1 className='text-2xl font-bold text-black'>Aria</h1>
       </div>
 
       {/* Main authentication content */}

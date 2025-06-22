@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 
 import type { ChatAttachment } from './FileUploadButton';
 import FileUploadButton from './FileUploadButton';
-import ModelSelector from './ModelSelector';
+
 
 interface WelcomeScreenProps {
   onSubmit: (message: string, attachments: ChatAttachment[]) => void;
@@ -148,10 +148,7 @@ export function WelcomeScreen({
 
       {/* Input area with model selector */}
       <div className='animate-in slide-in-from-bottom-8 w-full max-w-3xl delay-500 duration-700'>
-        {/* Model selector positioned above the input area */}
-        <div className='mb-2 flex justify-start'>
-          <ModelSelector />
-        </div>
+
         <form onSubmit={handleSubmit}>
           <div className='relative'>
             <textarea
