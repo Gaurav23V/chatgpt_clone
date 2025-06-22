@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { Mic, Send, Settings } from 'lucide-react';
+import { Send } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 
@@ -173,27 +173,7 @@ export function WelcomeScreen({
                 disabled={disabled || isLoading}
               />
 
-              {/* Settings button */}
-              <Button
-                type='button'
-                size='icon'
-                variant='ghost'
-                className='hover-lift h-8 w-8 rounded-lg text-gray-400 transition-all duration-200 hover:bg-[#404040] hover:text-white'
-                disabled={disabled || isLoading}
-              >
-                <Settings className='h-4 w-4' />
-              </Button>
 
-              {/* Microphone button - prepared for future functionality */}
-              <Button
-                type='button'
-                size='icon'
-                variant='ghost'
-                className='hover-lift h-8 w-8 rounded-lg text-gray-400 transition-all duration-200 hover:bg-[#404040] hover:text-white'
-                disabled={disabled || isLoading}
-              >
-                <Mic className='h-4 w-4' />
-              </Button>
 
               {/* Send button - only show when there's text */}
               {input.trim() && (

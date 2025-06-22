@@ -9,10 +9,7 @@ import { UserButton } from '@clerk/nextjs';
 import {
   MoreHorizontal,
   PenSquare,
-  Plus,
-  Search,
   Trash2,
-  Users,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -160,16 +157,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           variant='ghost'
           size='icon'
           className='h-10 w-10 text-white hover:bg-[#303030]'
-          onClick={onClose}
+          onClick={handleNewChat}
         >
           <PenSquare className='h-5 w-5' />
-        </Button>
-        <Button
-          variant='ghost'
-          size='icon'
-          className='h-10 w-10 text-white hover:bg-[#303030]'
-        >
-          <Search className='h-5 w-5' />
         </Button>
       </div>
     );
@@ -202,72 +192,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </Button>
         </div>
 
-        <Button
-          variant='ghost'
-          className='h-10 w-full justify-start text-white hover:bg-[#303030]'
-        >
-          <Search className='mr-3 h-4 w-4' />
-          Search chats
-        </Button>
-
-        <Button
-          variant='ghost'
-          className='h-10 w-full justify-start text-white hover:bg-[#303030]'
-        >
-          <Plus className='mr-3 h-4 w-4' />
-          Library
-        </Button>
-      </div>
-
-      {/* GPT Models */}
-      <div className='space-y-1 px-3'>
-        <Button
-          variant='ghost'
-          className='h-10 w-full justify-start text-white hover:bg-[#303030]'
-        >
-          <Plus className='mr-3 h-4 w-4' />
-          Sora
-        </Button>
-
-        <Button
-          variant='ghost'
-          className='h-10 w-full justify-start text-white hover:bg-[#303030]'
-        >
-          <Plus className='mr-3 h-4 w-4' />
-          GPTs
-        </Button>
-
-        <Button
-          variant='ghost'
-          className='h-10 w-full justify-start text-white hover:bg-[#303030]'
-        >
-          <Users className='mr-3 h-4 w-4' />
-          Humanize AI
-        </Button>
-
-        <Button
-          variant='ghost'
-          className='h-10 w-full justify-start text-white hover:bg-[#303030]'
-        >
-          <Plus className='mr-3 h-4 w-4' />
-          Data Analyst
-        </Button>
-
-        <Button
-          variant='ghost'
-          className='h-10 w-full justify-start text-white hover:bg-[#303030]'
-        >
-          <Plus className='mr-3 h-4 w-4' />
-          Code Copilot
-        </Button>
-
-        <Button
-          variant='ghost'
-          className='h-10 w-full justify-start text-white hover:bg-[#303030]'
-        >
-          <Plus className='mr-3 h-4 w-4' />
-          Web Browser
-        </Button>
       </div>
 
       {/* Chats Section */}
